@@ -1,0 +1,11 @@
+# 站点私有/运行文件不入库
+/config.inc.php
+/config.inc.php.bak*
+/uploads/*
+!/uploads/.gitkeep
+/var/*
+!/var/.gitkeep
+*.log
+ssh.txt
+sshx.py
+.nogit/

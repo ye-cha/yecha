@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <!-- 森林茶 · 杯中森林：一盏茶里立着三株杉树 -->
+  <g fill="none" stroke="#2B4A3E" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">
+    <!-- 杯体 -->
+    <path d="M15 16h26c0 12-1 22-3 28a7 7 0 0 1-6.6 4.8h-6.8A7 7 0 0 1 18 44c-2-6-3-16-3-28z"/>
+    <!-- 杯柄 -->
+    <path d="M41 22h5a6 6 0 0 1 0 12h-6"/>
+    <!-- 茶面 -->
+    <path d="M17 26h22"/>
+  </g>
+  <!-- 杯内三株杉树（森林） -->
+  <g fill="#2B4A3E">
+    <path d="M24 11 19.5 20h9z"/>
+    <path d="M28 15.5 25 22h6z"/>
+    <path d="M33 13 29.8 20.4h6.4z"/>
+  </g>
+  <!-- 一绺茶烟 -->
+  <g fill="none" stroke="#7A8F83" stroke-width="2" stroke-linecap="round">
+    <path d="M36 8c-1.5 2 .5 3.4-1 5.4"/>
+    <path d="M30 5c-1.4 1.8.4 3.2-1 5"/>
+  </g>
+</svg>

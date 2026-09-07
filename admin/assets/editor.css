@@ -1,0 +1,37 @@
+/* YeCha 后台双模式编辑器 */
+.ed-grid{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:18px;align-items:start}
+.ed-left{min-width:0}
+.ed-title{width:100%;box-sizing:border-box;border:1px solid #e6e6e2;border-radius:8px;padding:10px 12px;font-size:20px;font-weight:700;margin-bottom:8px}
+.slug-row{display:flex;align-items:center;gap:6px;color:#6f767e;font-size:13px;margin:0 2px 10px;flex-wrap:wrap}
+.slug-row input{border:0;border-bottom:1px dashed #d8d8d0;background:transparent;font-size:13px;color:#b3541e;width:200px;font-family:inherit}
+.hint{font-size:12px;color:#9a9a90}
+.ed-toolbar{display:flex;flex-wrap:wrap;align-items:center;gap:2px;border:1px solid #e6e6e2;border-bottom:0;background:#f7f7f4;border-radius:8px 8px 0 0;padding:6px 8px}
+.ed-toolbar button{background:none;border:1px solid transparent;border-radius:5px;padding:3px 9px;font-size:13px;cursor:pointer;color:#3d4147}
+.ed-toolbar button:hover{background:#ecece7}
+.ed-toolbar .sep{width:1px;height:18px;background:#ddd;margin:0 5px}
+.ed-toolbar .ed-mode{display:inline-flex;border:1px solid #e0e0da;border-radius:6px;overflow:hidden;margin-left:auto}
+.ed-toolbar .ed-mode button{border-radius:0;padding:2px 12px;color:#6f767e}
+.ed-toolbar .ed-mode button.active{background:#1f2328;color:#fff}
+.ed-area{display:grid;grid-template-columns:1fr;border:1px solid #e6e6e2;background:#fff;border-radius:0 0 8px 8px;overflow:hidden}
+.ed-area.split{grid-template-columns:1fr 1fr}
+.ed-textarea,.ed-rich{border:0;outline:0;padding:14px 16px;font-size:15px;line-height:1.8;min-height:340px;width:100%;box-sizing:border-box;resize:vertical;font-family:inherit}
+.ed-textarea{font-family:Consolas,Menlo,monospace;background:#fff}
+.ed-rich p{margin:0 0 .6em}
+.ed-preview{border-left:1px solid #eee;padding:14px 16px;font-size:14.5px;line-height:1.85;overflow:auto;min-height:340px;display:none;background:#fff}
+.ed-area.split .ed-preview{display:block}
+.ed-preview h1,.ed-preview h2,.ed-preview h3{margin:.4em 0}
+.ed-preview pre{background:#f6f6f4;border-radius:6px;padding:10px 12px;overflow-x:auto;font-size:13px}
+.ed-preview blockquote{border-left:3px solid #e0e0da;margin:8px 0;padding:2px 12px;color:#6f767e}
+.ed-preview code{background:#f2f2ee;border-radius:3px;padding:0 4px;font-size:13px}
+.ed-preview table{border-collapse:collapse;margin:8px 0}
+.ed-preview td,.ed-preview th{border:1px solid #e6e6e2;padding:4px 10px}
+.chk{display:flex;align-items:center;gap:6px;font-weight:400;font-size:13.5px;margin:4px 0}
+.side-field{margin-bottom:14px}
+.side-field label{display:block;font-size:12.5px;color:#6f767e;margin-bottom:4px}
+.side-field input[type=text],.side-field input:not([type=checkbox]):not([type=file]),.side-field select,.side-field textarea{width:100%;box-sizing:border-box;border:1px solid #e6e6e2;border-radius:6px;padding:6px 9px;font-size:13.5px;font-family:inherit}
+.side-field textarea{resize:vertical}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.chip{display:inline-flex;align-items:center;gap:5px;background:#f6ece4;color:#b3541e;border-radius:999px;font-size:12px;padding:2px 6px 2px 11px}
+.chip b{cursor:pointer;font-weight:400}
+.ed-actions{margin-top:14px;display:flex;gap:10px;align-items:center}
+@media(max-width:1000px){.ed-grid{grid-template-columns:1fr}.ed-area.split{grid-template-columns:1fr}.ed-preview{display:none!important}}

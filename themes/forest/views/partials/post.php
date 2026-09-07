@@ -1,0 +1,171 @@
+<?php
+/** 文章页区块：$post,$html,$comments,$segments,$para_n,$fav,$my_marks */
+$p = $post;
+$cid = (int)$p['id'];
+$logged = Auth::check();
+$csrf = Csrf::token();
+$lp2 = (Poly::on() && Lang::short() !== Poly::defaultLang()) ? ui_lp() : '';
+$back = $lp2 . '/' . e((string)$p['slug']) . '.html';
+/* 作者名/简介按当前语言取（blogger.nick_<lang> / bio_<lang>），缺失回落基准语言 */
+$pgLang = Lang::short();
+$authNick = trim((string)get_option('blogger.nick_' . $pgLang, ''));
+if ($authNick === '') { $authNick = (string)get_option('blogger.nick', site_label()); }
+$authBio  = trim((string)get_option('blogger.bio_' . $pgLang, ''));
+if ($authBio === '') { $authBio = (string)get_option('blogger.bio', ''); }
+/* 文章结构化数据（BlogPosting） */
+$ptT = strtotime((string)($p['published_at'] ?? $p['created_at']));
+$ptISO = $ptT ? date('c', $ptT) : date('c');
+$host2 = $_SERVER['HTTP_HOST'] ?? 'senlincha.com';
+$scheme2 = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+$artUrl = $GLOBALS['YC_CANONICAL'] ?? ($scheme2 . '://' . $host2 . '/' . (string)$p['slug'] . '.html');
+$artDesc = !empty($GLOBALS['YC_META']['description']) ? $GLOBALS['YC_META']['description'] : trim((string)preg_replace('/\s+/u', ' ', Str::cleanMd((string)($p['excerpt'] !== '' ? $p['excerpt'] : ($p['content'] ?? '')))));
+$bloggerName = $authNick;
+$ldArt = [
+    '@context' => 'https://schema.org',
+    '@type' => 'BlogPosting',
+    'mainEntityOfPage' => ['@type' => 'WebPage', '@id' => $artUrl],
+    'headline' => (string)$p['title'],
+    'description' => mb_substr($artDesc, 0, 300),
+    'datePublished' => $ptISO,
+    'dateModified' => date('c', strtotime((string)($p['updated_at'] ?? $p['published_at'] ?? $p['created_at']))),
+    'author' => ['@type' => 'Person', 'name' => $bloggerName, 'url' => $scheme2 . '://' . $host2 . '/laosen.html'],
+    'publisher' => ['@type' => 'Organization', 'name' => site_label()],
+    'inLanguage' => Lang::short() === 'zh' ? 'zh-CN' : Lang::short(),
+];
+echo "\n" . '<script type="application/ld+json">' . json_encode($ldArt, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) . '</script>';
+?>
+<article class="article" data-cid="<?= $cid ?>">
+  <?php if (!empty($p['cats'])): ?>
+  <div class="kicker">
+    <?php foreach ($p['cats'] as $c): ?><a style="color:var(--accent)" href="<?= e(Poly::termUrl('category', $c)) ?>"><?= e(Poly::termName($c)) ?></a><?php endforeach; ?>
+  </div>
+  <?php endif; ?>
+  <h1 class="article-title"><?= e($p['title']) ?></h1>
+  <?php if (Poly::on() && Lang::short() !== Poly::defaultLang()): ?>
+  <?php if (!empty($fallback)): ?>
+    <div class="poly-notice"><?= e(__('poly.fallback')) ?></div>
+  <?php elseif (!empty($translated)): ?>
+    <div class="poly-notice ok">🌐 <?= e(__('poly.has_trans')) ?> · <a href="/<?= e((string)$p['slug']) ?>.html"><?= e(__('poly.view_orig')) ?></a></div>
+  <?php endif; ?>
+  <?php if (!empty($p['stale'])): ?>
+    <div class="poly-notice stale"><?= e(__('poly.stale')) ?></div>
+  <?php endif; ?>
+  <div class="poly-langs">
+    <?= e(__('post.lang_label')) ?>
+    <?php foreach (Poly::enabled() as $lc2): if ($lc2 === Lang::short()) { continue; } ?>
+    <a href="<?= e(($lc2 === Poly::defaultLang() ? '' : '/' . $lc2) . '/' . (string)$p['slug']) ?>.html"><?= e(Poly::label($lc2)) ?></a>
+    <?php endforeach; ?>
+  </div>
+  <?php endif; ?>
+  <div class="article-meta">
+    <?php $pt = strtotime((string)($p['published_at'] ?? $p['created_at'])); ?>
+    <span><?= e(date('Y-m-d', $pt)) ?><?= date('H:i', $pt) === '09:00' ? '' : ' ' . date('H:i', $pt) ?></span>
+    <span><?= e(__('meta.reads')) ?><?= Str::num((int)$p['views']) ?></span>
+    <span><?= e(__('meta.comments')) ?><?= (int)$comment_total ?></span>
+  </div>
+  <?php
+  // 摘要去重 v2：若摘要只是正文开头部分的原样摘抄，则不再在正文上方重复显示 lead。
+  // 修复 v1 两个缺陷：① markdown 渲染后正文以 <p>/<strong> 起始，去标签转空格会带前导空格，
+  //    使“前缀匹配”永远失败、摘要几乎总被显示；② 只比前 40 字、逐字精确，标点/加粗差异即漏判。
+  // v2：剥离内联标签 → 空白归一 → 摘要前 80 字与正文开头（含少许余量）做相似度比较，
+  //    相似 ≥82% 判定为同文摘抄，不再重复显示；摘要字段仍用于列表/搜索/description。
+  $showLead = false;
+  if (($p['excerpt'] ?? '') !== '') {
+      $h = (string)($html ?? '');
+      $h = (string)preg_replace('#<(?:strong|em|b|i|u|s|code|a|span)[^>]*>#i', '', $h);
+      $h = (string)preg_replace('#</(?:strong|em|b|i|u|s|code|a|span)>#i', '', $h);
+      $plainLead = trim((string)preg_replace('/\s+/u', ' ', (string)preg_replace('/<[^>]+>/', ' ', $h)));
+      $excerptN = trim((string)preg_replace('/\s+/u', ' ', (string)$p['excerpt']));
+      if ($excerptN === '' || $plainLead === '') {
+          $showLead = false;
+      } else {
+          $probe = mb_substr($excerptN, 0, 80);
+          $headT = mb_substr($plainLead, 0, mb_strlen($probe) + 20);
+          similar_text($probe, $headT, $pct);
+          $showLead = $pct < 82;
+      }
+  }
+  if ($showLead): ?><p style="color:var(--muted)"><?= e($p['excerpt']) ?></p><?php endif; ?>
+
+  <div class="article-content" id="articleBody"><?= $html ?></div>
+
+  <?php if (!empty($p['tags'])): ?>
+  <div class="article-tags">
+    <span class="tags-label"><?= e(__('ui.tags_label')) ?></span>
+    <?php foreach ($p['tags'] as $t): ?>
+      <span class="tag"><a href="<?= e(Poly::termUrl('tag', $t)) ?>"><?= e(Poly::termName($t)) ?></a></span>
+    <?php endforeach; ?>
+  </div>
+  <?php endif; ?>
+
+  <!-- 上一篇 / 下一篇 -->
+  <nav class="adjacent">
+    <?php if (!empty($prev)): ?><a href="<?= e($lp2 . '/' . (string)$prev['slug']) ?>.html"><b><?= e(__('post.prev')) ?></b><?= e($prev['title']) ?></a>
+    <?php else: ?><span></span><?php endif; ?>
+    <?php if (!empty($next)): ?><a href="<?= e($lp2 . '/' . (string)$next['slug']) ?>.html" class="nx"><b><?= e(__('post.next')) ?></b><?= e($next['title']) ?></a>
+    <?php else: ?><span></span><?php endif; ?>
+  </nav>
+
+  <div class="reader-bar">
+    <?php if ($logged): ?>
+      <form class="inline" method="post" action="/user/favorite">
+        <input type="hidden" name="content_id" value="<?= $cid ?>">
+        <input type="hidden" name="redirect" value="<?= $back ?>">
+        <?= Csrf::field() ?>
+        <button class="btn btn-sm fav-btn <?= $fav ? 'on' : '' ?>" type="submit"><?= $fav ? e(__('post.fav_on')) : e(__('post.fav_off')) ?></button>
+      </form>
+      <span class="hint"><?php
+          $hintMd = sprintf(__('post.mark_hint'), (int)$my_marks);
+          $myLp = ui_lp();
+          if ($myLp !== '') { $hintMd = str_replace('href="/user/', 'href="' . $myLp . '/user/', $hintMd); }
+          echo $hintMd;
+      ?></span>
+      <span class="hint"><?= e(__('post.seg_hint')) ?></span>
+    <?php else: ?>
+      <a class="btn btn-sm" href="<?= e(ui_login($back)) ?>"><?= e(__('post.login_cta')) ?></a>
+    <?php endif; ?>
+  </div>
+
+  <div class="author-card">
+    <span class="author-avatar"><?= e(mb_substr($authNick, 0, 1)) ?></span>
+    <div class="author-info">
+      <div class="author-name"><?= e($authNick) ?></div>
+      <p class="author-bio"><?= e($authBio) ?></p>
+    </div>
+    <a class="author-follow" href="<?= e($back) ?>#comments"><?= e(__('post.follow')) ?></a>
+  </div>
+
+  <?= View::render('partials/comments', [
+      'cid' => $cid, 'logged' => $logged, 'back' => $back,
+      'comments' => $comments, 'segments' => $segments, 'para_n' => $para_n, 'csrf' => $csrf,
+      'comment_page' => $comment_page ?? 1, 'comment_pages' => $comment_pages ?? 1,
+      'comment_total' => (int)$comment_total,
+  ]) ?>
+</article>
+<script>
+  window.__READER = {
+    cid: <?= $cid ?>,
+    logged: <?= $logged ? 'true' : 'false' ?>,
+    csrf: <?= json_encode($csrf) ?>,
+    t: {
+      mt: <?= json_encode(__('rd.mark_title'), JSON_UNESCAPED_UNICODE) ?>,
+      tip: <?= json_encode(__('rd.mark_tip'), JSON_UNESCAPED_UNICODE) ?>,
+      add: <?= json_encode(__('rd.add_note'), JSON_UNESCAPED_UNICODE) ?>,
+      noteTip: <?= json_encode(__('rd.note_tip'), JSON_UNESCAPED_UNICODE) ?>,
+      prompt: <?= json_encode(__('rd.prompt'), JSON_UNESCAPED_UNICODE) ?>,
+      saved: <?= json_encode(__('rd.saved'), JSON_UNESCAPED_UNICODE) ?>
+    }
+  };
+  // 阅读计数：访客+文章+自然日 去重上报（不阻塞渲染；服务端 append ye_views）
+  (function () {
+    try {
+      var key = 'yc_view_' + <?= $cid ?> + '_' + new Date().toISOString().slice(0, 10);
+      if (localStorage.getItem(key)) { return; }
+      localStorage.setItem(key, '1');
+      var fd = new FormData();
+      fd.append('content_id', String(<?= $cid ?>));
+      fetch('/count', { method: 'POST', body: fd, credentials: 'same-origin' });
+    } catch (e) {}
+  })();
+</script>
+<script src="<?= e(View::asset('reader.js')) ?>"></script>

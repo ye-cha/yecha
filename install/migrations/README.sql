@@ -1,0 +1,3 @@
+-- YeCha 系统核心迁移目录（install/migrations）
+-- 命名：NNN_描述.sql|php，按文件名升序执行，只增不改；文件需幂等。
+-- 由后台「系统升级」/ tools/upgrade 执行；已应用的记入 ye_migrations。
