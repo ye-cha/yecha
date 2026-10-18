@@ -1,5 +1,5 @@
 ﻿<?php
-// YeCha 配置示例：复制为 config.inc.php 后填写（或直接运行 /install/ 向导自动生成）
+// YeCha 安装配置示例：复制为 config.inc.php 后填写，或直接使用 /install/ 向导生成
 define('DB_HOST', '127.0.0.1');
 define('DB_PORT', '3306');
 define('DB_NAME', 'yecha');

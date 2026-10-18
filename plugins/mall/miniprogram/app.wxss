@@ -1,0 +1,26 @@
+/* 全局样式：砖红主题 + 方角（与商城 PC 版一致） */
+page {
+  background: #f4f4f4;
+  color: #333;
+  font-size: 28rpx;
+  font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Helvetica Neue", Helvetica, sans-serif;
+}
+view, text, image, scroll-view { box-sizing: border-box; }
+.brick { color: #a21400; }
+.btn-primary {
+  background: #a21400; color: #fff; border-radius: 0; font-size: 28rpx;
+  padding: 0 32rpx; height: 76rpx; line-height: 76rpx; text-align: center; border: none;
+}
+.btn-primary::after { border: none; }
+.btn-ghost { background: #fff; color: #a21400; border: 1rpx solid #a21400; border-radius: 0; height: 64rpx; line-height: 64rpx; padding: 0 24rpx; font-size: 26rpx; }
+.btn-ghost::after { border: none; }
+.card { background: #fff; margin: 16rpx; padding: 20rpx; }
+.price { color: #a21400; font-weight: 700; }
+.price .y { font-size: 24rpx; }
+.market { color: #999; text-decoration: line-through; font-size: 24rpx; margin-left: 12rpx; }
+.title-2 { font-size: 30rpx; font-weight: 700; padding: 24rpx 16rpx 8rpx; }
+.empty { text-align: center; color: #999; padding: 80rpx 0; }
+.row { display: flex; align-items: center; }
+.between { justify-content: space-between; }
+.gap { flex: 1; }
+.img { width: 100%; height: 100%; background: #eee; display: block; }

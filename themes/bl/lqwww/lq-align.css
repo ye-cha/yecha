@@ -1,0 +1,380 @@
+/* ============================================================================
+   lq-align.css —— 「实例功能件 ↔ www 形态」桥接层（lqalign2 · 2026-10-05）
+   ----------------------------------------------------------------------------
+   加载顺序：lqwww/www.css（www 自己的 Tailwind 产物）→ style.css（实例功能件）
+             → 本文件（最后，覆盖/接线）
+   职责只有三件：
+     ① 把页面底座接到 www 的设计令牌（--background/--foreground/--card/--border/--radius）
+     ② 把实例既有的**功能件**（侧栏 / 评论区 / 目录 / 阅读条 / 分页 / 搜索 / 图库 /
+        归档 / 标签 / 页面列表 / 404）接到 www 的卡片语言（圆角 + 细边框 + 轻阴影）
+     ③ 深色模式下给这些功能件补一套令牌化配色（www.css 已带 .dark 令牌）
+   ★ 不改任何功能件的行为，只改表皮；不引入图片/字体等外链资源。
+   ========================================================================== */
+
+:root {
+  /* 实例功能件用的强调色 = www 的主色（style.css 已把 --accent 改名为 --lq-accent） */
+  --lq-accent: hsl(var(--primary));
+  --lq-accent-soft: hsl(var(--accent));
+  --lq-muted: hsl(var(--muted-foreground));
+  --lq-line: hsl(var(--border));
+  --lq-fg: hsl(var(--foreground));
+  --lq-soft: hsl(var(--muted));
+  --lq-codebg: hsl(var(--muted));
+}
+
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  background: hsl(var(--background));
+  color: hsl(var(--foreground));
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  font: 15px/1.75 -apple-system, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+}
+a { color: inherit; text-decoration: none; }
+a:hover { color: hsl(var(--primary)); }
+img { max-width: 100%; }
+.img-miss {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 40px; min-height: 24px; padding: 2px 6px; margin: 0 2px;
+  border: 1px dashed hsl(var(--border)); border-radius: 6px;
+  color: hsl(var(--muted-foreground)); font-size: 12px;
+}
+
+/* ---------- ① 容器：www 的 .container 已定义，这里只补"实例自造容器" ---------- */
+.wrap, .g-box-1200, .g-home-wrap { max-width: 1280px; margin: 0 auto; padding: 0 1rem; }
+
+/* ---------- ② 侧栏：.side-box → www 的 `rounded-xl border bg-card p-3 text-sm shadow-sm` ---------- */
+.side-box, .article-toc, .lq-rel, .lq-dl, .search-page-form, .meta-index, .comments-area,
+.c-form, .c-item, .reader-bar, .side-search, .uc-empty, .empty, .sticky > .side-box {
+  background: hsl(var(--card));
+  border: 1px solid hsl(var(--border));
+  border-radius: var(--radius);
+  box-shadow: 0 1px 2px 0 rgb(0 0 0 / .05);
+}
+.side-box { padding: .75rem; margin-bottom: 1rem; font-size: .875rem; }
+.side-box h4 {
+  margin: 0 0 .375rem; padding: 0 .5rem; font-size: .75rem; font-weight: 600;
+  letter-spacing: .05em; text-transform: uppercase; color: hsl(var(--muted-foreground));
+}
+.side-box h4 a { color: inherit; }
+.side-list { list-style: none; margin: 0; padding: 0; }
+.side-list li { margin: 0; }
+.side-list a, .side-cat {
+  display: flex; align-items: center; justify-content: space-between; gap: .5rem;
+  padding: .375rem .5rem; border-radius: calc(var(--radius) - .375rem);
+  color: hsl(var(--muted-foreground)); transition: background-color .15s, color .15s;
+}
+.side-list a:hover, .side-cat:hover { background: hsl(var(--accent)); color: hsl(var(--accent-foreground)); }
+.side-list .d { font-size: .75rem; color: hsl(var(--muted-foreground)); }
+.side-nick { font-weight: 700; margin-bottom: .375rem; }
+.side-bio { color: hsl(var(--muted-foreground)); font-size: .875rem; }
+.side-search { display: flex; gap: .5rem; padding: .5rem; background: transparent; border: 0; box-shadow: none; }
+.side-search input {
+  flex: 1; min-width: 0; border: 1px solid hsl(var(--border)); background: hsl(var(--background));
+  border-radius: 9999px; padding: .375rem .875rem; font-size: .875rem; color: inherit;
+}
+.side-search input:focus { outline: none; box-shadow: 0 0 0 2px hsl(var(--ring) / .4); }
+.side-search button, .btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: .375rem;
+  border: 1px solid hsl(var(--border)); background: hsl(var(--background));
+  border-radius: calc(var(--radius) - .25rem); padding: .375rem .875rem;
+  font-size: .875rem; font-weight: 500; color: inherit; cursor: pointer;
+  transition: background-color .15s, color .15s;
+}
+.side-search button { border-radius: 9999px; background: hsl(var(--primary)); border-color: transparent; color: hsl(var(--primary-foreground)); }
+.side-search button:hover, .btn:hover { background: hsl(var(--accent)); color: hsl(var(--accent-foreground)); }
+.side-search button:hover { background: hsl(var(--primary) / .9); color: hsl(var(--primary-foreground)); }
+.btn-sm { padding: .25rem .625rem; font-size: .8125rem; }
+.btn.ghost { background: transparent; }
+
+/* 侧栏标签云 */
+.side-tags { display: flex; flex-wrap: wrap; gap: .375rem; padding: .25rem .5rem .5rem; }
+.side-tags li { margin: 0; }
+.side-tags a {
+  display: inline-flex; padding: .125rem .5rem; border: 1px solid hsl(var(--border));
+  border-radius: 9999px; font-size: .75rem; color: hsl(var(--muted-foreground));
+}
+.side-tags a:hover { border-color: hsl(var(--primary)); color: hsl(var(--primary)); }
+
+/* ---------- ③ 目录（lq-mech 的 toc-side / 老站的 article-toc） ---------- */
+.article-toc { padding: .75rem; margin-bottom: 1rem; font-size: .875rem; }
+.toc-cap, .article-toc .toc-cap {
+  margin: 0 .5rem .375rem; font-size: .75rem; font-weight: 600; letter-spacing: .05em;
+  text-transform: uppercase; color: hsl(var(--muted-foreground));
+}
+.article-toc ul { list-style: none; margin: 0; padding: 0; }
+.article-toc li { margin: 0; }
+.article-toc a {
+  display: block; padding: .25rem .5rem; border-radius: calc(var(--radius) - .375rem);
+  color: hsl(var(--muted-foreground));
+}
+.article-toc a:hover { background: hsl(var(--accent)); color: hsl(var(--accent-foreground)); }
+.article-toc .l4 { padding-left: .5rem; }
+.article-toc .l5 { padding-left: 1rem; }
+
+/* ---------- ④ 正文：与 www 的 `.tip-article` 同族（www.css 自带规则，这里补实例特有件） ---------- */
+.tip-article { font-size: 16px; }
+.tip-article > :first-child { margin-top: 0; }
+.article-content, .article, .page { color: hsl(var(--foreground)); }
+.article-title, .page h1 { font-weight: 700; }
+.article-meta, .kicker { font-size: .75rem; color: hsl(var(--muted-foreground)); }
+.article-tags { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; }
+.tag, .article-tags .tag {
+  display: inline-flex; padding: .125rem .625rem; border: 1px solid hsl(var(--border));
+  border-radius: 9999px; font-size: .75rem; color: hsl(var(--muted-foreground));
+}
+.tags-label { font-size: .75rem; font-weight: 600; letter-spacing: .05em; color: hsl(var(--muted-foreground)); }
+.poly-notice {
+  margin: 0 0 1rem; padding: .625rem .875rem; border: 1px solid hsl(var(--border));
+  border-radius: var(--radius); background: hsl(var(--muted)); font-size: .875rem;
+  color: hsl(var(--muted-foreground));
+}
+.tip-fig, .lq-thumb { display: block; }
+
+/* ---------- ⑤ 列表页遗留件（搜索 / 归档 / 标签索引 / 页面列表 / 404） ---------- */
+.page-head { margin-bottom: 1.25rem; }
+.page-head h1 { font-size: 1.875rem; font-weight: 700; margin: 0; }
+.page-head .sub, .sub { display: block; margin-top: .5rem; color: hsl(var(--muted-foreground)); font-size: .875rem; }
+.post-list { margin: 0; padding: 0; }
+.post-item {
+  padding: 1.25rem; margin-bottom: .875rem;
+  background: hsl(var(--card)); border: 1px solid hsl(var(--border));
+  border-radius: var(--radius); box-shadow: 0 1px 2px 0 rgb(0 0 0 / .05);
+  transition: box-shadow .15s, transform .15s;
+}
+.post-item:hover { box-shadow: 0 4px 6px -1px rgb(0 0 0 / .1); transform: translateY(-1px); }
+.post-item h2 { margin: 0 0 .5rem; font-size: 1rem; font-weight: 600; line-height: 1.5; }
+.post-excerpt { margin: 0 0 .625rem; color: hsl(var(--muted-foreground)); font-size: .875rem; }
+.post-meta { display: flex; flex-wrap: wrap; gap: .75rem; font-size: .75rem; color: hsl(var(--muted-foreground)); }
+.post-meta .cat { color: hsl(var(--primary)); }
+.readmore { display: inline-flex; align-items: center; gap: .25rem; color: hsl(var(--primary)); font-size: .875rem; }
+.search-page-form { display: flex; gap: .5rem; padding: .75rem; margin-bottom: 1.25rem; }
+.search-page-form input {
+  flex: 1; min-width: 0; border: 1px solid hsl(var(--border)); background: hsl(var(--background));
+  border-radius: 9999px; padding: .5rem 1rem; font-size: .875rem; color: inherit;
+}
+.meta-index { padding: 1rem; }
+.meta-chip, .cat-chip {
+  display: inline-flex; align-items: center; gap: .375rem; padding: .375rem .75rem; margin: 0 .375rem .375rem 0;
+  border: 1px solid hsl(var(--border)); border-radius: 9999px; font-size: .875rem;
+  color: hsl(var(--muted-foreground)); background: hsl(var(--card));
+}
+.meta-chip:hover, .cat-chip:hover { border-color: hsl(var(--primary)); color: hsl(var(--primary)); }
+.cat-chip.on, .cat-chip.on:hover { background: hsl(var(--primary)); border-color: transparent; color: hsl(var(--primary-foreground)); }
+.meta-index .mi-count { color: hsl(var(--muted-foreground)); font-size: .75rem; }
+.idx-hint, .uc-empty, .empty, .c-empty {
+  padding: 1.25rem; color: hsl(var(--muted-foreground)); font-size: .875rem;
+}
+.archives-list, .side-list.arch { padding: 0; }
+.hint { color: hsl(var(--muted-foreground)); font-size: .8125rem; }
+
+/* ---------- ⑥ 评论区（**保留**的功能件；只换表皮） ---------- */
+.comments-area { padding: 1.25rem; margin-top: 1.5rem; }
+.comments-title, .comments-area h3 { margin: 0 0 .875rem; font-size: 1.125rem; font-weight: 600; }
+.c-item { padding: .875rem; margin-bottom: .625rem; }
+.c-nick { font-weight: 600; }
+.c-who, .c-text, .c-row { font-size: .9375rem; }
+.c-actions { display: flex; gap: .75rem; font-size: .8125rem; color: hsl(var(--muted-foreground)); }
+.c-replies { margin-top: .625rem; padding-left: .875rem; border-left: 2px solid hsl(var(--border)); }
+.avatar { border-radius: 9999px; }
+.seg-block { border-top: 1px solid hsl(var(--border)); padding-top: .75rem; margin-top: .75rem; }
+.seg-head { font-size: .8125rem; font-weight: 600; color: hsl(var(--muted-foreground)); }
+.c-form { padding: 1rem; margin-top: 1rem; }
+.c-form textarea, .c-input, .reply-form textarea, .c-form input[type=text] {
+  width: 100%; border: 1px solid hsl(var(--border)); border-radius: calc(var(--radius) - .25rem);
+  background: hsl(var(--background)); color: inherit; padding: .625rem .75rem; font: inherit;
+}
+.c-form textarea:focus, .c-input:focus { outline: none; box-shadow: 0 0 0 2px hsl(var(--ring) / .4); }
+.anchor-quote, .mention {
+  border-left: 3px solid hsl(var(--primary)); background: hsl(var(--muted));
+  padding: .375rem .625rem; border-radius: 0 calc(var(--radius) - .25rem) calc(var(--radius) - .25rem) 0;
+  color: hsl(var(--muted-foreground)); font-size: .875rem;
+}
+.reply-to { font-size: .8125rem; color: hsl(var(--muted-foreground)); }
+
+/* ---------- ⑦ 分页 / 阅读条（功能件） ---------- */
+.pager { display: flex; flex-wrap: wrap; align-items: center; gap: .375rem; margin-top: 1.5rem; }
+.pager a, .pager span, .pager b {
+  display: inline-flex; align-items: center; justify-content: center; min-width: 2.25rem; height: 2.25rem;
+  padding: 0 .75rem; border: 1px solid hsl(var(--border)); border-radius: calc(var(--radius) - .25rem);
+  font-size: .875rem; color: inherit;
+}
+.pager a:hover { background: hsl(var(--accent)); color: hsl(var(--accent-foreground)); }
+.pager b, .pager .on { background: hsl(var(--primary)); border-color: transparent; color: hsl(var(--primary-foreground)); }
+.pager .cur { background: hsl(var(--primary)); border-color: transparent; color: hsl(var(--primary-foreground)); font-weight: 600; }
+/* 分页按钮（www 形状，宽度对齐 www 的方形页码键；www 没有 min-w-9 这个类 ⇒ 在这里补） */
+.lq-pager a, .lq-pager span { min-width: 2.25rem; }
+.reader-bar { display: flex; flex-wrap: wrap; align-items: center; gap: .75rem; }
+.fav-btn.on { background: hsl(var(--primary)); border-color: transparent; color: hsl(var(--primary-foreground)); }
+
+/* ---------- ⑧ lq-mech 机制件（面包屑 / 更新时间 / 朗读打印 / 相关阅读 / 下载表） ---------- */
+.lq-crumbs {
+  margin: 0 0 1.5rem; padding: 0; max-width: none;
+  font-size: .875rem; color: hsl(var(--muted-foreground));
+}
+.lq-crumbs ol { list-style: none; display: flex; flex-wrap: wrap; align-items: center; gap: .25rem; margin: 0; padding: 0; }
+.lq-crumbs li { display: flex; align-items: center; gap: .25rem; }
+.lq-crumbs a:hover { color: hsl(var(--foreground)); }
+.lq-crumbs .sep { font-style: normal; opacity: .6; }
+.lq-meta { display: flex; flex-wrap: wrap; align-items: center; gap: .75rem; margin: 0 0 1rem; font-size: .75rem; color: hsl(var(--muted-foreground)); }
+.lq-updated { color: hsl(var(--muted-foreground)); }
+.lq-acts { display: inline-flex; gap: .375rem; }
+.lq-act {
+  display: inline-flex; align-items: center; padding: .125rem .625rem; border: 1px solid hsl(var(--border));
+  border-radius: 9999px; background: hsl(var(--card)); color: hsl(var(--muted-foreground));
+  font-size: .75rem; cursor: pointer;
+}
+.lq-act:hover { border-color: hsl(var(--primary)); color: hsl(var(--primary)); }
+.lq-rel { padding: 1rem; margin-top: 1.5rem; }
+.lq-rel-cap { margin: 0 0 .5rem; font-size: .875rem; font-weight: 600; }
+.lq-rel ul { list-style: none; margin: 0; padding: 0; }
+.lq-rel li { padding: .25rem 0; font-size: .875rem; }
+.lq-dl { padding: 1rem; margin-top: 1.5rem; }
+.lq-dl h2 { margin: 0 0 .5rem; font-size: 1.125rem; font-weight: 600; }
+.lq-dl-note { margin: 0 0 .75rem; font-size: .75rem; color: hsl(var(--muted-foreground)); }
+.lq-dl-wrap { overflow-x: auto; }
+.lq-dl-t { width: 100%; border-collapse: collapse; font-size: .8125rem; }
+.lq-dl-t th, .lq-dl-t td { padding: .5rem .625rem; border-bottom: 1px solid hsl(var(--border)); text-align: left; }
+.lq-dl-t th { font-weight: 600; color: hsl(var(--muted-foreground)); }
+.lq-dl-t code { font-size: .75rem; word-break: break-all; }
+
+/* ---------- ⑨ 工具页本体（137 个工具自带样式，这里只给中性外框） ---------- */
+.lq-toolbody { color: hsl(var(--foreground)); }
+.lq-toolbody > :first-child { margin-top: 0; }
+
+/* ---------- ⑩ 图库（wall.php 的 wt-* 自带样式；这里把它的容器接到卡片语言） ---------- */
+.wt-sec, .wt-wallbox, .wt-tool, .wt-facts, .wt-quick, .wt-strip {
+  border-radius: var(--radius);
+}
+.wt-btn, .wt-chip, .wt-cat {
+  border-radius: calc(var(--radius) - .25rem);
+}
+.wt-btn { background: hsl(var(--primary)); color: hsl(var(--primary-foreground)); border-color: transparent; }
+.wt-chip.on, .wt-cat.on { background: hsl(var(--primary)); color: hsl(var(--primary-foreground)); border-color: transparent; }
+
+/* ---------- ⑪ 深色模式：把遗留件的硬编码浅色换成 www 的深色令牌 ---------- */
+.dark .side-box, .dark .article-toc, .dark .lq-rel, .dark .lq-dl, .dark .search-page-form,
+.dark .meta-index, .dark .comments-area, .dark .c-form, .dark .c-item, .dark .reader-bar,
+.dark .post-item, .dark .lq-act { background: hsl(var(--card)); border-color: hsl(var(--border)); }
+.dark .side-search input, .dark .search-page-form input, .dark .c-form textarea, .dark .c-input {
+  background: hsl(var(--background)); border-color: hsl(var(--input)); color: hsl(var(--foreground));
+}
+.dark .anchor-quote, .dark .mention { background: hsl(var(--muted)); }
+.dark .c-replies { border-left-color: hsl(var(--border)); }
+.dark .img-miss { border-color: hsl(var(--border)); color: hsl(var(--muted-foreground)); }
+.dark .tip-article img, .dark .article-content img { opacity: .95; }
+
+/* ---------- ⑫ 响应式兜底：窄屏把两栏收成一栏（www 用 lg:grid-cols-[230px_1fr] 达成） ---------- */
+@media (max-width: 1023.98px) {
+  aside.hidden.lg\:block { display: none !important; }
+}
+/* ===== [lqpix 2026-10-05] 精仿基线覆盖 ===== */
+/* 参照 www 的 html/body 基准（实测 computed）：16px / line-height 1.5 / color = hsl(var(--foreground))
+   = rgb(15,23,41) / font-family 以 system-ui 打头。
+   实例 style.css 里 `body{font:15px/1.85 -apple-system,…;color:var(--fg)}` 是**功能件的老基准**：
+   它把 root font-size 定成 15px，而 www 的 Tailwind 间距全是 rem ⇒ 所有 padding/gap/圆角
+   都被缩到 15/16，且字体栈缺 system-ui、正文色也停在 #1f2328 ⇒ 与参照对不上。
+   这里只覆盖 html/body 两条，不删不改 style.css 本体（回滚 = 删掉本段）。 */
+html { font-size: 16px; }
+body {
+  margin: 0;
+  display: block;
+  background: #fff;
+  color: hsl(var(--foreground));
+  min-height: 100vh;
+  font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif;
+}
+/* ===== [lqpix 2026-10-05] 令牌口径修复 ===== */
+/* www.css 的消费端是 hsl(var(--border)) / hsl(var(--card)) —— 需要**通道三元组**。
+   而 style.css 里 `:root{--border:var(--line);--card:var(--soft)}` 把它们改成了**完整颜色**
+   ⇒ hsl(#e6e6e2) 求值失败 ⇒ border-color 落回 initial 值 currentColor（近黑）
+   ⇒ 全站每个 `class="border"` 的卡片边框都会画成近黑（本批像素 diff 实测到的差异源）。
+   这里把三个令牌还原成 www.css 自己的值（本文件晚于 style.css 加载 ⇒ 同权重后者胜）。
+   回滚 = 删掉本段。 */
+:root {
+  --border: 243 20% 90%;
+  --input:  243 20% 90%;
+  --card:   0 0% 100%;
+}
+html.dark, .dark {
+  --border: 222 25% 20%;
+  --input:  222 25% 22%;
+  --card:   222 40% 10%;
+}
+
+/* ============================================================================
+   ⑬ 断点补齐（lqart 2026-10-06）
+   ----------------------------------------------------------------------------
+   实测：参照 `/herontool` 引的 `/assets/index-CIsVBZk.css`（40,479 B）里有
+     @media (min-width:1280px){ .xl\:grid-cols-4{grid-template-columns:repeat(4,minmax(0,1fr))} }
+   而本主题的 `lqwww/www.css`（= 另一构建产物 index-cAFfNupP.css 的逐字节副本，49,004 B）
+   **一个 `xl:` 前缀的类都没有** ⇒ 标记里的 `xl:grid-cols-4` 拿不到规则 ⇒
+   1440 视口下只命中 `lg:`（3 列）⇒ 工具墙每段行数变多、整页高度多出几千 px。
+   这里只补**参照有、我们缺**的那一档（原样照参照的声明），不改复制来的 www.css。
+   ========================================================================== */
+@media (min-width: 1280px) {
+  .xl\:grid-cols-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+
+/* ============================================================================
+   ⑭ 补齐「站内真在用、但任何 CSS（含参照 4 份构建）都没有规则」的工具类（lqart 2026-10-06）
+   ----------------------------------------------------------------------------
+   普查（归一化去变体后逐类比对产物 287 个文件）：
+     list-none   14 页（/download/<slug>）· pl-0  14 页 · pl-6  6 页 · list-decimal 5 页（/learn/<slug>）
+     hover:bg-destructive/10  1 页（/bookmark）· sm:justify-between  1 页（/herontool）
+   这 6 条在参照的 4 份 CSS 构建里**也都查不到规则** ⇒ 是我们模板用了、Tailwind 没生成的真缺口。
+   声明按 Tailwind 标准写法补，不改复制来的 www.css。
+   ========================================================================== */
+.list-none { list-style-type: none; }
+.list-decimal { list-style-type: decimal; }
+.pl-0 { padding-left: 0px; }
+.pl-6 { padding-left: 1.5rem; }
+.hover\:bg-destructive\/10:hover { background-color: hsl(var(--destructive) / 0.1); }
+@media (min-width: 640px) {
+  .sm\:justify-between { justify-content: space-between; }
+}
+
+/* ============================================================================
+   ⑮ 更正 ⑭：`.list-none` / `.pl-0` **确实加载了但没生效**，因为 style.css 里
+      `.tip-article ul { list-style-type: discard }`（实测 `list-style-type:disc`）与
+      `.tip-article ul, .tip-article ol { padding-left:1.5rem }` 的特异性 (0,1,1) 高于
+      `.list-none` / `.pl-0` 的 (0,1,0)。CDP `CSS.getMatchedStylesForNode` 实测匹配表：
+        ol,ul,menu                     list-style:none;margin:0;padding:0        (style.css)
+        .list-none                     list-style-type:none                      (lq-align.css)
+        .pl-0                          padding-left:0px                          (lq-align.css)
+        .tip-article ul,.tip-article ol padding-left:1.5rem                       (style.css)
+        .tip-article ul                list-style-type:disc   ← 压掉的那个        (style.css)
+      这里用更高特异性 (0,2,1) 压回；不改 style.css、不改 www.css。
+   ========================================================================== */
+.tip-article ul.list-none { list-style-type: none; padding-left: 0; }
+.tip-article ol.list-none { list-style-type: none; padding-left: 0; }
+.tip-article ul.pl-0 { padding-left: 0; }
+.tip-article ol.pl-0 { padding-left: 0; }
+.tip-article ol.list-decimal { list-style-type: decimal; }
+.tip-article ul.list-decimal { list-style-type: decimal; }
+
+/* ============================================================================
+   lqlearncolor —— /learn/<slug> 文章页 hero 的【专题色】（第1批 · 2026-10-07）
+   ----------------------------------------------------------------------------
+   为什么在这里：参照 liulanqi.com/learn/<slug> 的 hero 卡是逐篇不同的 inline
+     background:linear-gradient(120deg, #<专题色>14, hsl(var(--card)) 70%) + 徽标行 color:#<专题色>
+   实例这条色由共享 PHP（parts/lq-page.php 硬编码 #2563eb）给 ⇒ 本批不动共享文件，
+     改为在我们自己的层按页覆盖。inline 样式只有 author !important 压得住。
+   每页唯一钩子：header 语言切换里 a[aria-current="true"] 的 href = 本页 URL（全页恰 1 个，6 页逐页核过）。
+   色值逐字节取自参照件：chrome #2563eb · edge #0f766e · firefox #ea580c · opera #c026d3 · quark #7c3aed · yandex #dc2626
+   回滚：删掉本段（备份 /root/learnbk/lq-align.css.before）
+   ========================================================================== */
+body:has(a[aria-current="true"][href="/learn/chrome"]) .min-w-0.space-y-8 > .rounded-2xl.border.px-6.py-7 { background: linear-gradient(120deg, #2563eb14, hsl(var(--card)) 70%) !important; }
+body:has(a[aria-current="true"][href="/learn/chrome"]) .min-w-0.space-y-8 > .rounded-2xl.border.px-6.py-7 > div.flex.items-center.gap-2.text-xs { color: #2563eb !important; }
+body:has(a[aria-current="true"][href="/learn/edge"]) .min-w-0.space-y-8 > .rounded-2xl.border.px-6.py-7 { background: linear-gradient(120deg, #0f766e14, hsl(var(--card)) 70%) !important; }
+body:has(a[aria-current="true"][href="/learn/edge"]) .min-w-0.space-y-8 > .rounded-2xl.border.px-6.py-7 > div.flex.items-center.gap-2.text-xs { color: #0f766e !important; }
+body:has(a[aria-current="true"][href="/learn/firefox"]) .min-w-0.space-y-8 > .rounded-2xl.border.px-6.py-7 { background: linear-gradient(120deg, #ea580c14, hsl(var(--card)) 70%) !important; }
+body:has(a[aria-current="true"][href="/learn/firefox"]) .min-w-0.space-y-8 > .rounded-2xl.border.px-6.py-7 > div.flex.items-center.gap-2.text-xs { color: #ea580c !important; }
+body:has(a[aria-current="true"][href="/learn/opera"]) .min-w-0.space-y-8 > .rounded-2xl.border.px-6.py-7 { background: linear-gradient(120deg, #c026d314, hsl(var(--card)) 70%) !important; }
+body:has(a[aria-current="true"][href="/learn/opera"]) .min-w-0.space-y-8 > .rounded-2xl.border.px-6.py-7 > div.flex.items-center.gap-2.text-xs { color: #c026d3 !important; }
+body:has(a[aria-current="true"][href="/learn/quark"]) .min-w-0.space-y-8 > .rounded-2xl.border.px-6.py-7 { background: linear-gradient(120deg, #7c3aed14, hsl(var(--card)) 70%) !important; }
+body:has(a[aria-current="true"][href="/learn/quark"]) .min-w-0.space-y-8 > .rounded-2xl.border.px-6.py-7 > div.flex.items-center.gap-2.text-xs { color: #7c3aed !important; }
+body:has(a[aria-current="true"][href="/learn/yandex"]) .min-w-0.space-y-8 > .rounded-2xl.border.px-6.py-7 { background: linear-gradient(120deg, #dc262614, hsl(var(--card)) 70%) !important; }
+body:has(a[aria-current="true"][href="/learn/yandex"]) .min-w-0.space-y-8 > .rounded-2xl.border.px-6.py-7 > div.flex.items-center.gap-2.text-xs { color: #dc2626 !important; }

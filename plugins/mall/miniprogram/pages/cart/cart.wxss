@@ -1,0 +1,13 @@
+.ct { padding-bottom: 120rpx; }
+.ci { display: flex; background: #fff; margin: 16rpx; padding: 20rpx; align-items: center; }
+.ciimg { width: 140rpx; height: 140rpx; background: #eee; margin-right: 20rpx; }
+.cibody { flex: 1; }
+.cit { font-size: 28rpx; line-height: 1.4; height: 72rpx; overflow: hidden; }
+.cis { color: #999; font-size: 24rpx; margin: 6rpx 0; }
+.stepper { display: flex; align-items: center; }
+.step { width: 56rpx; height: 56rpx; line-height: 56rpx; text-align: center; background: #f4f4f4; font-size: 32rpx; }
+.num { width: 72rpx; text-align: center; }
+.del { color: #bbb; font-size: 40rpx; padding: 0 10rpx; }
+.cbar { position: fixed; left: 0; right: 0; bottom: 0; height: 100rpx; display: flex; align-items: center; background: #fff; border-top: 1rpx solid #eee; padding: 0 16rpx; }
+.ctotal { flex: 1; font-size: 30rpx; }
+.cbar .btn-primary { height: 76rpx; line-height: 76rpx; padding: 0 48rpx; }

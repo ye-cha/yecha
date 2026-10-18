@@ -1,0 +1,46 @@
+{
+  "name": "夸克 Kuake",
+  "version": "1.0.0",
+  "requires_core": "1.0.0",
+  "author": "YeCha",
+  "description": "夸克 Kuake —— 仿 quarkblog 的纸白极简博客：纯白底、红色链接强调、系统无衬线字体、清爽单栏文章列表。",
+  "home": "landing",
+  "settings": [
+    {
+      "key": "width",
+      "type": "number",
+      "label": "版心宽度",
+      "def": "1180",
+      "min": 960,
+      "max": 1440
+    },
+    {
+      "key": "accent",
+      "type": "color",
+      "label": "强调色",
+      "def": "#c81e1e"
+    },
+    {
+      "key": "per_page",
+      "type": "number",
+      "label": "每页条数",
+      "def": "10",
+      "min": 3,
+      "max": 50
+    },
+    {
+      "key": "latest_n",
+      "type": "number",
+      "label": "首页最新条数",
+      "def": "6",
+      "min": 3,
+      "max": 12
+    },
+    {
+      "key": "show_sidebar",
+      "type": "checkbox",
+      "label": "显示侧栏",
+      "def": "1"
+    }
+  ]
+}

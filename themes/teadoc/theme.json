@@ -1,6 +1,6 @@
 {
   "name": "TeaDoc",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "requires_core": "1.0.0",
   "author": "YeCha",
   "description": "TeaDoc（学茶文档主题）：参考站式首页（大 Hero + 特性卡 + 学习目录树/编号文章列表）与三栏内容页（左全部文章导航 / 正文 / 右 Markdown 目录）；内置绿系青竹与暖纸两套色板 × 明暗实时切换，右下阅读工具栏（夜间/字号/阅读模式/配色）。"

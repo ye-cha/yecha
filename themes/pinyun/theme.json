@@ -1,0 +1,15 @@
+{
+  "name": "品云 Pinyun",
+  "version": "1.0.0",
+  "requires_core": "1.0.0",
+  "author": "YeCha",
+  "description": "品云 Pinyun —— 仿 Pinpe 云端的个人云博客：浅绿云朵风、清新通透、系统无衬线字体、顶部大搜索 + 文章列表 + 可选侧栏。",
+  "home": "landing",
+  "settings": [
+    {"key": "width", "type": "number", "label": "版心宽度", "def": "1180", "min": 960, "max": 1440},
+    {"key": "accent", "type": "color", "label": "强调色", "def": "#2aa775"},
+    {"key": "per_page", "type": "number", "label": "每页条数", "def": "10", "min": 3, "max": 50},
+    {"key": "latest_n", "type": "number", "label": "首页最新条数", "def": "6", "min": 3, "max": 12},
+    {"key": "show_sidebar", "type": "checkbox", "label": "显示侧栏", "def": "1"}
+  ]
+}

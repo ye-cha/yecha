@@ -1,0 +1,194 @@
+/* lqht.css — 「913 款工具」我方界面样式（第 14 棒 · 2026-10-14）
+ * ===========================================================================
+ * ★ 这是**我们自己的设计系统**：颜色/圆角/间距全部取本站既有 CSS 变量
+ *   （`--line` / `--accent` / `--muted` / `--card` / `--fg` / `--radius`），与
+ *   `themes/bl/style.css` `themes/bl/lqwww/www.css` 同源。
+ * ★ 只做「皮」：不改任何 id / data-* —— 那些是共享运行时（engine.js）的契约。
+ * ★ 作用域：一律挂在 `[data-lq-tool]` 之内，绝不外溢到别的页型。
+ */
+
+[data-lq-tool] .lqht-widget {
+  --lqht-line: var(--line, #e5e7eb);
+  --lqht-fg: var(--fg, #0f1729);
+  --lqht-muted: var(--muted, #65758b);
+  --lqht-accent: var(--accent, #2563eb);
+  --lqht-bg: var(--card, #fff);
+  --lqht-radius: var(--radius, 12px);
+  border: 1px solid var(--lqht-line);
+  border-radius: var(--lqht-radius);
+  background: var(--lqht-bg);
+  padding: 16px;
+  color: var(--lqht-fg);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+[data-lq-tool] .lqht-widget .w-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--lqht-muted);
+  margin: 0 0 6px;
+}
+
+/* ---------- io：左右两栏输入/输出 ---------- */
+[data-lq-tool] .tt-grid {
+  display: grid;
+  gap: 14px;
+}
+@media (min-width: 880px) {
+  [data-lq-tool] .tt-grid { grid-template-columns: 1fr 1fr; }
+}
+[data-lq-tool] .tt-col { min-width: 0; }
+
+[data-lq-tool] .tt-input,
+[data-lq-tool] .tt-output,
+[data-lq-tool] .tw-textarea,
+[data-lq-tool] .calc-field,
+[data-lq-tool] .tt-field,
+[data-lq-tool] .calc-code {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid var(--lqht-line);
+  border-radius: 10px;
+  background: var(--lqht-bg);
+  color: var(--lqht-fg);
+  padding: 10px 12px;
+  font: inherit;
+  min-height: 44px;
+}
+[data-lq-tool] .tt-input,
+[data-lq-tool] .tt-output,
+[data-lq-tool] .tw-textarea,
+[data-lq-tool] .calc-code { min-height: 180px; resize: vertical; }
+[data-lq-tool] .tt-output { background: color-mix(in srgb, var(--lqht-line) 22%, var(--lqht-bg)); }
+[data-lq-tool] .tt-input:focus,
+[data-lq-tool] .tt-output:focus,
+[data-lq-tool] .calc-field:focus,
+[data-lq-tool] .tt-field:focus {
+  outline: 2px solid color-mix(in srgb, var(--lqht-accent) 45%, transparent);
+  outline-offset: 1px;
+  border-color: var(--lqht-accent);
+}
+
+/* ---------- 控制条 ---------- */
+[data-lq-tool] .tt-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 10px 14px;
+  margin: 14px 0 0;
+}
+[data-lq-tool] .ctrl-btns { display: inline-flex; gap: 6px; }
+[data-lq-tool] .ctrl-btns button {
+  border: 1px solid var(--lqht-line);
+  background: var(--lqht-bg);
+  color: var(--lqht-fg);
+  border-radius: 999px;
+  padding: 5px 14px;
+  font: inherit;
+  cursor: pointer;
+}
+[data-lq-tool] .ctrl-btns button.on {
+  background: var(--lqht-accent);
+  border-color: var(--lqht-accent);
+  color: #fff;
+}
+[data-lq-tool] .chk {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--lqht-muted);
+  cursor: pointer;
+}
+
+/* ---------- 按钮 ---------- */
+[data-lq-tool] .tw-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 14px 0 0;
+}
+[data-lq-tool] .btn-copy,
+[data-lq-tool] .btn-ghost {
+  border-radius: 10px;
+  padding: 8px 16px;
+  font: inherit;
+  cursor: pointer;
+  border: 1px solid transparent;
+}
+[data-lq-tool] .btn-copy { background: var(--lqht-accent); color: #fff; }
+[data-lq-tool] .btn-ghost { background: transparent; border-color: var(--lqht-line); color: var(--lqht-fg); }
+[data-lq-tool] .btn-copy:hover { filter: brightness(1.06); }
+[data-lq-tool] .btn-ghost:hover { background: color-mix(in srgb, var(--lqht-line) 30%, transparent); }
+
+/* ---------- 表单（calc / gen / meta / cssgen / shadow / contrast） ---------- */
+[data-lq-tool] .calc-fields {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+@media (min-width: 720px) {
+  [data-lq-tool] .calc-fields { grid-template-columns: 1fr 1fr; }
+  [data-lq-tool] .calc-field-wrap:not(.lqht-half) { grid-column: 1 / -1; }
+}
+[data-lq-tool] .calc-field-wrap { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+[data-lq-tool] .calc-field-wrap > label { font-size: 13px; font-weight: 600; color: var(--lqht-muted); }
+
+[data-lq-tool] .calc-outs { display: grid; gap: 8px; margin: 14px 0 0; }
+[data-lq-tool] .calc-out {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  border: 1px solid var(--lqht-line);
+  border-radius: 10px;
+  padding: 8px 12px;
+}
+[data-lq-tool] .calc-out .lab { color: var(--lqht-muted); font-size: 13px; }
+[data-lq-tool] .calc-out .val { font-weight: 600; word-break: break-all; text-align: right; }
+[data-lq-tool] .serp-out { display: block; }
+
+/* ---------- counter 统计卡 ---------- */
+[data-lq-tool] .stat-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin: 14px 0 0;
+}
+@media (min-width: 720px) { [data-lq-tool] .stat-grid { grid-template-columns: repeat(3, 1fr); } }
+[data-lq-tool] .stat-card {
+  border: 1px solid var(--lqht-line);
+  border-radius: 10px;
+  padding: 10px 12px;
+  text-align: center;
+}
+[data-lq-tool] .stat-card .num { font-size: 20px; font-weight: 700; }
+[data-lq-tool] .stat-card .lab { font-size: 12px; color: var(--lqht-muted); }
+
+/* ---------- 生成器调色板占位 ---------- */
+[data-lq-tool] .pal-swatches { display: flex; flex-wrap: wrap; gap: 4px; margin: 10px 0 0; }
+[data-lq-tool] .pal-swatches > * { width: 28px; height: 28px; border-radius: 6px; border: 1px solid var(--lqht-line); }
+
+/* ---------- 深色主题跟随（本站用 .dark / prefers-color-scheme） ---------- */
+@media (prefers-color-scheme: dark) {
+  [data-lq-tool] .lqht-widget {
+    --lqht-line: var(--line, #2a3242);
+    --lqht-fg: var(--fg, #e6eaf2);
+    --lqht-bg: var(--card, #161c26);
+  }
+}
+
+/* ---------- AI 工具（第16棒 · 我方 UI）---------- [t16 ai-css]
+   `.ai-out / .ai-msg / .ai-status / .ai-login-tip` 是**引擎/参照**写出的内容类（钩子面，不许改名）；
+   `.lqht-ai*` 是我方新增（登录提示 + 剩余额度显示）。样式一律走我方 --lqht-* 变量。 */
+[data-lq-tool] .ai-status { margin-top: 12px; font-size: 13px; color: var(--lqht-muted); }
+[data-lq-tool] .ai-out { margin-top: 14px; }
+[data-lq-tool] .ai-out .ai-msg { border: 1px solid var(--lqht-line); border-radius: 10px; padding: 14px 16px; font-size: 14px; line-height: 1.8; background: var(--lqht-bg); }
+[data-lq-tool] .ai-out .ai-msg.ok pre { white-space: pre-wrap; word-break: break-word; font-family: inherit; margin: 0; }
+[data-lq-tool] .ai-out .ai-msg.err { border-color: rgba(224, 93, 68, .35); background: rgba(224, 93, 68, .06); color: #b0341f; }
+[data-lq-tool] .ai-out .ai-msg a { color: inherit; text-decoration: underline; }
+[data-lq-tool] .lqht-ai .calc-field-wrap { margin-bottom: 12px; }
+[data-lq-tool] .lqht-ai-tip { margin-top: 18px; border: 1px dashed var(--lqht-line); border-radius: 10px; padding: 16px; text-align: center; }
+[data-lq-tool] .lqht-ai-tip p { margin: 0 0 8px; font-size: 13.5px; color: var(--lqht-muted); }
+[data-lq-tool] .lqht-ai-quota { font-weight: 600; color: var(--lqht-fg); }
+[data-lq-tool] .lqht-ai-login { display: inline-block; text-decoration: none; }

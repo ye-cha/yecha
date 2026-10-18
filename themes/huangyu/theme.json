@@ -1,0 +1,46 @@
+{
+  "name": "黄羽 Huangyu",
+  "version": "1.0.0",
+  "requires_core": "1.0.0",
+  "author": "YeCha",
+  "description": "黄羽 Huangyu —— 仿 eatmoreduck 的个人博客：纯白底、青绿强调、系统无衬线字体、简约文章列表。",
+  "home": "landing",
+  "settings": [
+    {
+      "key": "width",
+      "type": "number",
+      "label": "版心宽度",
+      "def": "1180",
+      "min": 960,
+      "max": 1440
+    },
+    {
+      "key": "accent",
+      "type": "color",
+      "label": "强调色",
+      "def": "#0ca678"
+    },
+    {
+      "key": "per_page",
+      "type": "number",
+      "label": "每页条数",
+      "def": "10",
+      "min": 3,
+      "max": 50
+    },
+    {
+      "key": "latest_n",
+      "type": "number",
+      "label": "首页最新条数",
+      "def": "6",
+      "min": 3,
+      "max": 12
+    },
+    {
+      "key": "show_sidebar",
+      "type": "checkbox",
+      "label": "显示侧栏",
+      "def": "1"
+    }
+  ]
+}

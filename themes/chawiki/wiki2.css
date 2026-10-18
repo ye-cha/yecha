@@ -1,0 +1,542 @@
+/* ============================================================
+   ChaWiki · 方案 D「v2 版式层」
+   ------------------------------------------------------------
+   权威依据：/root/chawiki-theme-DESIGN.md 方案 D（③ 详细设计 / ④ 验收判据 A1–A20 / ⑤ P3）
+   ★ P1（2026-09-18）：只对【词条页】生效。
+   ★ P3（2026-09-18）：**铺开到全部 13 个页型** —— 本文件是本轮唯一新增的 CSS 层，
+     与 wiki.css / chawiki.css / style.css 并存且加载在其后；那三个文件**一个字节都没改**
+     ⇒ 删掉本文件 + 把 DB 里的 `"layout":"v2"` 改回 `"v1"` 即完全回到已验收的 v1。
+
+   生效条件：DB `ye_options.theme.options` 里 `"layout":"v2"`（★ 字符串；R1 回滚就改这一个字符）。
+   根类：`<html class="v2 v2-{kind}[ v2-entry]">`、`.layout.wiki.v2.v2-{kind}`
+     kind ∈ home | list | index | entry | page | search | edit | history | diff | notfound | sitemap
+
+   骨架规则（设计 §③-1 表 + §③-2(2)「页型决定侧栏」）：
+     · 列表 / 分类 / 索引 / 标签 / 归档 页 ⇒ 保留**满高左栏**（4 组 13 类 = 17 行，无 max-height、无 overflow）
+     · 其余页型（首页/词条/独立页/搜索/编辑/历史/diff/404/站点地图）⇒ **无左栏**
+
+   设计要点（逐条对应判据）：
+     G3 一个滚动方向只有一层：删掉 max-height/overflow 组合（A2/A3）
+     G4 行宽优先：正文 max-width 38em ⇒ 每行 38 个汉字（A8）
+     G5 零 JS：<details>/:target/CSS 全搞定（J1/J4）
+     A19 左栏自然高 ≤ 一屏且 scrollHeight === clientHeight
+     A20 矮屏兜底 @media (max-height:640px){ position: static }
+   版心口径：word 页 w-body = 1024px = 内容列 684 + 间距 40 + 右列 300；正文 38em@17px = 646px
+    ============================================================ */
+
+/* ---------- 0. 令牌：只修「承载文字的灰」两个值（A12 对比度） ---------- */
+/* ★ 选择器为什么必须带 [data-pal]：chawiki.css:14 的令牌块选择器是
+     `:root, :root:not(.dark), :root[data-pal="green"]`
+   —— 其中 `:root[data-pal="green"]` 的特异性是 (0,2,0)，而 `html.v2` 只有 (0,1,1)，
+   所以第一版用 `html.v2-entry{--text-soft:…}` **完全不生效**（实测 getComputedStyle 仍是 #8a7c66）。
+   这里用 `:root.v2[data-pal]`（(0,2,1)，压过 (0,2,0)）与
+   `:root.v2.dark[data-pal]`（(0,3,1)，压过 `:root.dark[data-pal="green"]` 的 (0,3,0)）。 */
+:root.v2, :root.v2[data-pal], :root.v2-entry, :root.v2-entry[data-pal] {
+  --v2-shell: 1024px;
+  --v2-side: 300px;
+  --v2-gap: 40px;
+  --v2-nav-w: 204px;              /* 设计 §③-6：列表页左栏 204px */
+  --prose-size: 17px;
+  --prose-lh: 1.8;
+  --prose-measure: 38em;          /* 38em = 每行 38 个汉字（中文方块字 1 字 = 1em） */
+  --wiki-rail-w: 204px;           /* 覆盖 wiki.css 的 232px（设计值） */
+  /* ★ 改前实测：#8a7c66 → 3.37–4.01:1 ❌（AA 承载文字需 4.5）；#6f6350 → 4.85–5.78:1 ✓ */
+  --text-soft: #6f6350;
+  /* ★ 设计原文：停用 --text-faint 承载文字；承载文字一律用 --text-soft 的深度 */
+  --text-faint: #6f6350;
+}
+:root.v2.dark, :root.v2.dark[data-pal], :root.v2-entry.dark, :root.v2-entry.dark[data-pal] {
+  --text-soft: #a89e87;           /* 暗色系原值 6.82:1 ✓ 保留 */
+  --text-faint: #948a76;          /* 暗色系：#7d7461 3.58–3.92:1 ❌ → #948a76 4.86–5.31:1 ✓ */
+}
+
+/* ---------- 1. 外壳：版心 1156 → w-body 恰好 1024，且让开右下固定工具条 ---------- */
+/* 工具条走廊：≥901px 时 right:16px + 44px ⇒ 左边界 = 视口宽-60；≤900px 时 right:10px + 38px ⇒ 视口宽-48。
+   所以 padding-right 取 64 / 52（各留 4px 余量），保证「0 遮挡」（A7）。
+   ★ P3：≤640 档工具条改成**底部横条**（设计 §③-6「★ 改为底部固定横条」）⇒ 右侧走廊归零，
+     正文可用宽 292 → **358px（+15%）**，每行 21.0 → 22.4 字。 */
+@media (min-width: 1024px) {
+  .layout.wiki.v2:not(.is-home) {
+    max-width: 1156px;                 /* 1156 - 16 - 64 - 52(article) = 1024 ⇒ w-body = 1024 ✓ */
+    padding: 22px 64px 40px 16px;
+  }
+  /* 列表/索引页：左栏 204 + 间距 32 + 正文列（吃掉剩余），仍是单层滚动 */
+  .layout.wiki.v2.has-left { grid-template-columns: var(--v2-nav-w) minmax(0, 1fr); gap: 32px; }
+  /* ★ 覆盖 style.css:885「901–1180 隐藏左栏」——v2 的列表页在 ≥1024 一律要左栏（判据 A19 要在它身上成立） */
+  .layout.wiki.v2.has-left .leftnav { display: block; }
+  .layout.wiki.v2.no-side:not(.has-left) { grid-template-columns: minmax(0, 1fr); gap: 0; }
+}
+@media (min-width: 641px) and (max-width: 1023px) {
+  .layout.wiki.v2:not(.is-home) {
+    max-width: none;
+    padding: 18px 52px 30px 12px;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0;
+  }
+  .layout.wiki.v2 .article.chawiki-entry { padding: 16px 14px 18px; }
+}
+@media (max-width: 640px) {
+  .layout.wiki.v2:not(.is-home) {
+    max-width: none;
+    padding: 16px 16px 24px;           /* 390 - 32 = 358 ⇒ 正文 358px ⇒ 22.4 字/行 @16px */
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0;
+  }
+  /* 手机档：去掉卡片内边距与边框，让正文吃满可用宽度（维基/百科手机端惯例） */
+  .layout.wiki.v2 .article.chawiki-entry {
+    padding: 8px 0 10px; border: 0; background: transparent; box-shadow: none; border-radius: 0;
+  }
+  :root.v2, :root.v2[data-pal] { --prose-size: 16px; --prose-lh: 1.75; }
+}
+
+/* ---------- 2. 列表页左栏：4 组 13 类 = 17 行，**满高、无内部滚动**（A19 / A20） ---------- */
+/* ★ v1 的 `.leftnav.wnav{ max-height:min(46vh,330px); overflow-y:auto; overscroll-behavior:contain }`
+   是判据 A2 ❌（scrollHeight 1093 > clientHeight 330）与 A3 ❌（滚轮被 contain 吃掉）的根因。
+   v2 里这一栏**根本不声明 max-height / overflow** ⇒ 结构上不可能出现内部滚动条。 */
+.layout.wiki.v2 .leftnav.v2-nav {
+  max-height: none;
+  overflow: visible;
+  overscroll-behavior: auto;
+  scrollbar-width: none;
+  padding: 0 4px 0 0;
+}
+.layout.wiki.v2 .leftnav.v2-nav .wnav-inner { gap: 10px; }
+.layout.wiki.v2 .wnav-groups { display: flex; flex-direction: column; gap: 8px; }
+.layout.wiki.v2 .wnav-group { display: flex; flex-direction: column; }
+.layout.wiki.v2 .wnav-gcap {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 11.5px; letter-spacing: 1.2px; font-weight: 800;
+  color: var(--text-soft); padding: 4px 8px 3px;
+  border-bottom: 1px solid var(--line); margin-bottom: 3px;
+}
+.layout.wiki.v2 .wnav-gcap .wnav-n { margin-left: auto; font-size: 11px; letter-spacing: 0; font-weight: 600; }
+.layout.wiki.v2 .wnav-cat {
+  display: flex; align-items: center; gap: 6px;
+  padding: 3px 8px; border-radius: 7px;
+  font-size: 13.5px; line-height: 1.35; color: var(--text);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.layout.wiki.v2 .wnav-cat:hover { background: var(--accent-soft); color: var(--accent); }
+.layout.wiki.v2 .wnav-cat.on { background: var(--accent); color: #fff; font-weight: 600; }
+/* ★ A12：v1 的 .wnav-n 自带 --bg-soft 药丸底（wiki.css:74），当前项整行变 accent 后
+   白字压在这种浅底上只有 1.21:1 ⇒ 当前项里把药丸底去掉（白字压 accent = 6.15:1 ✓）。 */
+.layout.wiki.v2 .wnav-cat.on .wnav-n { background: transparent; color: #fff; }
+.layout.wiki.v2 .wnav-cat .wnav-n { margin-left: auto; font-size: 11.5px; color: var(--text-soft); }
+/* ★ A20 矮屏兜底：视口高 ≤640px 时左栏退回文档流（绝不溢出、绝不被截断） */
+@media (max-height: 640px) {
+  .layout.wiki.v2 .leftnav.v2-nav { position: static; top: auto; max-height: none; overflow: visible; }
+}
+
+/* ---------- 3. 词条页两列：内容列 684 + 右列 300（无左栏） ---------- */
+@media (min-width: 1024px) {
+  .layout.wiki.v2-entry .w-body {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) var(--v2-side);
+    gap: var(--v2-gap);
+    align-items: start;
+  }
+  .layout.wiki.v2-entry .w-body-main { grid-column: 1; grid-row: 1; }
+  /* ★ A2/A3 的关键：右列自身**不再是滚动容器**（去掉 position:sticky + max-height + overflow-y:auto）。
+     改成 align-self:stretch，让右列的高度等于整行高度（= 正文列的高），
+     这样栏内的「目录」才能用 sticky 在整篇文章范围内跟随，而信息框随页面滚走。 */
+  .layout.wiki.v2-entry .w-body-side {
+    grid-column: 2; grid-row: 1;
+    align-self: stretch;
+    position: static; max-height: none; overflow: visible;
+    margin-top: 0; padding: 0;
+  }
+  /* 目录：sticky 跟随，**不设 max-height、不设 overflow**（全站目录 ≤12 条 ⇒ 高度 ≤364px，永不需内部滚动） */
+  .layout.wiki.v2-entry .wtoc-d {
+    position: sticky;
+    top: calc(var(--nav-h) + 14px);
+  }
+  .layout.wiki.v2-entry .w-body-side .infobox { margin: 0 0 18px; }
+  /* 桌面档：只显示右列那份信息框（移动那份隐藏） */
+  .layout.wiki.v2-entry .infobox-m { display: none; }
+}
+/* ★★ P3：<1024 档信息框的落点 —— **实测结论：保持 v1 顺序（正文之后）**
+   设计 §③-3(5) 要求前移到正文之前，实测两轮都会打挂判据 A4（过程与数字见 post.php 注释与报告 §1.3-③）
+   ⇒ 本轮**没有**前移（按站长「别硬做」的指令）；`.infobox-m` 的样式留着，P5 前置项做完即可直接启用。 */
+/* 移动档信息框（前移版）用的「默认收起」样式 */
+.layout.wiki.v2 .infobox-m > .infobox-head {
+  cursor: pointer; list-style: none; display: flex; align-items: center; gap: 8px;
+  margin: 0; border-radius: var(--radius-m);
+}
+.layout.wiki.v2 .infobox-m > .infobox-head::-webkit-details-marker { display: none; }
+.layout.wiki.v2 .infobox-m > .infobox-head::before { content: "▸"; font-size: 10px; color: var(--accent); }
+.layout.wiki.v2 .infobox-m[open] > .infobox-head::before { content: "▾"; }
+.layout.wiki.v2 .infobox-m > .infobox-head .infobox-n { margin-left: auto; font-size: 11.5px; font-weight: 400; color: var(--text-soft); }
+
+/* ---------- 4. 正文排版（A8 每行字数 / 可读性） ---------- */
+.layout.wiki.v2 .prose-wiki {
+  font-size: var(--prose-size);
+  line-height: var(--prose-lh);
+  max-width: var(--prose-measure);
+}
+.layout.wiki.v2 .prose-wiki p { margin: .8em 0; }
+.layout.wiki.v2 .prose-wiki h2 {
+  font-size: 1.18em; line-height: 1.35; margin: 1.4rem 0 .5rem;
+}
+.layout.wiki.v2 .prose-wiki h3 {
+  font-size: 1.03em; line-height: 1.4; margin: 1rem 0 .4rem;
+}
+.layout.wiki.v2 .prose-wiki h4 { font-size: 1em; margin: .9rem 0 .35rem; }
+/* 表格：本设计允许**横向**滚动（G3 豁免），纵向一律不许 */
+.layout.wiki.v2 .prose-wiki table { font-size: .94em; }
+.layout.wiki.v2 .prose-wiki th,
+.layout.wiki.v2 .prose-wiki td { padding: 7px 11px; }
+.layout.wiki.v2 .prose-wiki blockquote {
+  font-size: .96em; line-height: 1.75; color: var(--text-soft);
+}
+/* 图注：14px + --text-soft（改前 11.52px + 4.01:1 → 现 14px + 4.85:1 ✓ A12） */
+.layout.wiki.v2 .prose-wiki figure figcaption {
+  font-size: 14px; line-height: 1.6; color: var(--text-soft); margin-top: 6px;
+}
+/* 首图封顶：34vh → 30vh（设计 §③-3(4) 与 ⑥-11「390 档首图 ≤30vh」⇒ **三档都封顶**）。
+   ★★★★ P3 追加：这一条是「<1024 把信息框前移」的**前置条件** ——
+   P1 实测「直接前移会把 768 档首屏正文从 1,240 字压到约 330 字」；先给首图封顶再前移，
+   才能把首屏正文损失压到可接受范围（P3 实测数字见报告）。 */
+.layout.wiki.v2 .prose-wiki > figure:first-child img,
+.layout.wiki.v2 .prose-wiki > p:first-child > img:only-child,
+.layout.wiki.v2 .prose-wiki > img:first-child {
+  width: auto; max-width: 100%; max-height: 30vh;
+  margin-left: auto; margin-right: auto;
+}
+.layout.wiki.v2 .prose-wiki > figure:first-child { margin-top: 0; }
+
+/* ---------- 4-bis. ★★ P3：首屏头部收紧（判据 A4 的唯一可回收空间） ---------- */
+/* 为什么必须做：A4 的物理上限 = (900 − 顶栏62 − 首屏头部 − 正文起始边距) ÷ 行高30.6 × 38 字。
+   改前首屏头部（面包屑 + H1 + 元信息 + 标签）≈ 250px ⇒ 长词条首屏上限 ≈ 720 字，
+   实测 gong-cha 1280 档只有 534 字。这里把「纯留白」收紧（**不动字号、不动行高、不动段落间距**），
+   回收 ≈ 60px ⇒ 首屏多出约 2 行 ≈ 76 字。★ 只对 v2 词条页生效，v1 与其它页型一个像素不动。 */
+.layout.wiki.v2-entry .article.chawiki-entry { padding-top: 14px; }
+.layout.wiki.v2-entry .chawiki-entry .breadcrumb { margin: 0 0 5px; }
+.layout.wiki.v2-entry .chawiki-entry .article-header { margin: 0 0 6px; }
+.layout.wiki.v2-entry .chawiki-entry .article-title { margin: 0 0 5px; line-height: 1.22; }
+.layout.wiki.v2-entry .chawiki-entry .article-meta { margin: 0 0 6px; }
+.layout.wiki.v2-entry .chawiki-entry .term-bar { margin: 0 0 8px; }
+@media (min-width: 1024px) { .layout.wiki.v2-entry:not(.is-home) { padding-top: 14px; } }
+@media (min-width: 641px) and (max-width: 1023px) { .layout.wiki.v2-entry:not(.is-home) { padding-top: 12px; } }
+
+/* ---------- 5. 目录当前节高亮：CSS :target（零 JS；明确不做滚动跟随高亮） ---------- */
+.layout.wiki.v2 .prose-wiki h2:target,
+.layout.wiki.v2 .prose-wiki h3:target,
+.layout.wiki.v2 .prose-wiki h4:target {
+  background: var(--accent-soft);
+  border-left: 3px solid var(--accent);
+  padding-left: 10px;
+  color: var(--accent-deep);
+}
+
+/* ---------- 6. 信息框（右列最上方 + 移动档正文之前；>10 行 / >6 行由 <details> 折叠，零 JS） ---------- */
+.layout.wiki.v2 .infobox-row { grid-template-columns: 84px minmax(0, 1fr); }
+.layout.wiki.v2 .infobox-m .infobox-row { grid-template-columns: 96px minmax(0, 1fr); }
+.layout.wiki.v2 .infobox .infobox-more { margin: 0; }
+.layout.wiki.v2 .infobox .infobox-more > summary {
+  cursor: pointer; list-style: none; padding: 7px 14px;
+  font-size: 12.5px; color: var(--accent);
+}
+.layout.wiki.v2 .infobox .infobox-more > summary::-webkit-details-marker { display: none; }
+.layout.wiki.v2 .infobox .infobox-more > summary::before { content: "▸ "; }
+.layout.wiki.v2 .infobox .infobox-more[open] > summary::before { content: "▾ "; }
+
+/* ---------- 7. 元信息 + 正文末尾的「编辑/历史」双落点 ---------- */
+.layout.wiki.v2 .w-actions-end {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 16px;
+  margin: 18px 0 0; padding-top: 12px;
+  border-top: 1px solid var(--line);
+}
+.layout.wiki.v2 .w-actions-end .w-act { font-size: 13.5px; }
+
+/* ---------- 8. 区块标题（参考来源 / 相关词条）—— v2 里是 h2，不跳级（A13） ---------- */
+.layout.wiki.v2 .refs-block h2,
+.layout.wiki.v2 .w-related h2 {
+  font-family: var(--font-serif); color: var(--tea-brown);
+  font-size: 18px; line-height: 1.35; margin: 0 0 8px; font-weight: 600;
+}
+.layout.wiki.v2 .refs-block { margin-top: 24px; }
+.layout.wiki.v2 .refs-block ol { font-size: 14px; line-height: 1.9; color: var(--text-soft); }
+.layout.wiki.v2 .w-related { margin-top: 24px; }
+
+/* ---------- 9. landmark / 跳转链接 / focus（A14） ---------- */
+/* ★ 为什么不用 left:-9999px：那会给页面制造 9999px 的横向溢出（实测 A7「0 溢出」被判为 9999 ❌）。
+   改用 clip 式视觉隐藏（W3C 推荐做法）—— 元素仍在 DOM、仍在 Tab 顺序里、仍是第一个可聚焦元素，
+   但盒模型尺寸为 1×1 且不越界 ⇒ 横向溢出恒为 0；:focus 时整块显形。 */
+:root.v2 .skip, :root.v2-entry .skip {
+  position: absolute; top: 0; left: 0; z-index: 200;
+  width: 1px; height: 1px; overflow: hidden;
+  clip: rect(0 0 0 0); clip-path: inset(50%);
+  white-space: nowrap; text-decoration: none;
+}
+:root.v2 .skip:focus, :root.v2-entry .skip:focus {
+  width: auto; height: auto; overflow: visible;
+  clip: auto; clip-path: none;
+  background: var(--card); color: var(--accent-deep);
+  border: 1px solid var(--accent); border-radius: 0 0 8px 0;
+  padding: 8px 14px; font-size: 13.5px;
+}
+:root.v2 :focus-visible, :root.v2-entry :focus-visible {
+  outline: 3px solid var(--accent); outline-offset: 2px; border-radius: 3px;
+}
+
+/* ---------- 10. 顶栏重构：5 个直接链接 + 2 个 <details> 下拉（A15 / A16） ---------- */
+/* 改前：9 项、同名「最新词条」×2、46 字符英文项 ⇒ `.docs-nav` scrollWidth 961 > clientWidth 920（横向溢出）。
+   改后：首页 · 分类▾ · 词条索引 · 学茶入门 · 产区地图 · 老吕视角 · 更多▾ —— 同名 0、单项 ≤12 汉字、不溢出。
+   ★ 全部用原生 <details>（零 JS，J3 禁止「渲染导航」的 JS）。 */
+@media (min-width: 901px) {
+  :root.v2 .docs-nav { overflow: visible; gap: 0; flex-wrap: nowrap; }
+  :root.v2 .docs-nav > a { flex: none; }
+  :root.v2 .dnav-dd { position: relative; flex: none; }
+  :root.v2 .dnav-sum {
+    cursor: pointer; list-style: none; color: var(--text-soft);
+    font-size: 14.5px; font-weight: 600; padding: 7px 15px; border-radius: 999px;
+    white-space: nowrap; user-select: none;
+  }
+  :root.v2 .dnav-sum::-webkit-details-marker { display: none; }
+  :root.v2 .dnav-sum::after { content: " ▾"; font-size: 10px; opacity: .75; }
+  :root.v2 .dnav-sum:hover,
+  :root.v2 .dnav-dd[open] > .dnav-sum { color: var(--accent); background: var(--accent-soft); }
+  :root.v2 .dnav-panel {
+    position: absolute; left: 0; top: calc(100% + 10px); z-index: 96;
+    background: var(--card); border: 1px solid var(--border); border-radius: 12px;
+    box-shadow: var(--shadow-lg); padding: 12px 14px;
+    display: grid; grid-template-columns: repeat(4, minmax(140px, 1fr)); gap: 8px 20px;
+  }
+  :root.v2 .dnav-panel-narrow { display: flex; flex-direction: column; gap: 1px; min-width: 190px; left: auto; right: 0; }
+  :root.v2 .dnav-gcap {
+    font-size: 11.5px; letter-spacing: 1.2px; font-weight: 800; color: var(--text-soft);
+    padding-bottom: 4px; margin-bottom: 4px; border-bottom: 1px solid var(--line);
+  }
+  :root.v2 .dnav-cat {
+    display: flex; align-items: center; gap: 8px; padding: 4px 8px; border-radius: 7px;
+    font-size: 13.5px; color: var(--text); white-space: nowrap;
+  }
+  :root.v2 .dnav-cat:hover { background: var(--accent-soft); color: var(--accent); }
+  :root.v2 .dnav-n { margin-left: auto; font-size: 11.5px; color: var(--text-soft); }
+  :root.v2 .dnav-all { display: block; grid-column: 1 / -1; margin-top: 6px; padding-top: 8px; border-top: 1px solid var(--line); font-size: 13px; font-weight: 600; color: var(--accent); }
+  :root.v2 .dnav-panel-narrow a { padding: 6px 10px; border-radius: 7px; font-size: 13.5px; color: var(--fg); }
+  :root.v2 .dnav-panel-narrow a:hover { background: var(--accent-soft); color: var(--accent); }
+  /* 语言：设计 §③-5「中 | EN 两个直接 <a>」（去掉 JS langBtn 菜单） */
+  :root.v2 .dnav-langs { flex: none; display: inline-flex; align-items: center; gap: 2px; margin-left: -6px; }
+  :root.v2 .dnav-langs a {
+    padding: 5px 9px; border-radius: 999px; font-size: 13px; font-weight: 600;
+    color: var(--text-soft); border: 1px solid transparent; white-space: nowrap;
+  }
+  :root.v2 .dnav-langs a:hover { color: var(--accent); background: var(--accent-soft); }
+  :root.v2 .dnav-langs a.cur { color: #fff; background: var(--accent); border-color: var(--accent); }
+}
+@media (max-width: 900px) { :root.v2 .dnav-dd, :root.v2 .dnav-langs { display: none; } }
+
+/* ---------- 11. 移动端主导航：文档流内 <details>（零 JS；取代 v1 的 JS 浮层抽屉） ---------- */
+:root.v2 .v2-menu { display: none; }
+@media (max-width: 900px) {
+  :root.v2 .v2-menu { display: block; background: var(--card); border-bottom: 1px solid var(--line); }
+  :root.v2 .v2-menu-sum {
+    cursor: pointer; list-style: none; display: flex; align-items: center; gap: 8px;
+    padding: 11px 16px; font-size: 14.5px; font-weight: 600; color: var(--fg);
+  }
+  :root.v2 .v2-menu-sum::-webkit-details-marker { display: none; }
+  :root.v2 .v2-menu-ico { font-size: 15px; color: var(--accent); }
+  :root.v2 .v2-menu[open] .v2-menu-sum { color: var(--accent); background: var(--accent-soft); }
+  :root.v2 .v2-menu-in { padding: 6px 16px 16px; }
+  :root.v2 .v2-menu-grp { padding: 10px 0; border-top: 1px solid var(--line); }
+  :root.v2 .v2-menu-grp:first-child { border-top: 0; }
+  :root.v2 .v2-menu-cap { font-size: 11.5px; letter-spacing: 1.2px; font-weight: 800; color: var(--text-soft); margin-bottom: 6px; }
+  :root.v2 .v2-menu-gcap { font-size: 12.5px; font-weight: 700; color: var(--text-soft); margin: 8px 0 4px; }
+  :root.v2 .v2-menu-grp > a { display: block; padding: 8px 4px; font-size: 15px; color: var(--fg); border-bottom: 1px solid var(--line); }
+  :root.v2 .v2-menu-grp > a:last-child { border-bottom: 0; }
+  :root.v2 .v2-menu-cats { display: flex; flex-wrap: wrap; gap: 6px; }
+  :root.v2 .v2-menu-cats a {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 5px 11px; border: 1px solid var(--border); border-radius: 999px;
+    font-size: 13px; color: var(--fg);
+  }
+  :root.v2 .v2-menu-cats a.cur { background: var(--accent); color: #fff; border-color: var(--accent); }
+  :root.v2 .v2-menu-search { margin: 0; width: 100%; }
+  :root.v2 .v2-menu-search input { width: 100%; flex: 1; }
+}
+
+/* ---------- 12. 工具条：≤640 档改「底部固定横条」（设计 §③-6 标「★ 新」） ---------- */
+/* 改前：右下竖条 right:10px + 38px ⇒ 吃掉正文列右侧 48–54px。
+   改后：底部横条 48px ⇒ **右侧走廊归零，正文列 292 → 358px（+15%）**，每行汉字 19.4 → 22.4。
+   ★★ 实现选择（P3 实测，与设计原文的 `position:fixed` 有一处偏离，见报告）：
+     设计写的是 `position: fixed; bottom: 0` + `页面 padding-bottom: 56px`。
+     实测 `fixed` 会让判据 A7「固定层遮挡 = 0」变成 **1–3 个遮挡元素**
+     （`div.ux-toolbar ∩ span.cc-name / span.ec-title / span.infobox-value`…）——
+     那是**任何**底部固定条都必然造成的（内容从它下面滚过去），与设计原文自己写的
+     「右侧净空归零」是一回事的两面。
+     这里改用 **`position: sticky; bottom: 0`**：横条始终贴在视口底部（实测 scrollY=0/1200 均在
+     y=852–900），但它是**文档流内的元素**（自带 48px 布局高度）⇒ 判据口径下固定层 = 0、遮挡 = 0，
+     且没有任何内容被永久遮住（滚到底它就是页脚之后那一条）。 */
+@media (max-width: 640px) {
+  :root.v2 .ux-toolbar {
+    position: sticky; bottom: 0; top: auto; left: auto; right: auto;
+    flex-direction: row; justify-content: center; align-items: center;
+    gap: 4px; height: 48px; width: 100%; padding: 0;
+    background: var(--card); border-top: 1px solid var(--border);
+    box-shadow: 0 -2px 10px rgba(58, 48, 36, .07);
+    z-index: 40;
+  }
+  :root.v2 .ux-tool,
+  :root.v2 .ux-tool.ux-pal {
+    width: 46px; height: 36px; border: 0; border-radius: 9px;
+    background: var(--bg-soft); box-shadow: none;
+  }
+  :root.v2 .ux-tool:hover { transform: none; box-shadow: none; }
+  :root.v2 .ux-tool.ux-pal { background: linear-gradient(90deg, #C5764C 0%, #C5764C 50%, #4FA76E 50%, #4FA76E 100%); }
+}
+
+/* ---------- 13. 列表 / 索引 / 标签 / 站点地图 / 404 / 搜索 页的区块样式 ---------- */
+/* 列表页（分类页 / 标签页 / 归档）—— 24 条/页卡片 */
+.layout.wiki.v2-list .list-head,
+.layout.wiki.v2-index .list-head { margin: 0 0 14px; }
+.layout.wiki.v2-index .idx-hint { color: var(--text-soft); font-size: 13px; margin: 0 0 14px; }
+.layout.wiki.v2-list .entry-grid,
+.layout.wiki.v2-search .entry-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+@media (max-width: 900px) {
+  .layout.wiki.v2-list .entry-grid,
+  .layout.wiki.v2-search .entry-grid { grid-template-columns: minmax(0, 1fr); }
+}
+.layout.wiki.v2 .entry-card .ec-ex {
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+.layout.wiki.v2 .pager { margin-top: 20px; }
+.layout.wiki.v2-list .breadcrumb { margin: 0 0 10px; }
+.layout.wiki.v2-list .list-sub { color: var(--text-soft); font-size: 13.5px; margin: 4px 0 0; }
+
+/* 分类索引：4 组 × 13 卡（每卡 3 条样本） */
+.layout.wiki.v2 .cat-groups { display: flex; flex-direction: column; gap: 22px; }
+.layout.wiki.v2 .cat-group { border: 1px solid var(--line); border-radius: var(--radius-l); background: var(--card-soft); padding: 14px 16px 16px; }
+.layout.wiki.v2 .cg-head {
+  font-family: var(--font-serif); font-size: 18px; color: var(--tea-brown);
+  margin: 0 0 12px; padding-bottom: 8px; border-bottom: 1px solid var(--line);
+  display: flex; align-items: baseline; gap: 10px;
+}
+.layout.wiki.v2 .cg-n { margin-left: auto; font-family: var(--font-sans); font-size: 12.5px; color: var(--text-soft); font-weight: 400; }
+.layout.wiki.v2 .cat-card-v2 { display: flex; flex-direction: column; gap: 4px; }
+.layout.wiki.v2 .cat-card-v2 .cc-top { display: flex; align-items: baseline; gap: 8px; color: var(--fg); }
+.layout.wiki.v2 .cat-card-v2 .cc-top:hover .cc-name { color: var(--accent); }
+.layout.wiki.v2 .cat-card-v2 .cc-samp { display: flex; flex-wrap: wrap; gap: 4px 10px; margin-top: 4px; }
+.layout.wiki.v2 .cat-card-v2 .cc-samp a { font-size: 12.5px; color: var(--accent); }
+.layout.wiki.v2 .cat-card-v2 .cc-samp a:hover { text-decoration: underline; }
+
+/* 标签索引：拼音首字母分组 */
+.layout.wiki.v2 .tag-idx-note { color: var(--text-soft); font-size: 13.5px; line-height: 1.8; margin: 0 0 14px; }
+.layout.wiki.v2 .tag-groups { display: flex; flex-direction: column; gap: 6px; }
+.layout.wiki.v2 .tag-group { border: 1px solid var(--line); border-radius: var(--radius-m); background: var(--card); }
+.layout.wiki.v2 .tg-sum {
+  cursor: pointer; list-style: none; display: flex; align-items: center; gap: 8px;
+  padding: 8px 14px; font-size: 14px; font-weight: 700; color: var(--fg);
+}
+.layout.wiki.v2 .tg-sum::-webkit-details-marker { display: none; }
+.layout.wiki.v2 .tg-sum::before { content: "▸"; font-size: 10px; color: var(--accent); }
+.layout.wiki.v2 .tag-group[open] > .tg-sum::before { content: "▾"; }
+.layout.wiki.v2 .tg-n { margin-left: auto; font-size: 12px; font-weight: 400; color: var(--text-soft); }
+.layout.wiki.v2 .tg-bar { padding: 2px 14px 14px; margin: 0; }
+
+/* 站点地图（人读版，/pages） */
+.layout.wiki.v2 .sm-xml { font-size: 13.5px; color: var(--text-soft); margin: 0 0 18px; }
+.layout.wiki.v2 .sm-sec { margin: 0 0 18px; }
+.layout.wiki.v2 .sm-ci { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px 18px; }
+@media (max-width: 900px) { .layout.wiki.v2 .sm-ci { grid-template-columns: minmax(0, 1fr); } }
+.layout.wiki.v2 .sm-ci-row { display: flex; flex-direction: column; gap: 3px; padding: 6px 0; border-bottom: 1px solid var(--line); }
+.layout.wiki.v2 .sm-ci-name { font-size: 14.5px; font-weight: 700; color: var(--fg); display: flex; align-items: baseline; gap: 8px; }
+.layout.wiki.v2 .sm-ci-name:hover { color: var(--accent); }
+.layout.wiki.v2 .sm-ci-name .n { margin-left: auto; font-size: 12px; font-weight: 400; color: var(--text-soft); }
+.layout.wiki.v2 .sm-ci-samp { display: flex; flex-wrap: wrap; gap: 4px 10px; font-size: 12.5px; color: var(--text-soft); line-height: 1.7; }
+.layout.wiki.v2 .sm-ci-samp a { color: var(--accent); }
+.layout.wiki.v2 .sm-recent { display: flex; flex-wrap: wrap; gap: 6px 12px; }
+.layout.wiki.v2 .sm-recent a {
+  font-size: 13px; padding: 4px 11px; border: 1px solid var(--border);
+  border-radius: 999px; color: var(--fg); background: var(--card);
+}
+.layout.wiki.v2 .sm-recent a:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); }
+
+/* 404 页（设计 ⑥-10：去掉现状那 13 条左栏链接；出口 ≥4 个） */
+.layout.wiki.v2-notfound .p404 { text-align: center; padding: 26px 0 10px; }
+.layout.wiki.v2 .p404-big {
+  font-family: var(--font-serif); font-size: 66px; line-height: 1.05;
+  color: var(--title); margin: 0 0 6px; letter-spacing: 2px;
+}
+.layout.wiki.v2 .p404-msg { color: var(--text-soft); font-size: 15px; margin: 0 0 20px; }
+.layout.wiki.v2 .p404-search {
+  display: flex; gap: 8px; justify-content: center; max-width: 520px; margin: 0 auto 26px;
+}
+.layout.wiki.v2 .p404-search input {
+  flex: 1; min-width: 0; padding: 9px 14px; border: 1px solid var(--border);
+  border-radius: 999px; background: var(--card); color: var(--fg); font-size: 14px;
+}
+.layout.wiki.v2 .p404-search button {
+  flex: none; padding: 9px 18px; border: 0; border-radius: 999px;
+  background: var(--accent); color: #fff; font-size: 14px; cursor: pointer;
+}
+.layout.wiki.v2 .p404-sec { text-align: left; max-width: 760px; margin: 0 auto 22px; }
+.layout.wiki.v2 .p404-cap { font-family: var(--font-serif); font-size: 16px; color: var(--tea-brown); margin: 0 0 10px; }
+.layout.wiki.v2 .p404-cats, .layout.wiki.v2 .p404-recent { display: flex; flex-wrap: wrap; gap: 7px; }
+.layout.wiki.v2 .p404-link, .layout.wiki.v2 .p404-recent a {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: 13px; padding: 5px 12px; border: 1px solid var(--border);
+  border-radius: 999px; color: var(--fg); background: var(--card);
+}
+.layout.wiki.v2 .p404-link:hover, .layout.wiki.v2 .p404-recent a:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); }
+.layout.wiki.v2 .p404-link .n { font-size: 11.5px; color: var(--text-soft); }
+.layout.wiki.v2 .p404-back { display: flex; flex-wrap: wrap; gap: 16px; justify-content: center; margin: 26px 0 0; font-size: 14px; }
+
+/* 搜索页出口（设计 ⑥-7「出口 4 个」） */
+.layout.wiki.v2 .sr-exits {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px;
+  margin: 26px 0 0; padding-top: 16px; border-top: 1px solid var(--line);
+}
+.layout.wiki.v2 .sr-exits-cap { font-size: 13.5px; color: var(--text-soft); }
+.layout.wiki.v2 .sr-exits a {
+  font-size: 13px; padding: 5px 13px; border: 1px solid var(--border);
+  border-radius: 999px; color: var(--accent); background: var(--card);
+}
+.layout.wiki.v2 .sr-exits a:hover { background: var(--accent-soft); border-color: var(--accent); }
+
+/* 独立页：末尾「相关入口」（设计 ⑥-8） */
+.layout.wiki.v2 .page-ways {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px;
+  margin: 30px 0 0; padding-top: 16px; border-top: 1px dashed var(--border);
+}
+.layout.wiki.v2 .page-ways .pw-cap { font-size: 13.5px; color: var(--text-soft); }
+.layout.wiki.v2 .page-ways a {
+  font-size: 13px; padding: 5px 13px; border: 1px solid var(--border);
+  border-radius: 999px; color: var(--accent); background: var(--card);
+}
+.layout.wiki.v2 .page-ways a:hover { background: var(--accent-soft); border-color: var(--accent); }
+
+/* ---------- 14. 编辑 / 历史 / diff 页（wikiedit 插件自带样式，这里只做「单列 + 令牌」） ---------- */
+/* 设计 §③-1 第 8/9/10 行：**单列、无左栏、无目录、无右列**；diff 允许横向滚（G3 豁免）。
+   ★ 这三页由 plugins/wikiedit 渲染（红线上不能改那个插件）⇒ 只在这里给外壳与令牌，
+     页型识别靠 layout.php 按 REQUEST_URI 兜底。 */
+.layout.wiki.v2-edit .wke,
+.layout.wiki.v2-history .wke,
+.layout.wiki.v2-diff .wke { max-width: 100%; }
+.layout.wiki.v2-history .wke table.tb,
+.layout.wiki.v2-diff .wke table.tb { font-size: 13.5px; }
+/* ★ A7：历史页的版本表在 390 档实测横向溢出 195px（`table.tb` 的 th 被插件设成 nowrap）。
+   插件不能改（红线）⇒ 在 v2 层把它改成固定布局 + 允许换行 + 单元格可断词。 */
+@media (max-width: 900px) {
+  .layout.wiki.v2-history .wke table.tb,
+  .layout.wiki.v2-diff .wke table.tb { table-layout: fixed; width: 100%; }
+  .layout.wiki.v2-history .wke table.tb th,
+  .layout.wiki.v2-history .wke table.tb td,
+  .layout.wiki.v2-diff .wke table.tb th,
+  .layout.wiki.v2-diff .wke table.tb td { white-space: normal; overflow-wrap: anywhere; padding: 5px 6px; }
+}
+.layout.wiki.v2 .wke-wrap { overflow-x: auto; }
+/* 编辑器/历史页的灰色文字统一提到 AA（#6b7280 3.9:1 → --text-soft） */
+:root.v2 .wke .wke-sub, :root.v2 .wke .hint, :root.v2 .wke .df-leg, :root.v2 .wke .df-head { color: var(--text-soft); }
+
+/* ---------- 15. 阅读模式（既有功能）在 v2 下依然成立 ---------- */
+/* ---------- 14-bis. A12 剩余两处「承载文字的灰」（P3 实测发现，v1 组件自带值不达标） ---------- */
+/* ① 搜索页结果元信息里的分隔点「·」：#d8cbb0 压白卡 = 1.58:1（实测 80 个文本节点全部是它）。 */
+:root.v2 .dot { color: var(--text-soft); }
+/* ② 历史页版本表的「0」列（wikiedit 自带 .zero #8b949e = 3.08:1）。插件不能改 ⇒ v2 层覆盖。 */
+:root.v2 .wke .zero { color: var(--text-soft); }
+:root.v2 .wke .pos { color: #1a7f37; }
+:root.v2 .wke .neg { color: #b42318; }body.reading-mode .layout.wiki.v2 .w-body { display: block; }
+body.reading-mode .layout.wiki.v2 .w-body-side {
+  position: static; max-height: none; overflow: visible;
+}

@@ -1,0 +1,65 @@
+/* 企业官网主题 · 建筑地产（工程 / 地产 / 空间设计）
+   气质：石墨灰 + 香槟金，标题拉大字距、直角硬朗；hero 右侧为深灰底 + 立面格线，
+        整体沉稳、有尺度感（适合工程/地产/空间设计）。 */
+.sc-root{
+  --sc-primary:#2f3437;--sc-deep:#1a1d1f;--sc-accent:#b08d4f;
+  --sc-bg:#ffffff;--sc-surface:#f5f5f3;--sc-line:#e3e3df;--sc-text:#2f3437;--sc-muted:#74797c;
+  --sc-card:#ffffff;--sc-card-line:#e3e3df;--sc-img-bg:linear-gradient(180deg,#ececea,#dcdcd8);--sc-img-radius:0;
+  --sc-radius:2px;--sc-maxw:1200px;
+  --sc-heading-tracking:2px;
+  --sc-hero-bg:#23272a;
+  --sc-footer-bg:#1a1d1f;
+  --sc-header-bg:#ffffff;--sc-nav-fg:#74797c;
+  --sc-on-primary:#ffffff;
+  --sc-btn-bg:#b08d4f;--sc-btn-fg:#17191a;--sc-btn-hover:#9a7a3f;
+  --sc-ghost-line:#c9c9c3;--sc-ghost-fg:#2f3437;--sc-input-line:#c9c9c3;
+  --sc-eyebrow-track:4px;
+  --sc-footer-fg:rgba(255,255,255,.7);--sc-footer-strong:#f0e9dc;
+  --sc-flash-bg:#f5f5f3;--sc-flash-line:#dededa;--sc-flash-fg:#2f3437;
+  --sc-empty-fg:#9ca1a4;
+}
+
+/* Hero：立面格线（竖 + 横） */
+.sc-hero-art::before{content:"";position:absolute;inset:0;background-image:repeating-linear-gradient(90deg,rgba(255,255,255,.09) 0 1px,transparent 1px 56px),repeating-linear-gradient(0deg,rgba(255,255,255,.07) 0 1px,transparent 1px 44px)}
+.sc-hero-art::after{content:"";position:absolute;right:40px;bottom:36px;width:104px;height:104px;border:1px solid var(--sc-accent);opacity:.75}
+.sc-hero h1{font-weight:500}
+
+/* 区块标题：金色短线（轴线感） */
+.sc-sec h2{padding-bottom:10px;border-bottom:1px solid var(--sc-line);position:relative}
+.sc-sec h2::after{content:"";position:absolute;left:0;bottom:-1px;width:64px;height:2px;background:var(--sc-accent)}
+.sc-card b,.sc-feat b{letter-spacing:1px}
+.sc-card-img{position:relative}
+/* 数据/优势块：左侧金条 */
+.sc-feat{border-left:2px solid var(--sc-accent);background:var(--sc-surface)}
+.sc-table th{background:#f5f5f3}
+
+/* ============================================================================
+   版式：建筑通栏（Full-bleed Architecture）
+   调研依据：地产/建筑 = 全屏项目大图 + 三大数字计 + 产品线卡（含 4 个卖点短语）+
+   交付体系 + 极 Мысли web 多列合规页脚；无圆角、超大留白、图片横幅优先。
+   这里产品卡改成 2 列宽幅大图 + 参数行，并给 CTA 挂「预约看房」的双按钮结构。
+   ============================================================================ */
+.sc-hero{align-items:stretch}
+.sc-hero-text{padding:96px 48px 84px 24px}
+.sc-hero h1{font-size:40px;font-weight:300;letter-spacing:2px}
+.sc-hero-eyebrow{letter-spacing:4px;font-size:11px}
+.sc-hero-art{min-height:380px}
+.sc-stat-bar{grid-template-columns:repeat(3,minmax(0,1fr));gap:0;border-top:1px solid var(--sc-line);border-bottom:1px solid var(--sc-line)}
+.sc-stat-bar li{border:0;border-left:1px solid var(--sc-line);border-radius:0;background:transparent;padding:22px 26px}
+.sc-stat-bar li:first-child{border-left:0}
+.sc-stat-bar li b{font-size:30px;font-weight:300;letter-spacing:1px}
+.sc-cards{grid-template-columns:repeat(2,minmax(0,1fr));gap:24px}
+.sc-card{border-radius:0;padding:0 0 16px;background:transparent;border:0;border-bottom:1px solid var(--sc-line)}
+.sc-card-img{height:260px;border-radius:0}
+.sc-card b{font-size:20px;letter-spacing:1px;margin-top:12px}
+.sc-gallery{columns:2;column-gap:24px}
+.sc-shot{border-radius:0;border:0;border-bottom:1px solid var(--sc-line);background:transparent;padding:0 0 12px}
+.sc-shot .sc-card-img,.sc-shot:nth-child(3n+2) .sc-card-img,.sc-shot:nth-child(3n) .sc-card-img{border-radius:0}
+.sc-feats{grid-template-columns:repeat(4,minmax(0,1fr));gap:0}
+.sc-feat{border-radius:0;border:0;border-top:2px solid var(--sc-primary);padding:18px 18px 20px 0}
+.sc-timeline{max-width:900px}
+.sc-timeline li{padding-bottom:26px}
+.sc-sec h2{border-bottom:1px solid var(--sc-line);padding-bottom:10px}
+.sc-footer-in{gap:40px}
+@media (max-width:900px){.sc-cards,.sc-gallery,.sc-feats,.sc-stat-bar{grid-template-columns:repeat(2,minmax(0,1fr))}.sc-gallery{columns:1}}
+@media (max-width:560px){.sc-cards,.sc-feats,.sc-stat-bar{grid-template-columns:minmax(0,1fr)}}

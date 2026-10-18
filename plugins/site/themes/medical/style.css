@@ -1,0 +1,65 @@
+/* 企业官网主题 · 医疗洁净（医院 / 健康 / 生物）
+   气质：白 + 青蓝、浅青渐变，大圆角与柔和投影；hero 右侧为浅色渐变（不用深底），
+        区块标题带小青块标记，整体干净、可信、无攻击性。 */
+.sc-root{
+  --sc-primary:#0e7490;--sc-deep:#0f3b4a;--sc-accent:#0ea5a4;
+  --sc-bg:#ffffff;--sc-surface:#f2f9fb;--sc-line:#dbeaf0;--sc-text:#23404a;--sc-muted:#64808c;
+  --sc-card:#ffffff;--sc-card-line:#e0eef2;--sc-img-bg:linear-gradient(160deg,#e8f6f9,#d9eef6);--sc-img-radius:10px;
+  --sc-radius:12px;--sc-maxw:1140px;
+  --sc-hero-bg:linear-gradient(160deg,#e6f6fa,#d3ecf5);
+  --sc-footer-bg:#0f3b4a;
+  --sc-header-bg:#ffffff;--sc-nav-fg:#566f7a;
+  --sc-on-primary:#ffffff;
+  --sc-btn-bg:#0e7490;--sc-btn-fg:#ffffff;--sc-btn-hover:#0b5c73;
+  --sc-ghost-line:#c3dde6;--sc-ghost-fg:#0e7490;--sc-input-line:#c3dde6;
+  --sc-eyebrow-track:1px;
+  --sc-footer-fg:rgba(255,255,255,.72);--sc-footer-strong:#ffffff;
+  --sc-flash-bg:#e9f7f9;--sc-flash-line:#bfe3ea;--sc-flash-fg:#0b5c73;
+  --sc-empty-fg:#8ba6b0;
+}
+
+/* Hero：浅青渐变 + 涟漪同心圆（洁净感） */
+.sc-hero-art::before{content:"";position:absolute;right:64px;top:50%;width:210px;height:210px;margin-top:-105px;border-radius:50%;border:1px solid rgba(14,116,144,.25);box-shadow:0 0 0 26px rgba(14,116,144,.08),0 0 0 52px rgba(14,116,144,.05)}
+.sc-hero-art::after{content:"";position:absolute;right:150px;top:50%;width:40px;height:40px;margin-top:-20px;border-radius:50%;background:var(--sc-accent);opacity:.5}
+
+/* 区块标题：小青块标记 */
+.sc-sec h2::before{content:"";display:inline-block;width:8px;height:8px;margin-right:9px;border-radius:2px;background:var(--sc-accent);vertical-align:middle}
+/* 卡片：柔和投影、大圆角 */
+.sc-card,.sc-feat{box-shadow:0 2px 10px rgba(14,116,144,.06)}
+.sc-cta-box{background:linear-gradient(120deg,#eef8fb,#e6f4f7)}
+.sc-job{border-left:2px solid var(--sc-accent)}
+
+/* ============================================================================
+   版式：门户型医疗（Tool-first Portal）
+   调研依据：医院站首屏必带「预约挂号 / 门诊排班 / 就医指南 / 交通」快捷工具条，
+   主体是「科室列表 + 医生卡（头像+职称+科室）」的高密度信息结构，
+   圆角柔和到近圆、几乎不用重投影。这里给 hero 加工具条伪 chips，
+   科室双列磁贴，医生卡圆头像 + 职称条。
+   ============================================================================ */
+.sc-hero{align-items:center;background:var(--sc-bg)}
+.sc-hero-text{padding:56px 36px 52px}
+.sc-hero h1{font-size:32px}
+.sc-hero-art::before{opacity:.9}
+.sc-hero-cta{margin-top:22px;flex-wrap:wrap}
+.sc-hero-cta .sc-btn{border-radius:22px}
+.sc-hero-text::after{content:"预约挂号  ·  门诊排班  ·  就医指南  ·  交通停车";display:block;margin-top:22px;
+  font-size:13px;letter-spacing:1px;color:var(--sc-primary);border-top:1px dashed var(--sc-line);padding-top:14px}
+.sc-stat-bar{grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.sc-stat-bar li{border-radius:14px;text-align:center;padding:16px 10px;background:linear-gradient(180deg,#fff,#f4fafd)}
+.sc-stat-bar li b{font-size:18px;color:var(--sc-deep)}
+.sc-plist{columns:2;column-gap:32px;max-width:100%}
+.sc-plist li{break-inside:avoid}
+.sc-plist li a{border:1px solid var(--sc-line);border-radius:12px;padding:14px 18px;margin-bottom:10px;background:var(--sc-card)}
+.sc-plist li a:hover{border-color:var(--sc-primary);background:#f4fbfd}
+.sc-plist li b{font-size:16px;color:var(--sc-primary)}
+.sc-people{grid-template-columns:repeat(4,minmax(0,1fr));gap:16px}
+.sc-person{border-radius:14px;padding:18px 12px;border-color:#dff0f5}
+.sc-avatar{width:64px;height:64px;background:#e8f6fa;font-size:22px}
+.sc-person b{font-size:16px}
+.sc-person em{color:var(--sc-primary)}
+.sc-steps{grid-template-columns:repeat(4,minmax(0,1fr))}
+.sc-steps li{border-radius:14px;text-align:center;padding:18px 14px}
+.sc-steps li i{color:var(--sc-primary)}
+.sc-cta-box{border-radius:16px}
+@media (max-width:900px){.sc-plist{columns:1}.sc-stat-bar,.sc-people,.sc-steps{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:560px){.sc-people,.sc-steps{grid-template-columns:repeat(2,minmax(0,1fr))}.sc-stat-bar{grid-template-columns:minmax(0,1fr)}}

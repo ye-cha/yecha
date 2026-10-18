@@ -1,0 +1,59 @@
+/* 企业官网主题 · 科技极简（软件 / SaaS / 互联网）
+   气质：白底 + 电光蓝，柔和圆角与轻微投影；hero 右侧为渐变网格光块；
+        标题收紧字距、卡片 hover 上浮，整体轻盈现代。 */
+.sc-root{
+  --sc-primary:#2563eb;--sc-deep:#0b1220;--sc-accent:#06b6d4;
+  --sc-bg:#ffffff;--sc-surface:#f5f8ff;--sc-line:#e3e9f6;--sc-text:#2b3446;--sc-muted:#6b7787;
+  --sc-card:#ffffff;--sc-card-line:#e6ecf8;--sc-img-bg:linear-gradient(150deg,#eef4ff,#e4fbff);--sc-img-radius:8px;
+  --sc-radius:10px;--sc-maxw:1160px;
+  --sc-heading-tracking:-0.3px;
+  --sc-hero-bg:linear-gradient(135deg,#1e40af,#2563eb 45%,#06b6d4);
+  --sc-footer-bg:#0b1220;
+  --sc-header-bg:#ffffff;--sc-nav-fg:#4b5563;
+  --sc-on-primary:#ffffff;
+  --sc-btn-bg:#2563eb;--sc-btn-fg:#ffffff;--sc-btn-hover:#1d4ed8;
+  --sc-ghost-line:#cfd8e8;--sc-ghost-fg:#2563eb;--sc-input-line:#cfd8e8;
+  --sc-eyebrow-track:1px;
+  --sc-footer-fg:rgba(255,255,255,.72);--sc-footer-strong:#ffffff;
+  --sc-flash-bg:#eef4ff;--sc-flash-line:#c7d7fb;--sc-flash-fg:#1d4ed8;
+  --sc-empty-fg:#93a1b3;
+}
+
+/* Hero 光块：网格 + 光晕 */
+.sc-hero-art{background-image:linear-gradient(rgba(255,255,255,.14) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.14) 1px,transparent 1px),var(--sc-hero-bg);background-size:34px 34px,34px 34px,cover}
+.sc-hero-art::before{content:"";position:absolute;left:-40px;top:-40px;width:200px;height:200px;border-radius:50%;background:radial-gradient(circle,rgba(6,182,212,.55),transparent 70%)}
+.sc-hero-art::after{content:"";position:absolute;right:28px;bottom:26px;width:96px;height:96px;border-radius:24px;border:1px solid rgba(255,255,255,.35)}
+
+/* 标题与卡片：轻、收紧、可交互 */
+.sc-hero h1{font-weight:600;letter-spacing:-.6px}
+.sc-sec h2{letter-spacing:-.3px}
+.sc-card{transition:box-shadow .18s,border-color .18s,transform .18s}
+.sc-card:hover{transform:translateY(-2px);border-color:#c7d7fb;box-shadow:0 10px 26px rgba(37,99,235,.12)}
+.sc-feat{border-top:2px solid var(--sc-primary)}
+.sc-btn-primary{box-shadow:0 6px 16px rgba(37,99,235,.25)}
+
+/* ============================================================================
+   版式：SaaS Landing
+   调研依据：SaaS 官网 = 居中/左文的价值主张 + 双 CTA + 用户数据条 + 第三方认证 +
+   集成生态 + 案例 ROI。这里数据条做成一条无缝的大数字带（去掉格子感），
+   案例换成带 ROI 数字的引述卡，CTA 居中卡片形态。
+   ============================================================================ */
+.sc-hero{align-items:center}
+.sc-hero-text{padding:78px 40px}
+.sc-hero h1{font-size:38px}
+.sc-hero-cta{gap:14px}
+.sc-stat-bar{grid-template-columns:repeat(4,minmax(0,1fr));gap:0;border:1px solid var(--sc-card-line);border-radius:14px;overflow:hidden}
+.sc-stat-bar li{border:0;border-right:1px solid var(--sc-card-line);border-radius:0;text-align:center;padding:20px 10px}
+.sc-stat-bar li:last-child{border-right:0}
+.sc-stat-bar li b{font-size:22px;letter-spacing:-.4px}
+.sc-feats{grid-template-columns:repeat(4,minmax(0,1fr));gap:16px}
+.sc-feat{border-radius:14px;padding:20px 18px}
+.sc-cards{grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}
+.sc-card{border-radius:14px;padding:16px}
+.sc-quote{border:0;border-radius:16px;background:var(--sc-card);box-shadow:0 8px 30px rgba(15,23,42,.06);padding:26px 26px 22px}
+.sc-quote::before{content:"\201C";display:block;font-size:40px;line-height:1;color:var(--sc-primary);opacity:.32}
+.sc-quote p{font-size:16px}
+.sc-cta-box{flex-direction:column;text-align:center;gap:18px;border-radius:16px;padding:30px 24px}
+.sc-cta-box>div{text-align:center}
+@media (max-width:900px){.sc-feats,.sc-cards{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:560px){.sc-feats,.sc-cards{grid-template-columns:minmax(0,1fr)}.sc-stat-bar{border-radius:12px}}

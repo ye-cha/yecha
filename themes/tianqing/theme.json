@@ -1,0 +1,60 @@
+{
+  "name": "天青 Tianqing",
+  "version": "1.0.0",
+  "requires_core": "1.0.0",
+  "author": "YeCha",
+  "description": "天青 Tianqing —— 汝窑天青色主调的演示站主题：天青蓝 #1f6feb 强调色、极浅冷底留白、大圆角卡片网格（缩略图 + 分类角标 + 摘要 + 阅读全文），内置明暗双色切换、多语言切换、抽屉导航与搜索。适合茶文 / 图文博客与主题演示站。",
+  "display_name": "天青演示主题",
+  "tagline": "天青蓝调 · 卡片网格 · 明暗双色",
+  "settings": [
+    {
+      "key": "width",
+      "type": "select",
+      "label": "页面宽度",
+      "def": "",
+      "opts": {
+        "": "默认 1180px",
+        "760": "窄 760px",
+        "1040": "1040px",
+        "1180": "宽 1180px"
+      }
+    },
+    {
+      "key": "accent",
+      "type": "color",
+      "label": "强调色",
+      "help": "主色 hex，天青默认 #4f7a55（茶绿）",
+      "def": "#4f7a55"
+    },
+    {
+      "key": "per_page",
+      "type": "number",
+      "label": "每页文章数",
+      "def": "10",
+      "min": 5,
+      "max": 50
+    },
+    {
+      "key": "latest_n",
+      "type": "number",
+      "label": "侧栏最新文章数",
+      "def": "8",
+      "min": 3,
+      "max": 20
+    },
+    {
+      "key": "show_sidebar",
+      "type": "checkbox",
+      "label": "显示右侧栏",
+      "help": "分类 / 最新 / 标签 / 归档",
+      "def": "1"
+    },
+    {
+      "key": "announce",
+      "type": "text",
+      "label": "首页公告",
+      "help": "显示在顶部导航下的公告条；留空则不显示",
+      "def": ""
+    }
+  ]
+}

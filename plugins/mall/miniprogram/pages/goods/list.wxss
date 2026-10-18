@@ -1,0 +1,9 @@
+.gl { padding-bottom: 20rpx; }
+.search { display: flex; padding: 16rpx; background: #fff; }
+.sin { flex: 1; background: #f4f4f4; padding: 0 20rpx; height: 64rpx; }
+.search .btn-ghost { margin-left: 16rpx; }
+.grid { display: flex; flex-wrap: wrap; padding: 8rpx; }
+.g { width: calc(50% - 16rpx); margin: 8rpx; background: #fff; padding-bottom: 16rpx; }
+.gimg { width: 100%; height: 320rpx; background: #eee; }
+.gt { padding: 12rpx 16rpx 4rpx; font-size: 28rpx; line-height: 1.4; height: 76rpx; overflow: hidden; }
+.sales { padding: 4rpx 16rpx; color: #999; font-size: 22rpx; }

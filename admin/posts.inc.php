@@ -104,7 +104,7 @@ function pc_save(): void
         'type' => $type, 'title' => $title, 'slug' => $slug,
         'excerpt' => trim((string)($_POST['excerpt'] ?? '')),
         'description' => trim((string)($_POST['description'] ?? '')),
-        'keywords' => trim((string)($_POST['keywords'] ?? '')),
+        'keywords' => adm_norm_list((string)($_POST['keywords'] ?? '')),
         'content' => (string)($_POST['content'] ?? ''),
         'content_format' => 'markdown',
         'status' => $status,
@@ -121,9 +121,13 @@ function pc_save(): void
     if ($id > 0) {
         $oldMetaRows = Db::rows('SELECT meta_id FROM ' . Db::t('relationships') . ' WHERE content_id=?', [$id]);
         $oldMetaIds = array_column($oldMetaRows, 'meta_id');
-        if ((string)$data['content'] === '') {
-            $oldBody = Db::one('SELECT content FROM ' . Db::t('contents') . ' WHERE id=?', [$id]);
-            if ($oldBody !== null && $oldBody !== '') { $data['content'] = (string)$oldBody; $emptyContentKeep = true; }
+        $oldBody = Db::one('SELECT content FROM ' . Db::t('contents') . ' WHERE id=?', [$id]);
+        if ($oldBody !== null && $oldBody !== '') {
+            $stripMd = function ($s) { return trim(preg_replace('/[\s#*>`~_|\[\]()!.\-=+:"\'\/\\\\]+/u', '', (string)$s)); };
+            if ((string)$data['content'] === '' || ($stripMd($data['content']) === '' && $stripMd($oldBody) !== '')) {
+                $data['content'] = (string)$oldBody;
+                $emptyContentKeep = true;
+            }
         }
         Db::update('contents', $data, 'id=?', [$id]);
     } else {
@@ -140,9 +144,9 @@ function pc_save(): void
         Db::insert('relationships', ['content_id' => $id, 'meta_id' => $catId]);
         $newMetaIds[] = $catId;
     }
-    $tags = trim((string)($_POST['tags'] ?? ''));
+    $tags = adm_norm_list((string)($_POST['tags'] ?? ''));
     if ($tags !== '') {
-        foreach (array_unique(array_filter(array_map('trim', explode(',', $tags)))) as $tName) {
+        foreach (explode(',', $tags) as $tName) {
             $row = Db::row('SELECT id FROM ' . Db::t('metas') . " WHERE type='tag' AND name=? LIMIT 1", [$tName]);
             $tid = $row ? (int)$row['id'] : Db::insert('metas', ['type' => 'tag', 'name' => $tName, 'slug' => Str::tagSlug($tName)]);
             Db::insert('relationships', ['content_id' => $id, 'meta_id' => $tid]);
@@ -172,7 +176,7 @@ function pc_save(): void
     Cache::flush('blocks');
     $statusText = ['draft' => '草稿', 'publish' => '已发布', 'scheduled' => '定时', 'hidden' => '已下线'][$status] ?? $status;
     $_SESSION['flash'] = ($id > 0 ? '更新成功' : '已保存') . '（' . $statusText . '）· slug：' . $slug . $autoNote
-        . ($emptyContentKeep ? ' · ⚠ 正文为空，已保留原正文（请用新编辑器后刷新再试）' : '');
+        . ($emptyContentKeep ? ' · ⚠ 提交的正文没有有效文字，已保留原正文（请刷新后台编辑器后重试）' : '');
     header('Location: /admin/?s=' . $type . 's');
     exit;
 }
@@ -242,6 +246,99 @@ function pc_upload(): void
 }
 
 /* ================= 列表视图 ================= */
+/**
+ * 列表行里的「译」单元格：语言小徽标 + 「AI 翻译」按钮
+ * @param array<string,array> $have 该篇已有译文（lang => 行）
+ * @param array<int,string> $langs 目标语言短码
+ * @param array<string,string> $keep 回跳参数（type/page/q/st）
+ */
+function pc_ai_cell(int $cid, string $type, array $have, array $langs, bool $aiReady, callable $langTxt, string $tgtNames, array $keep, bool $isTrash): string
+{
+    if ($isTrash || !$langs) { return ''; }
+    $badges = '';
+    foreach ($langs as $lc) {
+        $row = $have[$lc] ?? null;
+        if ($row === null) {
+            $badges .= '<span title="' . e(Poly::label($lc)) . '：未翻译" style="display:inline-block;min-width:20px;text-align:center;margin:0 2px 0 0;padding:0 4px;border:1px dashed #d8d8d0;border-radius:4px;font-size:11px;color:#b9b9b0;">' . e($langTxt($lc)) . '</span>';
+            continue;
+        }
+        $published = ((string)$row['status']) === 'publish';
+        $manual = (int)($row['manual_override'] ?? 0) === 1;
+        $title = Poly::label($lc) . '：' . ($published ? '已发布' : '草稿') . ($manual ? ' · 已人工修正（AI 不会覆盖）' : '');
+        $style = $published
+            ? 'border:1px solid #cfe2d0;background:#eef4ee;color:#2e6b34;'
+            : 'border:1px solid #e6d9c2;background:#fbf7ee;color:#8a6a34;';
+        $badges .= '<span title="' . e($title) . '" style="display:inline-block;min-width:20px;text-align:center;margin:0 2px 0 0;padding:0 4px;border-radius:4px;font-size:11px;' . $style . '">'
+            . e($langTxt($lc)) . ($manual ? '✎' : '') . '</span>';
+    }
+    $hid = '';
+    foreach ($keep as $k => $v) {
+        $hid .= '<input type="hidden" name="back_' . e($k) . '" value="' . e((string)$v) . '">';
+    }
+    if (!$aiReady) {
+        return '<div style="margin-top:6px">' . $badges . '</div>'
+            . '<span class="hint" title="先到 多语 → AI 设置 填 DeepSeek / OpenAI 兼容 Key">AI 翻译（未配置密钥）</span>';
+    }
+    return '<div style="margin-top:6px">' . $badges . '</div>'
+        . '<form class="inline" method="post" action="/admin/?s=' . $type . 's" style="margin-top:4px"'
+        . ' onsubmit="return confirm(\'用 AI 立即翻译成：' . e($tgtNames) . '？（已人工修正的译文会跳过）\')">'
+        . Csrf::field()
+        . '<input type="hidden" name="do" value="poly-ai-row"><input type="hidden" name="type" value="' . $type . '">'
+        . '<input type="hidden" name="cid" value="' . $cid . '">' . $hid
+        . '<button class="btn ghost mini ai" type="submit" title="AI 翻译成：' . e($tgtNames) . '">AI 翻译</button></form>';
+}
+
+/** 列表页「AI 翻译」按钮的处理：把该篇翻译成所有启用的非基准语言（跳过人工修正的；超时可再点一次续做） */
+function pc_ai_row(): void
+{
+    $type = ((string)($_POST['type'] ?? '')) === 'page' ? 'page' : 'post';
+    $typeName = $type === 'page' ? '页面' : '文章';
+    $q = trim((string)($_POST['back_q'] ?? ''));
+    $st = trim((string)($_POST['back_st'] ?? ''));
+    $page = max(1, (int)($_POST['back_page'] ?? 1));
+    $back = '/admin/?s=' . $type . 's' . ($page > 1 ? '&page=' . $page : '')
+        . ($q !== '' ? '&q=' . rawurlencode($q) : '') . ($st !== '' ? '&st=' . rawurlencode($st) : '');
+    $cid = (int)($_POST['cid'] ?? 0);
+
+    $row = $cid > 0 ? Db::row('SELECT id, title FROM ' . Db::t('contents') . ' WHERE id=? LIMIT 1', [$cid]) : null;
+    if ($row === null) { $_SESSION['flash'] = '找不到该' . $typeName; header('Location: ' . $back); exit; }
+    $head = '「' . mb_substr((string)$row['title'], 0, 24) . '」AI 翻译：';
+
+    if (!Poly::on()) { $_SESSION['flash'] = $head . '多语言未启用'; header('Location: ' . $back); exit; }
+    if (!yc_opt_has('ai.key')) {
+        $_SESSION['flash'] = $head . '未配置 AI 密钥（后台 → 多语 → AI 设置 填 DeepSeek / OpenAI 兼容 Key）';
+        header('Location: ' . $back); exit;
+    }
+    $langs = [];
+    foreach (Poly::enabled() as $lc) { if ($lc !== Poly::defaultLang()) { $langs[] = (string)$lc; } }
+    if (!$langs) { $_SESSION['flash'] = $head . '没有启用其它语言（设置 → 站点 → 语言）'; header('Location: ' . $back); exit; }
+
+    $t0 = microtime(true);
+    $done = []; $skip = []; $fail = []; $later = [];
+    foreach ($langs as $lc) {
+        if ((microtime(true) - $t0) > 45) { $later[] = Poly::label($lc); continue; }   // 单请求限时，剩下的再点一次续做
+        $r = ['ok' => false, 'error' => '未知错误'];
+        try {
+            $r = Poly::aiTranslate($cid, $lc, '', '', '', true);   // 与「AI 全自动」同参数：直接发布
+        } catch (Throwable $e) {
+            $r = ['ok' => false, 'error' => $e->getMessage()];
+        }
+        if (!empty($r['skipped_override'])) { $skip[] = Poly::label($lc) . '（已人工修正）'; }
+        elseif (!empty($r['ok'])) { $done[] = Poly::label($lc); }
+        else { $fail[] = Poly::label($lc) . '（' . mb_substr((string)($r['error'] ?? '失败'), 0, 60) . '）'; }
+    }
+
+    $msg = $head . ($done ? ('已翻译并发布 ' . implode('、', $done)) : '没有产生新译文');
+    if ($skip) { $msg .= ' · 跳过 ' . implode('、', $skip); }
+    if ($fail) { $msg .= ' · 失败 ' . implode('、', $fail); }
+    if ($later) { $msg .= ' · 本次时间到，' . implode('、', $later) . ' 请再点一次继续'; }
+    $_SESSION['flash'] = $msg;
+    Cache::flush('pages');
+    Cache::flush('blocks');
+    header('Location: ' . $back);
+    exit;
+}
+
 function pc_render_list(string $type, string $q, string $st, int $page): string
 {
     $d = pc_list_rows($type, $q, $st, $page);
@@ -249,6 +346,30 @@ function pc_render_list(string $type, string $q, string $st, int $page): string
     $list = '';
     $statusMap = ['publish' => '已发布', 'draft' => '草稿', 'scheduled' => '定时', 'hidden' => '已下线', 'trash' => '回收站'];
     $isTrash = $st === 'trash';
+    /* ---------- 译文状态 + 「AI 翻译」按钮所需的数据（一次查询覆盖本页所有行） ---------- */
+    $polyOn = Poly::on();
+    $polyLangs = [];
+    if ($polyOn) {
+        foreach (Poly::enabled() as $lc) { if ($lc !== Poly::defaultLang()) { $polyLangs[] = (string)$lc; } }
+    }
+    $aiReady = yc_opt_has('ai.key');
+    $trMap = [];   // cid => [lang => ['status'=>..,'manual'=>..]]
+    if ($polyOn && $polyLangs && $d['rows']) {
+        $ids = array_map(static fn(array $x): int => (int)$x['id'], $d['rows']);
+        $in = implode(',', array_fill(0, count($ids), '?'));
+        foreach (Db::rows('SELECT group_id, lang, status, manual_override FROM ' . Poly::table() . " WHERE group_id IN ($in)", $ids) as $pv) {
+            $trMap[(int)$pv['group_id']][(string)$pv['lang']] = $pv;
+        }
+    }
+    $langTag = ['zh' => '中', 'tw' => '繁', 'en' => 'EN', 'ja' => '日', 'ko' => '韩', 'fr' => 'FR',
+                'es' => 'ES', 'ru' => 'RU', 'ar' => 'AR', 'de' => 'DE', 'pt' => 'PT', 'it' => 'IT'];
+    $langTxt = static fn(string $lc): string => $langTag[$lc] ?? strtoupper(substr($lc, 0, 3));
+    $tgtNames = implode('、', array_map(static fn(string $lc): string => Poly::label($lc), $polyLangs));
+    /* 回到当前筛选/页码，翻译完不用重新找 */
+    $keep = ['type' => $type, 'page' => (string)$page];
+    if ($q !== '') { $keep['q'] = $q; }
+    if ($st !== '') { $keep['st'] = $st; }
+
     foreach ($d['rows'] as $r) {
         $stTxt = $statusMap[$r['status']] ?? $r['status'];
         $styl = $r['status'] === 'draft' ? ' style="color:#9a6b3f;"' : ($r['status'] === 'scheduled' ? ' style="color:#2e6b34;"' : '');
@@ -262,7 +383,7 @@ function pc_render_list(string $type, string $q, string $st, int $page): string
                 . '<td><form class="inline" method="post" action="/admin/?s=' . $type . 's"><input type="hidden" name="do" value="trash-restore"><input type="hidden" name="type" value="' . $type . '">' . Csrf::field()
                 . '<input type="hidden" name="cid" value="' . (int)$r['id'] . '"><button class="btn ghost mini" type="submit">恢复</button></form> '
                 . '<form class="inline" method="post" action="/admin/?s=' . $type . 's" onsubmit="return confirm(\'彻底删除（含其评论/译文/关系，不可恢复）？\')"><input type="hidden" name="do" value="trash-purge"><input type="hidden" name="type" value="' . $type . '">' . Csrf::field()
-                . '<input type="hidden" name="cid" value="' . (int)$r['id'] . '"><button class="btn ghost mini" style="border-color:#e3c5b6;color:#9c3f1b;" type="submit">彻底删除</button></form></td></tr>';
+                . '<input type="hidden" name="cid" value="' . (int)$r['id'] . '"><button class="btn ghost mini danger" type="submit">彻底删除</button></form></td></tr>';
             continue;
         }
         $list .= '<tr><td>' . e($r['title']) . ($r['status'] === 'scheduled' ? '<br><span style="color:#9a6b3f;font-size:11.5px;">将于 ' . e(substr((string)$r['published_at'], 0, 16)) . ' 发布</span>' : '')
@@ -276,7 +397,9 @@ function pc_render_list(string $type, string $q, string $st, int $page): string
                 : '<span style="color:#c0c0b8;font-size:12px;">未发布</span> ')
             . '<form class="inline" method="post" action="/admin/?s=' . $type . 's" onsubmit="return confirm(\'移入回收站？\')">' . Csrf::field()
             . '<input type="hidden" name="do" value="post-trash"><input type="hidden" name="type" value="' . $type . '">'
-            . '<input type="hidden" name="cid" value="' . (int)$r['id'] . '"><button class="btn ghost mini" style="border-color:#e3c5b6;color:#9c3f1b;" type="submit">回收站</button></form></td></tr>';
+            . '<input type="hidden" name="cid" value="' . (int)$r['id'] . '"><button class="btn ghost mini danger" type="submit">回收站</button></form>'
+            . pc_ai_cell((int)$r['id'], $type, $trMap[(int)$r['id']] ?? [], $polyLangs, $aiReady, $langTxt, $tgtNames, $keep, $isTrash)
+            . '</td></tr>';
     }
     $pager = '';
     if ($d['pages'] > 1) {
@@ -311,11 +434,13 @@ function pc_render_list(string $type, string $q, string $st, int $page): string
         . '<div class="card"><table><tr><th>标题</th><th>slug</th><th>状态</th><th>阅读</th><th>日期</th><th>操作</th></tr>' . $list . '</table>' . $pager . '</div>';
 }
 
-/* ================= 多语（Drupal 式节点翻译） ================= */
+/* ================= 多语（翻译组模型） ================= */
 
 /** 某语言版在中文编辑页的保存入口：POST do=poly-en-save（id=中文内容 id，lang=启用语言短码；post 与独立页 page 通用） */
 function pc_poly_save(): void
 {
+    if (!Poly::on()) { $_SESSION['flash'] = '多语言未启用'; header('Location: /admin/?s=posts'); exit; }
+
     $baseId = (int)($_POST['id'] ?? 0);
     $code = trim((string)($_POST['lang'] ?? 'en'));
     $base = Db::row('SELECT * FROM ' . Db::t('contents') . ' WHERE id=?', [$baseId]);
@@ -348,9 +473,9 @@ function pc_poly_save(): void
     $catRow = $catId > 0 ? Db::row('SELECT id FROM ' . Db::t('metas') . " WHERE id=? AND type='category'", [$catId]) : null;
     $cats = $catRow ? [(int)$catId] : [];
     $tagIds = [];
-    $tagsRaw = trim((string)($_POST['poly_tags'] ?? ''));
+    $tagsRaw = adm_norm_list((string)($_POST['poly_tags'] ?? ''));
     if ($tagsRaw !== '') {
-        foreach (array_unique(array_filter(array_map('trim', explode(',', $tagsRaw)))) as $tName) {
+        foreach (explode(',', $tagsRaw) as $tName) {
             $row = Db::row('SELECT id FROM ' . Db::t('metas') . " WHERE type='tag' AND name=? LIMIT 1", [$tName]);
             $tid = $row ? (int)$row['id'] : Db::insert('metas', ['type' => 'tag', 'name' => $tName, 'slug' => Str::tagSlug($tName)]);
             $tagIds[] = (int)$tid;
@@ -361,7 +486,7 @@ function pc_poly_save(): void
         'group_id' => $baseId, 'lang' => $code,
         'title' => $title, 'slug' => $slug,
         'excerpt' => trim((string)($_POST['excerpt'] ?? '')),
-        'keywords' => trim((string)($_POST['keywords'] ?? '')),
+        'keywords' => adm_norm_list((string)($_POST['keywords'] ?? '')),
         'description' => mb_substr(trim((string)($_POST['description'] ?? '')), 0, 300),
         'content' => (string)($_POST['content'] ?? ''),
         'status' => $status,
@@ -391,6 +516,8 @@ function pc_poly_save(): void
 /** AI 生成某语言草稿入口：POST do=poly-ai-en（id=中文内容 id，lang=语言短码；post 与独立页 page 通用） */
 function pc_poly_ai(): void
 {
+    if (!Poly::on()) { $_SESSION['flash'] = '多语言未启用'; header('Location: /admin/?s=posts'); exit; }
+
     $baseId = (int)($_POST['id'] ?? 0);
     $code = trim((string)($_POST['lang'] ?? 'en'));
     $base = Db::row('SELECT * FROM ' . Db::t('contents') . ' WHERE id=?', [$baseId]);
@@ -422,7 +549,7 @@ function pc_poly_ai(): void
     exit;
 }
 
-/** 中文编辑页顶部的语言标签（Drupal 节点式入口；cur=当前编辑语言短码，默认语言为原文；post 与独立页 page 通用） */
+/** 中文编辑页顶部的语言标签（翻译组入口；cur=当前编辑语言短码，默认语言为原文；post 与独立页 page 通用） */
 function pc_lang_tabs(int $id, string $type, string $cur): string
 {
     if (!in_array($type, ['post', 'page'], true) || $id <= 0 || !Poly::on()) { return ''; }
@@ -458,6 +585,7 @@ function pc_lang_tabs(int $id, string $type, string $cur): string
 /** 某语言版编辑器（在中文文章/页面编辑页内，?lang=<code>；post 与独立页 page 通用） */
 function pc_render_editor_lang(int $id, string $code): string
 {
+    $GLOBALS['YC_ADMIN_FOCUS'] = true;   // 译文编辑器同样专注版面
     $base = Db::row('SELECT * FROM ' . Db::t('contents') . ' WHERE id=?', [$id]);
     if ($base === null || !in_array(($base['type'] ?? ''), ['post', 'page'], true) || !in_array($code, Poly::enabled(), true) || $code === Poly::defaultLang()) {
         $_SESSION['flash'] = '未找到该内容';
@@ -521,7 +649,7 @@ function pc_render_editor_lang(int $id, string $code): string
         . '<input type="hidden" name="do" value="poly-en-save"><input type="hidden" name="id" value="' . $id . '"><input type="hidden" name="lang" value="' . e($code) . '">'
         . '<input name="title" value="' . e($f['title']) . '" placeholder="' . ($code === 'en' ? 'English title' : e($label) . ' 标题') . '" required style="width:100%;box-sizing:border-box;font-size:15px;font-weight:700;padding:8px 10px;border:1px solid #e6e6e2;border-radius:6px;">'
         . '<div class="slug-row" style="margin:8px 0;color:#6f767e;">固定链接：/' . e($code) . '/<input name="slug" value="' . e($f['slug']) . '" style="width:200px;padding:4px 8px;border:1px solid #e6e6e2;border-radius:6px;">.html（留空自动）</div>'
-        . '<div class="ed-grid"><div class="ed-left">'
+        . '<div class="ed-grid open"><div class="ed-left">'
         . '<label class="pf">正文（Markdown）</label><textarea name="content" rows="16" style="width:100%;box-sizing:border-box;border:1px solid #e6e6e2;border-radius:6px;padding:8px 10px;font-family:Consolas,monospace;font-size:13px;">' . e($f['content']) . '</textarea>'
         . '<div class="hint">中文原文预览（只读参考）：</div><div class="ed-preview-box" style="max-height:320px;overflow:auto;background:#fafaf7;border:1px solid #e6e6e2;border-radius:6px;padding:10px;font-size:12.5px;color:#565b61;white-space:pre-wrap;">' . e($zh) . '</div>'
         . '</div><div class="ed-right">'
@@ -546,8 +674,57 @@ function pc_render_editor_lang(int $id, string $code): string
 }
 
 /* ================= 编辑器视图 ================= */
+/** 编辑器工具栏线性图标（stroke 风格 · 24 视框 · 随文字色） */
+function ed_ico(string $n, int $size = 18): string
+{
+    static $p = [
+        'h2'     => '<path d="M4 12h8"/><path d="M4 18V6"/><path d="M12 18V6"/><path d="M21 18h-4c0-4 4-3 4-6 0-1.5-1-2-2-2s-2 .5-2 1.5"/>',
+        'h3'     => '<path d="M4 12h8"/><path d="M4 18V6"/><path d="M12 18V6"/><path d="M17.5 10.5c1.7-1 3.5-.5 3.5 1 0 1.5-2 2-3 2 1 0 3 .5 3 2 0 1.5-1.8 2-3.5 1"/>',
+        'bold'   => '<path d="M6 4h8a4 4 0 0 1 0 8H6z"/><path d="M6 12h9a4 4 0 0 1 0 8H6z"/>',
+        'italic' => '<path d="M19 4h-9"/><path d="M14 20H5"/><path d="M15 4 9 20"/>',
+        'del'    => '<path d="M16 4H9a3 3 0 0 0-2.83 4"/><path d="M14 12a4 4 0 0 1 0 8H6"/><path d="M4 12h16"/>',
+        'code'   => '<path d="m16 18 6-6-6-6"/><path d="m8 6-6 6 6 6"/>',
+        'quote'  => '<path d="M17 6H3"/><path d="M21 12H8"/><path d="M21 18H8"/><path d="M3 12v6"/>',
+        'ul'     => '<path d="M8 6h13"/><path d="M8 12h13"/><path d="M8 18h13"/><path d="M3 6h.01"/><path d="M3 12h.01"/><path d="M3 18h.01"/>',
+        'ol'     => '<path d="M10 6h11"/><path d="M10 12h11"/><path d="M10 18h11"/><path d="M4 6h1v4"/><path d="M4 10h2"/><path d="M6 18H4c0-1 2-2 2-3s-1-1.5-2-1"/>',
+        'link'   => '<path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>',
+        'img'    => '<rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="8.5" cy="10" r="1.5"/><path d="m21 16-5-5L5 21"/>',
+        'table'  => '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18"/><path d="M9 10v9"/><path d="M15 10v9"/>',
+        'hr'     => '<path d="M4 12h16"/>',
+        'md'     => '<path d="M14 3v5h5"/><path d="M15 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M9 13l-2 2 2 2"/><path d="M14 17l2-2-2-2"/>',
+        'rich'   => '<path d="M4 7V5h16v2"/><path d="M9 20h6"/><path d="M12 5v15"/>',
+        'eye'    => '<path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7"/><circle cx="12" cy="12" r="3"/>',
+        'eyeoff' => '<path d="m3 3 18 18"/><path d="M10.6 10.6a3 3 0 0 0 4.2 4.2"/><path d="M9.9 4.24A9.1 9.1 0 0 1 12 4c6.4 0 10 8 10 8a17 17 0 0 1-3.2 4.2"/><path d="M6.6 6.6A17 17 0 0 0 2 12s3.6 8 10 8a9 9 0 0 0 4-.9"/>',
+        'sliders'=> '<path d="M4 21v-7"/><path d="M4 10V3"/><path d="M12 21v-9"/><path d="M12 8V3"/><path d="M20 21v-5"/><path d="M20 12V3"/><path d="M1 14h6"/><path d="M9 8h6"/><path d="M17 16h6"/>',
+        'back'   => '<path d="M19 12H5"/><path d="m12 19-7-7 7-7"/>',
+    ];
+    return '<svg class="ico" viewBox="0 0 24 24" width="' . $size . '" height="' . $size . '" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' . ($p[$n] ?? '') . '</svg>';
+}
+
+/** 把「粘贴进来的一串」整理成规范列表：支持中英文逗号、顿号、分号、竖线、换行分隔；去空白、去空项、去重（ASCII 不区分大小写），按原顺序保留。
+ *  用途：标签与关键词字段允许直接粘贴 "A,B、C；D" 这种串，服务端也要能正确拆开（不依赖前端 JS）。 */
+if (!function_exists('adm_norm_list')) {
+    function adm_norm_list(string $raw): string
+    {
+        $parts = preg_split('/[,，、;；|\r\n\t]+/u', $raw) ?: [];
+        $out = [];
+        $seen = [];
+        foreach ($parts as $one) {
+            $one = trim((string)preg_replace('/\s+/u', ' ', (string)$one));
+            if ($one === '') { continue; }
+            $one = mb_substr($one, 0, 60);
+            $k = mb_strtolower($one);
+            if (isset($seen[$k])) { continue; }
+            $seen[$k] = true;
+            $out[] = $one;
+        }
+        return implode(',', $out);
+    }
+}
+
 function pc_render_editor(string $type, int $id = 0, string $lang = ''): string
 {
+    $GLOBALS['YC_ADMIN_FOCUS'] = true;   // 专注写作：后台不渲染左栏导航，把版面留给正文
     $typeName = $type === 'page' ? '页面' : '文章';
     $d = [
         'title' => '', 'slug' => '', 'excerpt' => '', 'description' => '', 'keywords' => '',
@@ -581,8 +758,10 @@ function pc_render_editor(string $type, int $id = 0, string $lang = ''): string
     }
     $cats = Db::rows('SELECT * FROM ' . Db::t('metas') . " WHERE type='category' ORDER BY `order` ASC, id ASC");
     $catOpts = '';
+    $catName = '未分类';
     foreach ($cats as $c) {
         $selC = $c['id'] == $d['catId'] ? ' selected' : '';
+        if ($c['id'] == $d['catId']) { $catName = (string)$c['name']; }
         $catOpts .= '<option value="' . (int)$c['id'] . '"' . $selC . '>' . e($c['name']) . '</option>';
     }
     $checked = fn(bool $v) => $v ? ' checked' : '';
@@ -606,43 +785,48 @@ function pc_render_editor(string $type, int $id = 0, string $lang = ''): string
     $ckFeat = $d['featured'] ? ' checked' : '';
     $ckComm = $d['allow_comment'] ? ' checked' : '';
     $schedVal = $d['published_at'] ? date('Y-m-d\TH:i', strtotime((string)$d['published_at'])) : '';
-    $langTabsHtml = $id > 0 ? pc_lang_tabs($id, $type, Poly::defaultLang()) : '';
+    /* 顶栏状态摘要（折叠「发布设置」时也能一眼看到状态与分类） */
+    $statusText = ['draft' => '草稿', 'publish' => '已发布', 'scheduled' => '定时发布', 'hidden' => '已下线'][$d['status']] ?? $d['status'];
+    $stateText = $isPage ? $statusText : ($statusText . ' · ' . $catName);
+    $tbBtn = static function (string $cmd, string $icon, string $label): string {
+        return '<button type="button" class="ed-tb" data-cmd="' . $cmd . '" title="' . e($label) . '" aria-label="' . e($label) . '">' . ed_ico($icon) . '</button>';
+    };
+    $cfgOpen = $id <= 0; // 新建文章默认展开「发布设置」，存过的文章默认收起，写作优先
 
     $__html = <<<HTML
-$langTabsHtml
 <form id="postForm" method="post" action="{$formAction}">
 <input type="hidden" name="do" value="post-save">
 <input type="hidden" name="type" value="{$type}">
 <input type="hidden" name="id" value="{$id}">
 <input type="hidden" name="content" id="contentValue">
 $csrfField
-<div class="ed-grid">
+<div class="ed-bar">
+  <a class="ed-back" href="{$listUrl}" title="返回列表" aria-label="返回列表">__ICO_BACK__</a>
+  <span class="ed-state" id="edState">{$stateText}</span>
+  <span class="ed-sp"></span>
+  <button type="button" class="ed-btn ghost" id="edCfgBtn" aria-expanded="__CFG_ARIA__">__ICO_SLIDERS__<span>发布设置</span></button>
+  <button type="submit" class="ed-btn primary">保存</button>
+</div>
+<input name="title" id="edTitle" value="{$titleVal}" placeholder="标题" class="ed-title" required autocomplete="off">
+<div class="ed-toolbar" id="toolbar">
+  {$tbBtn('h2', 'h2', '二级标题')}{$tbBtn('h3', 'h3', '三级标题')}<span class="sep"></span>{$tbBtn('bold', 'bold', '加粗')}{$tbBtn('italic', 'italic', '斜体')}{$tbBtn('del', 'del', '删除线')}{$tbBtn('code', 'code', '行内代码')}<span class="sep"></span>{$tbBtn('quote', 'quote', '引用')}{$tbBtn('ul', 'ul', '无序列表')}{$tbBtn('ol', 'ol', '有序列表')}{$tbBtn('link', 'link', '链接')}{$tbBtn('img', 'img', '图片')}{$tbBtn('table', 'table', '表格')}{$tbBtn('hr', 'hr', '分割线')}
+  <span class="ed-sp"></span>
+  <span class="ed-mode" id="edMode"><button type="button" class="active" data-mode="md" title="Markdown 写作">__ICO_MD__<span>Markdown</span></button><button type="button" data-mode="rich" title="所见即所得">__ICO_RICH__<span>富文本</span></button></span>
+  <button type="button" class="ed-tb wide" id="btnPrev" title="显示 / 隐藏预览" aria-pressed="false">__ICO_EYE__<span>预览</span></button>
+</div>
+<div class="__CFG_CLS__" id="edGrid">
   <div class="ed-left">
-    <input name="title" id="edTitle" value="{$titleVal}" placeholder="标题" class="ed-title" required>
-    <div class="slug-row"><span>固定链接：/</span><input name="slug" id="edSlug" value="{$slugVal}" placeholder="自动生成"><span>.html</span>
-      <span class="hint" id="slugLive"></span></div>
-
-    <div class="ed-toolbar" id="toolbar">
-      <button type="button" data-cmd="h2">H2</button><button type="button" data-cmd="h3">H3</button><span class="sep"></span>
-      <button type="button" data-cmd="bold"><b>B</b></button><button type="button" data-cmd="italic"><i>I</i></button>
-      <button type="button" data-cmd="del"><s>S</s></button><button type="button" data-cmd="code">`code`</button>
-      <button type="button" data-cmd="quote">❝引用</button><button type="button" data-cmd="ul">•列表</button>
-      <button type="button" data-cmd="ol">1.列表</button><button type="button" data-cmd="link">🔗链接</button>
-      <button type="button" data-cmd="img">🖼图片</button><button type="button" data-cmd="table">▦表格</button>
-      <button type="button" data-cmd="hr">—分割线</button>
-      <span class="sep"></span>
-      <span class="ed-mode" id="edMode"><button type="button" class="active" data-mode="md">Markdown</button><button type="button" data-mode="rich">富文本</button></span>
-      <button type="button" id="btnSplit" class="split">分屏预览</button>
-    </div>
-    <div class="ed-area split" id="edArea">
-      <textarea id="mdIn" class="ed-textarea" spellcheck="false" placeholder="用 Markdown 写作，或切到富文本模式所见即所得…">__MD_BODY__</textarea>
+    <div class="ed-area" id="edArea">
+      <textarea id="mdIn" class="ed-textarea" spellcheck="false" placeholder="在这里写你的故事……">__MD_BODY__</textarea>
       <div id="richIn" class="ed-rich" contenteditable="true" style="display:none;"></div>
       <div id="edPrev" class="ed-preview"></div>
     </div>
-    <div class="hint" id="charCount"></div>
+    <div class="ed-foot"><span class="hint" id="charCount"></span><span class="hint" id="slugLive"></span></div>
   </div>
-
-  <div class="ed-right">
+  <aside class="ed-right" id="edCfg"__CFG_HIDDEN__>
+    <div class="ed-cfg-head">发布设置 <button type="button" class="ed-cfg-x" id="edCfgX" title="收起" aria-label="收起">×</button></div>
+    <div class="side-field"><label>固定链接（slug）</label>
+      <input name="slug" id="edSlug" value="{$slugVal}" placeholder="留空自动生成" autocomplete="off"></div>
     <div class="side-field"><label>状态</label>
       <select name="status" id="statusSel">
         <option value="draft"$optDraft>草稿</option>
@@ -652,26 +836,39 @@ $csrfField
       </select></div>
     <div class="side-field" id="schedRow" style="display:none;"><label>定时时间</label>
       <input type="datetime-local" name="scheduled_at" id="schedAt" value="$schedVal"></div>
-    <div class="side-field"><label>选项</label>
-      <label class="chk"><input type="checkbox" name="sticky"$ckSticky> 置顶</label>
-      <label class="chk"><input type="checkbox" name="featured"$ckFeat> 精选</label>
-      <label class="chk"><input type="checkbox" name="allow_comment"$ckComm> 允许评论</label></div>
 HTML
     . ($isPage ? '' : '<div class="side-field"><label>分类</label><select name="category"><option value="0">未分类</option>' . $catOpts . '</select></div>')
-    . ($isPage ? '' : '<div class="side-field"><label>标签（回车或逗号分隔，可新建）</label><input id="tagInput" placeholder="输入后回车">
+    . ($isPage ? '' : '<div class="side-field"><label>标签（粘贴一串也行：中英文逗号 / 顿号 / 分号 / 换行都能拆）</label><input id="tagInput" placeholder="粘贴或输入，回车 / 逗号分隔">
         <div class="chips" id="tagChips"></div><input type="hidden" name="tags" id="tagsHidden"></div>')
     . '<div class="side-field"><label>简介 excerpt</label><textarea name="excerpt" rows="3">' . $excerpt . '</textarea></div>'
     . '<div class="side-field"><label>描述 description（meta）</label><input name="description" value="' . $desc . '"></div>'
-    . '<div class="side-field"><label>关键词 keywords（meta）</label><input name="keywords" value="' . $kw . '"></div>'
-    . '<div class="side-field"><label>上传图片 / 附件</label><button type="button" class="btn ghost" id="btnUpload">选择文件上传</button>
+    . '<div class="side-field"><label>关键词 keywords（meta）<span class="hint" id="kwCount"></span></label>'
+    . '<input name="keywords" id="edKeywords" value="' . $kw . '" placeholder="粘贴一串也行，保存时自动拆分去重">'
+    . '<div class="hint" style="margin-top:5px">' . ($isPage ? '' : '<button type="button" class="btn ghost mini" id="kwFromTags">用上面的标签填充</button> ') . '逗号分隔，用于 SEO meta keywords</div></div>'
+    . '<div class="side-field"><label>选项</label>
+        <label class="chk"><input type="checkbox" name="sticky"' . $ckSticky . '> 置顶</label>
+        <label class="chk"><input type="checkbox" name="featured"' . $ckFeat . '> 精选</label>
+        <label class="chk"><input type="checkbox" name="allow_comment"' . $ckComm . '> 允许评论</label></div>'
+    . '<div class="side-field"><label>图片 / 附件</label><button type="button" class="btn ghost" id="btnUpload">选择文件上传</button>
         <input type="file" id="upFile" style="display:none;"><div class="hint" id="upMsg"></div></div>'
-    . '</div></div>'
+    . '</aside></div>'
     . '<div class="ed-actions"><button type="submit" class="btn">保存</button> <a class="btn ghost" href="' . $listUrl . '">返回列表</a>'
     . ($id > 0 && $d['status'] === 'publish' ? ' <a class="btn ghost" target="_blank" href="/' . e($d['slug']) . '.html">预览前台 ↗</a>' : '')
     . '</div></form>'
     . '<script>window.__YC = {csrf:' . json_encode($csrf) . ', tags:' . $tagsJson . ', page:' . ($isPage ? 'true' : 'false') . '};</script>'
     . '<link rel="stylesheet" href="/admin/assets/editor.css?v=' . @filemtime(__DIR__ . '/assets/editor.css') . '"><script src="/admin/assets/editor.js?v=' . @filemtime(__DIR__ . '/assets/editor.js') . '"></script>';
-    return str_replace('__MD_BODY__', $mdBody, $__html);
+    $out = str_replace(
+        ['__MD_BODY__', '__ICO_BACK__', '__ICO_SLIDERS__', '__ICO_MD__', '__ICO_RICH__', '__ICO_EYE__', '__CFG_ARIA__', '__CFG_HIDDEN__', '__CFG_CLS__'],
+        [$mdBody, ed_ico('back'), ed_ico('sliders'), ed_ico('md'), ed_ico('rich'), ed_ico('eye'),
+         $cfgOpen ? 'true' : 'false', $cfgOpen ? '' : ' hidden', $cfgOpen ? 'ed-grid open' : 'ed-grid'],
+        $__html
+    );
+    /* 插件挂载点：编辑器尾部（如「文章自动保存」在此注入状态条与前端脚本） */
+    if (class_exists('Hooks')) {
+        $hk = Hooks::run('admin.editor.tail', ['html' => '', 'type' => $type, 'id' => $id, 'lang' => $lang]);
+        $out .= (string)($hk['html'] ?? '');
+    }
+    return $out;
 }
 
 /** HTML 转义复用的 select selected helper */

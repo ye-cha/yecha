@@ -1,0 +1,14 @@
+<view class="al">
+  <view class="news">
+    <view class="n" wx:for="{{list}}" wx:key="id" bindtap="goDetail" data-id="{{item.id}}">
+      <image class="nimg" src="{{item.thumb}}" mode="aspectFill"></image>
+      <view class="nbody">
+        <view class="nt">{{item.title}}</view>
+        <view class="nd">{{item.excerpt}}</view>
+        <view class="ntime">{{item.published_at}}</view>
+      </view>
+    </view>
+  </view>
+  <view class="empty" wx:if="{{list.length === 0}}">暂无资讯</view>
+  <view class="empty" wx:if="{{list.length > 0 && !hasMore}}">没有更多了</view>
+</view>

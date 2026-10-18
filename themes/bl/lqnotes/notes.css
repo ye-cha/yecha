@@ -1,0 +1,401 @@
+/* =============================================================================
+ * lqnotes · 云笔记前台样式（只补 Tailwind 产物里没有的那几处；其余全部复用站内 www.css）
+ * 令牌全部取自站内既有 CSS 变量：--border --card --muted --muted-foreground
+ * --primary --primary-foreground --accent --destructive --background --foreground
+ * ========================================================================== */
+
+.lqn-ta {
+  width: 100%;
+  flex: 1 1 auto;
+  /* ★ 2026-10-08：原 min-height:320px 会把卡片顶出视口（实测底部条落到 892..956 > 视口 900）
+     ⇒ 改成可被 flex 压缩的下限 140px + 自己滚动，保证底部条永远在视口内 */
+  min-height: 140px;
+  overflow-y: auto;
+  resize: none;
+  border: 0;
+  outline: none;
+  background: transparent;
+  color: inherit;
+  font-size: 15px;
+  line-height: 1.85;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+  padding: 14px 18px;
+}
+.lqn-wys {
+  flex: 1 1 auto;
+  min-height: 140px;
+  overflow-y: auto;
+  outline: none;
+  font-size: 15.5px;
+  line-height: 1.85;
+  padding: 14px 18px;
+}
+.lqn-wys:empty:before {
+  content: attr(data-ph);
+  color: hsl(var(--muted-foreground));
+}
+.lqn-wys h1 { font-size: 24px; font-weight: 700; margin: 14px 0 8px; }
+.lqn-wys h2 { font-size: 20px; font-weight: 700; margin: 12px 0 6px; }
+.lqn-wys h3 { font-size: 17px; font-weight: 600; margin: 10px 0 6px; }
+.lqn-wys p { margin: 6px 0; }
+.lqn-wys ul { list-style: disc; padding-left: 22px; margin: 6px 0; }
+.lqn-wys ol { list-style: decimal; padding-left: 22px; margin: 6px 0; }
+.lqn-wys blockquote {
+  border-left: 3px solid hsl(var(--border));
+  padding-left: 12px;
+  margin: 8px 0;
+  color: hsl(var(--muted-foreground));
+}
+.lqn-wys code { background: hsl(var(--muted)); padding: 1px 5px; border-radius: 5px; font-size: 13px; }
+.lqn-wys pre { background: hsl(var(--muted)); padding: 12px; border-radius: 8px; overflow: auto; }
+.lqn-wys a { color: hsl(var(--primary)); text-decoration: underline; }
+
+/* ★ 2026-10-17：页面壳 /notes 用 Tailwind 任意值类 h-[calc(100vh-284px)]，
+   但 www.css（2026-10-05 产物）里没有这一条 ⇒ 三栏容器只剩 min-h:460px，
+   38 条笔记把整页撑成 3500px 的长柱（站主所说「堆在一起」）。在此补上，仅 /notes 生效。 */
+.h-\[calc\(100vh-284px\)\] { height: calc(100vh - 284px); }
+
+.lqn-tools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  border-bottom: 1px solid hsl(var(--border));
+  padding: 8px 10px;
+}
+.lqn-tb {
+  border: 1px solid transparent;
+  border-radius: 7px;
+  padding: 4px 8px;
+  font-size: 12px;
+  line-height: 1.4;
+  color: hsl(var(--muted-foreground));
+  background: transparent;
+  cursor: pointer;
+}
+.lqn-tb:hover { background: hsl(var(--muted)); color: hsl(var(--foreground)); }
+.lqn-tb[data-on="1"] { background: hsl(var(--primary) / 0.1); color: hsl(var(--primary)); font-weight: 600; }
+.lqn-sep { width: 1px; height: 18px; background: hsl(var(--border)); margin: 0 4px; }
+
+.lqn-toast {
+  position: fixed;
+  left: 50%;
+  bottom: 28px;
+  transform: translate(-50%, 12px);
+  background: hsl(var(--foreground));
+  color: hsl(var(--background));
+  font-size: 13px;
+  padding: 9px 16px;
+  border-radius: 10px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .18s ease, transform .18s ease;
+  z-index: 80;
+  max-width: 84vw;
+}
+.lqn-toast[data-lqn-on="1"] { opacity: .96; transform: translate(-50%, 0); }
+
+.lqn-panel {
+  border: 1px solid hsl(var(--border));
+  border-radius: 10px;
+  background: hsl(var(--card));
+  padding: 12px;
+  margin: 10px 14px 0;
+  font-size: 13px;
+}
+.lqn-input {
+  border: 1px solid hsl(var(--border));
+  border-radius: 8px;
+  background: transparent;
+  color: inherit;
+  padding: 6px 10px;
+  font-size: 13px;
+  min-width: 0;
+}
+.lqn-btn {
+  border: 1px solid hsl(var(--border));
+  border-radius: 8px;
+  background: transparent;
+  color: inherit;
+  padding: 6px 12px;
+  font-size: 13px;
+  cursor: pointer;
+}
+.lqn-btn:hover { background: hsl(var(--muted)); }
+.lqn-btn-primary {
+  background: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+  border-color: transparent;
+}
+
+/* ★★ [t20 · 2026-10-16 · 站主报「笔记功能使用都不行」的根因]
+   笔记页的 [data-lqn="empty"] / [data-lqn="editor"] / [data-lqn="bookform"] 等元素同时带着
+   Tailwind 的显示工具类（.flex{display:flex}）与 hidden 属性：
+     www.css 里 [hidden]:where(:not([hidden="until-found"])){display:none} 与 .flex{display:flex}
+     同特异度（0,1,0），而工具类在源顺序上靠后 ⇒ **hidden 属性失效**
+   ⇒ 空态占位（约 1750px 高）与编辑器同时在流内，编辑器被顶到 2000px 之下
+   ⇒ 站主看到「右侧一片空白 / 点新建没反应」。本行按 Tailwind 官方口径补齐。
+   回滚：删本 8 行（备份 /root/ta20/backup/t20_notes.css.f66a7781ecb6f8c6.orig）。 */
+[hidden] { display: none !important; }
+
+/* ===== ★ 2026-10-08 批1–2：对齐参照的工具栏/底部条/模板/富文本 ========================= */
+
+/* 新富文本元素（删除线 / 高亮 / 任务清单 / 表格 / 外链图片） */
+.lqn-wys s, .lqn-wys del, .lqn-wys strike { text-decoration: line-through; }
+.lqn-wys mark { background: #fde68a; color: #111827; padding: 0 2px; border-radius: 3px; }
+.lqn-wys ul.lqn-task { list-style: none; padding-left: 6px; }
+.lqn-wys ul.lqn-task li { padding-left: 0; }
+.lqn-wys table { border-collapse: collapse; margin: 8px 0; width: 100%; }
+.lqn-wys th, .lqn-wys td { border: 1px solid hsl(var(--border)); padding: 5px 8px; font-size: 14px; }
+.lqn-wys th { background: hsl(var(--muted)); font-weight: 600; text-align: left; }
+.lqn-wys img { max-width: 100%; height: auto; border-radius: 6px; }
+/* 暗色模式下高亮别太刺眼 */
+.dark .lqn-wys mark { background: #a16207; color: #fff; }
+
+/* 内联「链接 / 图片」表单（不用 window.prompt）
+   ★ 注意：带 hidden 属性的元素若被作者样式写上 display，会【压过 UA 的 [hidden]{display:none}】
+     ⇒ 必须写成 :not([hidden])，否则永远显示（批4 实测：模态那层盖住全页把点击全拦了） */
+.lqn-urlform {
+  align-items: center;
+  gap: 6px;
+  border-bottom: 1px solid hsl(var(--border));
+  padding: 7px 10px;
+  background: hsl(var(--muted) / 0.35);
+}
+.lqn-urlform:not([hidden]) { display: flex; }
+.lqn-urlform-label { font-size: 12px; color: hsl(var(--muted-foreground)); white-space: nowrap; }
+
+/* 侧栏模板面板（模板清单逐字取自参照 bundle 的 6 条） */
+.lqn-tpl-panel { border-bottom: 1px solid hsl(var(--border)); padding: 6px 8px; }
+.lqn-tpl-row { display: flex; flex-wrap: wrap; gap: 4px; }
+.lqn-tpl-row .lqn-tb { border-color: hsl(var(--border)); font-size: 11px; }
+
+/* 底部条：参照 = `N 字 · 输入自动保存 · 仅本地（登录后自动上云）` + 查看源码·分享·版本·.md·HTML·打印 */
+.lqn-bot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  border-top: 1px solid hsl(var(--border));
+  padding: 7px 10px;
+}
+.lqn-bot-meta { font-size: 11px; color: hsl(var(--muted-foreground)); margin: 0; flex: 0 0 auto; }
+.lqn-bot-btns { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; flex: 1 1 auto; justify-content: flex-end; }
+/* 分享行独占一行，避免三段挤成 3 行把底部条撑高 */
+.lqn-bot > p[data-lqn="share-line"] { flex: 1 1 100%; }
+
+/* ===== ★ 2026-10-08 批3：分享面板（三个页签 + 短链 + 二维码 + 统计） ============= */
+.lqn-sh-tabs {
+  display: flex;
+  gap: 4px;
+  border-bottom: 1px solid hsl(var(--border));
+  margin: -12px -12px 10px;
+  padding: 6px 8px 0;
+}
+.lqn-sh-tab {
+  border: 1px solid transparent;
+  border-bottom: 0;
+  border-radius: 8px 8px 0 0;
+  background: transparent;
+  color: hsl(var(--muted-foreground));
+  font-size: 12px;
+  font-weight: 500;
+  padding: 6px 12px;
+  cursor: pointer;
+}
+.lqn-sh-tab:hover { background: hsl(var(--muted)); color: hsl(var(--foreground)); }
+.lqn-sh-tab-on { background: hsl(var(--primary) / 0.1); color: hsl(var(--primary)); }
+.lqn-help { font-size: 11px; color: hsl(var(--muted-foreground)); margin: 6px 0 0; }
+.lqn-form-row { display: flex; align-items: center; gap: 8px; margin-top: 8px; }
+.lqn-form-lab { font-size: 12px; color: hsl(var(--muted-foreground)); white-space: nowrap; min-width: 62px; }
+.lqn-form-acts { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 10px; }
+.lqn-btn-danger { border-color: hsl(var(--destructive) / 0.4); color: hsl(var(--destructive)); }
+.lqn-btn-danger:hover { background: hsl(var(--destructive) / 0.08); }
+.lqn-confirm {
+  flex-wrap: wrap; align-items: center; gap: 8px;
+  margin-top: 10px; padding: 8px 10px; border-radius: 8px;
+  border: 1px solid hsl(var(--destructive) / 0.35); background: hsl(var(--destructive) / 0.06);
+  font-size: 12px;
+}
+.lqn-confirm:not([hidden]) { display: flex; }
+.lqn-qr-wrap { align-items: center; gap: 12px; margin-top: 10px; }
+.lqn-qr-wrap:not([hidden]) { display: flex; }
+.lqn-qr {
+  width: 132px; height: 132px; flex: 0 0 auto;
+  border: 1px solid hsl(var(--border)); border-radius: 8px; padding: 6px; background: #fff;
+}
+.lqn-stat-cards { display: flex; gap: 10px; margin-top: 4px; }
+.lqn-stat-card {
+  flex: 1 1 0; border: 1px solid hsl(var(--border)); border-radius: 10px;
+  padding: 10px 12px; display: flex; flex-direction: column; gap: 2px;
+}
+.lqn-stat-card b { font-size: 22px; line-height: 1.15; }
+.lqn-stat-card span { font-size: 11px; color: hsl(var(--muted-foreground)); }
+.lqn-bars {
+  display: flex; align-items: flex-end; gap: 3px;
+  height: 92px; margin-top: 6px; padding: 0 2px;
+  border-bottom: 1px solid hsl(var(--border));
+}
+.lqn-bar-col { flex: 1 1 0; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; height: 100%; }
+.lqn-bar-col i { display: block; width: 100%; background: hsl(var(--primary) / 0.55); border-radius: 3px 3px 0 0; min-height: 2px; }
+.lqn-bar-col span { font-size: 9px; color: hsl(var(--muted-foreground)); margin-top: 3px; white-space: nowrap; }
+.lqn-refs { list-style: none; margin: 6px 0 0; padding: 0; max-height: 150px; overflow-y: auto; }
+.lqn-refs li {
+  display: flex; justify-content: space-between; gap: 10px;
+  font-size: 11.5px; padding: 3px 0; border-bottom: 1px dashed hsl(var(--border));
+}
+.lqn-refs li:last-child { border-bottom: 0; }
+.lqn-refs li span { color: hsl(var(--muted-foreground)); white-space: nowrap; }
+.lqn-refs li b { font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* ===== ★ 2026-10-08 批5b：本机加密导出/导入面板 ============================== */
+.lqn-enc-title { font-size: 13px; font-weight: 600; margin: 0 0 2px; }
+.lqn-enc-title + .lqn-form-row { margin-top: 10px; }
+
+/* ===== ★ 2026-10-08 批4：历史版本（模态 + 行级对比） ============================= */
+.lqn-modal {
+  position: fixed; inset: 0; z-index: 90;
+  align-items: center; justify-content: center;
+  background: hsl(0 0% 0% / 0.4); padding: 16px;
+}
+.lqn-modal:not([hidden]) { display: flex; }
+.lqn-modal-box {
+  width: 460px; max-width: 100%; max-height: 70vh; overflow-y: auto;
+  border-radius: 12px; background: hsl(var(--card)); border: 1px solid hsl(var(--border));
+  padding: 20px;
+}
+.lqn-modal-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.lqn-modal-h3 { font-size: 14px; font-weight: 600; margin: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lqn-modal-x {
+  border: 0; background: transparent; color: hsl(var(--muted-foreground));
+  font-size: 18px; line-height: 1; cursor: pointer; padding: 2px 6px; border-radius: 6px;
+}
+.lqn-modal-x:hover { background: hsl(var(--muted)); }
+.lqn-rev-list { max-height: 44vh; overflow-y: auto; }
+.lqn-rev-row {
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  border: 1px solid hsl(var(--border)); border-radius: 8px;
+  padding: 8px 12px; margin-bottom: 8px; font-size: 13px;
+}
+.lqn-rev-at { color: hsl(var(--muted-foreground)); }
+.lqn-rev-w { color: hsl(var(--muted-foreground)); font-size: 11.5px; white-space: nowrap; }
+.lqn-rev-acts { display: flex; align-items: center; gap: 6px; white-space: nowrap; }
+.lqn-rev-cmp { margin-top: 10px; }
+.lqn-df-box {
+  max-height: 30vh; overflow: auto; border: 1px solid hsl(var(--border)); border-radius: 8px;
+  padding: 8px 10px; background: hsl(var(--muted) / 0.25);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12px; line-height: 1.6;
+}
+.lqn-df { white-space: pre-wrap; word-break: break-word; }
+.lqn-df-del { color: #b91c1c; background: rgba(185, 28, 28, .08); }
+.lqn-df-add { color: #15803d; background: rgba(21, 128, 61, .08); }
+.dark .lqn-df-del { color: #fca5a5; }
+.dark .lqn-df-add { color: #86efac; }
+
+/* 打印（打印按钮 = 参照底部条的「打印」） */
+@media print {
+  body[data-lqn-print="1"] > * { visibility: hidden !important; }
+  body[data-lqn-print="1"] [data-lqn="preview"],
+  body[data-lqn-print="1"] [data-lqn="bodywrap"],
+  body[data-lqn-print="1"] .lqn-wys,
+  body[data-lqn-print="1"] .lqn-ta { visibility: visible !important; }
+  body[data-lqn-print="1"] [data-lqn="preview"] {
+    position: absolute; left: 0; top: 0; width: 100%;
+    border: 0 !important; padding: 0 !important; margin: 0 !important;
+  }
+  body[data-lqn-print="1"] .lqn-toast,
+  body[data-lqn-print="1"] .lqn-tools,
+  body[data-lqn-print="1"] .lqn-bot { display: none !important; }
+}
+
+/* =============================================================================
+ * ★ t30（第30棒 2026-10-18）· /notes 简化：两栏（左：搜索+笔记本+笔记列表 / 右：标题+正文+一行工具条）
+ *   参照：houyue.com/jishiben（门内需登录）⇒ 同源旧版组件 /www/wwwroot/liulanqi.com/assets/Notepad-DFqDYxv-.js
+ *   参照结构：页头（标题+同步状态+导入/帮助/导出/新建/加密锁）+ 两栏 grid(320px|1fr) + 左栏（新建笔记/回收站/文件夹/列表）
+ *   我方对齐：页头（标题+状态+新建/保存/删除/分享/更多）+ 两栏 grid(280px|1fr) + 左栏（搜索/全部/笔记本/回收站/列表）
+ *   回滚：删本整段（备份见 /root/ta30/backup/）
+ * ========================================================================== */
+.lqn-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 12px; }
+.lqn-head-l { display: flex; align-items: baseline; gap: 10px; min-width: 0; flex: 1 1 auto; }
+.lqn-h1 { font-size: 22px; font-weight: 700; margin: 0; line-height: 1.2; }
+.lqn-status { font-size: 12px; color: hsl(var(--muted-foreground)); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lqn-head-r { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.lqn-head-r .lqn-btn { padding: 6px 12px; font-size: 13px; white-space: nowrap; }
+.lqn-btn[disabled] { opacity: .55; cursor: default; }
+.lqn-save[data-state="saving"] { opacity: .8; }
+.lqn-save[data-state="saved"] { background: hsl(var(--primary) / 0.12); color: hsl(var(--primary)); border-color: transparent; }
+.lqn-save[data-state="error"] { background: hsl(var(--destructive) / 0.10); color: hsl(var(--destructive)); border-color: hsl(var(--destructive) / 0.4); }
+.lqn-more-wrap { position: relative; }
+.lqn-more-menu {
+  position: absolute; right: 0; top: calc(100% + 6px); z-index: 60; min-width: 190px; padding: 6px;
+  display: flex; flex-direction: column;
+  border: 1px solid hsl(var(--border)); border-radius: 10px; background: hsl(var(--card));
+  box-shadow: 0 10px 30px rgba(15, 23, 42, .14);
+}
+.lqn-mi { border: 0; background: transparent; color: inherit; text-align: left; font-size: 12.5px; padding: 7px 10px; border-radius: 7px; cursor: pointer; }
+.lqn-mi:hover { background: hsl(var(--muted)); }
+.lqn-mi-sep { height: 1px; background: hsl(var(--border)); margin: 5px 4px; }
+
+.lqn-wrap { display: grid; grid-template-columns: 280px minmax(0, 1fr); gap: 14px; height: calc(100vh - 240px); min-height: 520px; }
+.lqn-side, .lqn-main {
+  display: flex; flex-direction: column; min-height: 0; overflow: hidden;
+  border: 1px solid hsl(var(--border)); border-radius: 14px; background: hsl(var(--card));
+}
+.lqn-side-top { display: flex; flex-direction: column; gap: 8px; border-bottom: 1px solid hsl(var(--border)); padding: 8px; }
+.lqn-q { width: 100%; }
+.lqn-nav { display: flex; flex-direction: column; gap: 2px; max-height: 34vh; overflow-y: auto; }
+.lqn-nav-row {
+  display: flex; width: 100%; align-items: center; justify-content: space-between; gap: 8px;
+  border: 0; background: transparent; color: inherit; text-align: left;
+  font-size: 13px; padding: 6px 8px; border-radius: 7px; cursor: pointer;
+}
+.lqn-nav-row:hover { background: hsl(var(--muted)); }
+.lqn-count { font-size: 11px; color: hsl(var(--muted-foreground)); }
+.lqn-nav-add { color: hsl(var(--muted-foreground)); }
+.lqn-bookform { display: flex; gap: 4px; padding: 2px 4px; align-items: center; }
+.lqn-bookform .lqn-input { flex: 1 1 auto; min-width: 0; }
+.lqn-list { display: flex; flex-direction: column; gap: 8px; flex: 1 1 auto; min-height: 0; overflow-y: auto; padding: 8px; }
+
+.lqn-main { position: relative; }
+.lqn-empty { display: flex; flex: 1 1 auto; flex-direction: column; align-items: center; justify-content: center; gap: 12px; padding: 32px 16px; text-align: center; }
+.lqn-empty-t { margin: 0; font-size: 13px; color: hsl(var(--muted-foreground)); }
+.lqn-editor { display: flex; flex: 1 1 auto; flex-direction: column; min-height: 0; }
+.lqn-titlebar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; border-bottom: 1px solid hsl(var(--border)); padding: 8px 10px; }
+.lqn-title { flex: 1 1 auto; font-size: 16px; font-weight: 600; padding: 7px 10px; }
+.lqn-booksel { flex: 0 0 auto; max-width: 44%; }
+.lqn-bodywrap { display: flex; flex: 1 1 auto; flex-direction: column; min-height: 0; }
+.lqn-preview { border-top: 1px solid hsl(var(--border)); }
+.lqn-share { margin: 8px 10px 0; }
+.lqn-share-out { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 8px; }
+.lqn-item-top { display: flex; align-items: center; justify-content: space-between; gap: 6px; }
+.lqn-item-del {
+  flex: 0 0 auto; border: 1px solid transparent; background: transparent; color: hsl(var(--muted-foreground));
+  font-size: 11px; line-height: 1.4; padding: 1px 6px; border-radius: 6px; cursor: pointer;
+  opacity: 0; transition: opacity .12s ease;
+}
+[data-lqn="item"]:hover .lqn-item-del, .lqn-item-del:focus { opacity: 1; }
+.lqn-item-del:hover { background: hsl(var(--destructive) / 0.1); border-color: hsl(var(--destructive) / 0.35); color: hsl(var(--destructive)); }
+@media (hover: none) { .lqn-item-del { opacity: .65; } }
+.lqn-float {
+  position: fixed; left: 50%; top: 10vh; transform: translateX(-50%); z-index: 70;
+  width: min(560px, 92vw); max-height: 70vh; overflow-y: auto; margin: 0;
+  box-shadow: 0 12px 40px rgba(15, 23, 42, .18);
+}
+
+@media (max-width: 767px) {
+  .lqn-wrap { grid-template-columns: minmax(0, 1fr); height: auto; min-height: 0; }
+  .lqn-side { max-height: none; }
+  .lqn-nav { max-height: none; }
+  .lqn-list { max-height: 34vh; }
+  .lqn-main { min-height: 62vh; }
+  .lqn-h1 { font-size: 19px; white-space: nowrap; }
+  .lqn-head-l { flex: 1 1 100%; flex-direction: column; align-items: flex-start; gap: 2px; }
+  .lqn-status { max-width: 100%; white-space: normal; line-height: 1.35; }
+  .lqn-head-r { width: 100%; }
+  .lqn-head-r .lqn-btn { flex: 1 1 auto; justify-content: center; text-align: center; }
+  .lqn-more-menu { right: auto; left: 0; }
+  .lqn-booksel { max-width: 100%; flex: 1 1 auto; }
+  .lqn-tools { padding: 6px; }
+  .lqn-tb { padding: 3px 6px; }
+}

@@ -4,8 +4,8 @@ declare(strict_types=1);
 return [
     'id' => 'forum',
     'name' => '论坛 Forum',
-    'ver' => '1.0.0',
-    'desc' => '轻量论坛插件：板块 / 帖子 / 回帖 / 分页 / Markdown / 会员发帖游客可读，附后台板块与内容管理。',
+    'ver' => '1.1.0',
+    'desc' => '轻量论坛插件：版块 / 主题 / 回帖 / 引用 / 编辑 / 软删 / 搜索 / 分页 / Markdown / 个人资料 / 置顶·精华·锁定，附后台板块与内容管理。',
     'author' => 'YeCha',
     'license' => 'MIT',
     'requires' => ['core' => '1.0.0'],

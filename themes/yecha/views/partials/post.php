@@ -33,7 +33,7 @@ $back = $lp2 . '/' . e((string)$p['slug']) . '.html';
   <div class="article-meta">
     <?php $pt = strtotime((string)($p['published_at'] ?? $p['created_at'])); ?>
     <span><?= e(date('Y-m-d', $pt)) ?><?= date('H:i', $pt) === '09:00' ? '' : ' ' . date('H:i', $pt) ?></span>
-    <span><?= e(__('meta.reads')) ?><?= Str::num((int)$p['views']) ?></span>
+    <span><?= e(__('meta.reads')) ?><i class="yc-views" data-cid="<?= (int)$p['id'] ?>" style="font-style:normal"><?= Str::num((int)$p['views']) ?></i></span>
     <span><?= e(__('meta.comments')) ?><?= (int)$comment_total ?></span>
   </div>
   <?php
@@ -121,10 +121,18 @@ $back = $lp2 . '/' . e((string)$p['slug']) . '.html';
     try {
       var key = 'yc_view_' + <?= $cid ?> + '_' + new Date().toISOString().slice(0, 10);
       if (localStorage.getItem(key)) { return; }
-      localStorage.setItem(key, '1');
       var fd = new FormData();
       fd.append('content_id', String(<?= $cid ?>));
-      fetch('/count', { method: 'POST', body: fd, credentials: 'same-origin' });
+      // 用响应里的最新总数刷新页面上的阅读数（页面有整页缓存，这一步让数字即时更新）
+      fetch('/count', { method: 'POST', body: fd, credentials: 'same-origin' })
+        .then(function (r) { return r.json(); })
+        .then(function (j) {
+          if (!j || !j.ok) { return; }
+          localStorage.setItem(key, '1');
+          var el = document.querySelector('.yc-views[data-cid="<?= $cid ?>"]');
+          if (el && j.views !== undefined) { el.textContent = String(j.views); }
+        })
+        .catch(function () {});
     } catch (e) {}
   })();
 </script>

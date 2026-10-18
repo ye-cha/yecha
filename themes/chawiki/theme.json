@@ -1,0 +1,31 @@
+{
+  "name": "ChaWiki",
+  "version": "1.0.0",
+  "requires_core": "1.0.0",
+  "author": "YeCha",
+  "description": "ChaWiki（茶百科主题）：以文档/wiki 三栏结构为骨架，茶绿/茶褐/宣纸底配色；正文 .prose-wiki 排版 + 320×200 浮动图 + 灯箱（视觉资产取自旧站 cha.wiki）；首页/词条详情/分类页三类页型。",
+  "settings": [
+    {
+      "key": "width",
+      "label": "版心宽度(px)",
+      "type": "number",
+      "default": 1180
+    },
+    {
+      "key": "palette",
+      "label": "默认配色",
+      "type": "select",
+      "default": "green",
+      "options": {
+        "green": "青茶绿（旧站主色）",
+        "warm": "焙火褐"
+      }
+    },
+    {
+      "key": "per_page",
+      "label": "每页词条数",
+      "type": "number",
+      "default": 24
+    }
+  ]
+}

@@ -1,5 +1,8 @@
 <?php
 declare(strict_types=1);
+// [2026-09-27 官网恢复] 本文件内指向「应用市场说明页」的地址已由 /market.html 改为 /market-guide.html。
+// 原因：market 是 core/Router.php 的 RESERVED 保留字，/{slug}.html 对保留字恒 404。
+// 注意：升级/覆盖本插件会静默丢回旧地址（旧地址会 404）。
 // 市场收录 · 后台：验证 / 发布 / 驳回
 require_once __DIR__ . '/market_lib.php';
 
@@ -84,7 +87,7 @@ function yc_market_admin(): string
     }
     return '<div class="card"><h3>应用市场收录 <small>公开 /market-app 提交 → 验证 → 发布进 var/market/manifest.json（云市场自动读取）</small></h3>'
         . '<p style="color:#565b61;font-size:13px;">' . $manifest . '</p>'
-        . '<p style="color:#9a9a90;font-size:12.5px;">验证内容：ZIP 结构（防路径穿越）→ 插件需根 plugin.php / 主题需含 CSS → 包内全部 .php 跑 php -l → 计算 SHA-256 并与申请声明比对。验证不执行包内代码，发布后上线行为仍需留意。前台入口：<a target="_blank" href="/market-app">/market-app</a>（上架规范见该页与<a target="_blank" href="/market.html">应用市场</a>）。</p></div>'
+        . '<p style="color:#9a9a90;font-size:12.5px;">验证内容：ZIP 结构（防路径穿越）→ 插件需根 plugin.php / 主题需含 CSS → 包内全部 .php 跑 php -l → 计算 SHA-256 并与申请声明比对。验证不执行包内代码，发布后上线行为仍需留意。前台入口：<a target="_blank" href="/market-app">/market-app</a>（上架规范见该页与<a target="_blank" href="/market-guide.html">应用市场</a>）。</p></div>'
         . '<div class="card"><h3>上架申请（' . count($rows) . '）</h3>'
         . ($rows
             ? '<table><tr><th>应用</th><th>作者 / 下载</th><th>说明 / 联系</th><th>状态</th><th>操作</th></tr>' . $tr . '</table>'

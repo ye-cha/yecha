@@ -24,7 +24,7 @@ if ($tw !== '' || ($tac !== '' && preg_match('/^#[0-9a-fA-F]{3,8}$/', $tac))) {
         . (preg_match('/^#[0-9a-fA-F]{3,8}$/', $tac) ? '--accent:' . $tac . ';' : '') . '}</style>';
 }
 ?>
-<?php $headStat = stat_html('stats.head'); if ($headStat !== '') { echo "\n<!-- stats.head -->\n" . $headStat; } ?>
+<?php $headStat = (string)get_option('stats.head', ''); if ($headStat !== '') { echo "\n<!-- stats.head -->\n" . $headStat; } ?>
 <?php
 // canonical + hreflang：仅当 index.php 判明“该内容语言集”后输出（文章/页面，且只列真有 publish 译文的语言）
 if (!empty($GLOBALS['YC_CANONICAL'])) {
@@ -32,7 +32,7 @@ if (!empty($GLOBALS['YC_CANONICAL'])) {
 }
 if (!empty($GLOBALS['YC_HREFLANG']) && is_array($GLOBALS['YC_HREFLANG'])) {
     $host = $_SERVER['HTTP_HOST'] ?? 'localhost:8082';
-    $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+    $scheme = yc_theme_scheme();
     $origin = $scheme . '://' . $host;
     foreach (Poly::enabled() as $lc) {
         $rel = $GLOBALS['YC_HREFLANG'][$lc] ?? null;
@@ -67,9 +67,29 @@ if (!empty($GLOBALS['YC_META'])) {
       <?php endif; ?>
       <span class="brand-word"><?= e(site_label()) ?></span>
     </a>
-    <nav class="nav">
+    <nav class="nav" aria-label="<?= e(__('ui.main_nav')) ?>">
       <?php foreach (Nav::list('top', Lang::short()) as $ni): ?>
+      <?php if (!empty($ni['groups'])): ?>
+      <?php $nGroups = count($ni['groups']); ?>
+      <div class="nav-dd nav-mega">
+        <a class="nav-dd-btn<?= $ni['active'] ? ' active' : '' ?><?= $ni['key'] === 'downloads' ? ' nav-cta' : '' ?>" href="<?= e($ni['href']) ?>" aria-haspopup="true" aria-expanded="false">
+          <span><?= e($ni['label']) ?></span>
+          <svg class="ico nav-dd-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"></path></svg>
+        </a>
+        <div class="nav-dd-menu nav-mega-menu"<?= $nGroups < 3 ? ' style="min-width:228px;grid-template-columns:1fr"' : '' ?>>
+          <?php foreach ($ni['groups'] as $g): ?>
+          <div class="nav-mega-col">
+            <div class="nav-mega-cap"><?= e($g['label']) ?></div>
+            <?php foreach ($g['items'] as $ci): ?>
+            <a href="<?= e($ci['href']) ?>"<?= $ci['active'] ? ' class="active"' : '' ?>><?= e($ci['label']) ?></a>
+            <?php endforeach; ?>
+          </div>
+          <?php endforeach; ?>
+        </div>
+      </div>
+      <?php else: ?>
       <a href="<?= e($ni['href']) ?>"<?= $ni['active'] ? ' class="active"' : '' ?>><?= e($ni['label']) ?></a>
+      <?php endif; ?>
       <?php endforeach; ?>
     </nav>
     <div class="hd-tools">
@@ -108,7 +128,19 @@ if (!empty($GLOBALS['YC_META'])) {
       </button>
       <nav class="drawer-nav">
         <?php foreach (Nav::list('top', Lang::short()) as $ni): ?>
+        <?php if (!empty($ni['groups'])): ?>
+        <div class="drawer-sub">
+          <a class="drawer-sub-cap<?= $ni['active'] ? ' active' : '' ?>" href="<?= e($ni['href']) ?>"><?= e($ni['label']) ?></a>
+          <?php foreach ($ni['groups'] as $g): ?>
+          <div class="drawer-sub-cap2"><?= e($g['label']) ?></div>
+          <?php foreach ($g['items'] as $ci): ?>
+          <a class="drawer-sub-a<?= $ci['active'] ? ' active' : '' ?>" href="<?= e($ci['href']) ?>"><?= e($ci['label']) ?></a>
+          <?php endforeach; ?>
+          <?php endforeach; ?>
+        </div>
+        <?php else: ?>
         <a href="<?= e($ni['href']) ?>"<?= $ni['active'] ? ' class="active"' : '' ?>><?= e($ni['label']) ?></a>
+        <?php endif; ?>
         <?php endforeach; ?>
       </nav>
       <?php if (Poly::on()): ?>
@@ -149,8 +181,14 @@ if (!empty($GLOBALS['YC_META'])) {
 
 <footer class="site-footer"><div class="wrap">
   <span><?php foreach (Nav::list('foot', Lang::short()) as $fi => $ni): ?><?= $fi > 0 ? ' · ' : '' ?><a href="<?= e($ni['href']) ?>"><?= e($ni['label']) ?></a><?php endforeach; ?></span>
-  <span>© <?= date('Y') ?> <?= e(site_label()) ?> · <?= __('ui.powered') ?><?php $icp = trim((string)get_option('site.icp', '')); if ($icp !== ''): ?> · <a href="<?= e((string)get_option('site.icp_link', 'https://beian.miit.gov.cn/')) ?>" rel="noopener" target="_blank"><?= e($icp) ?></a><?php endif; ?></span>
+  <span>© <?= date('Y') ?> <?= e(site_label()) ?><?php // 署名默认不显示（站方自有品牌站点）；需要时把 site.powered 设为 1
+      if (trim((string)get_option('site.powered', '0')) === '1'): ?> · <a href="https://yecha.org/" rel="noopener" target="_blank"><?= __('ui.powered') ?></a><?php endif; ?>
+    <?php $icp = trim((string)get_option('site.icp', '')); if ($icp !== ''): ?>
+    · <a href="<?= e((string)get_option('site.icp_link', 'https://beian.miit.gov.cn/')) ?>" rel="noopener" target="_blank"><?= e($icp) ?></a>
+    <?php endif; ?>
+  </span>
 </div></footer>
+<?php $footStat = (string)get_option('stats.foot', ''); if ($footStat !== '') { echo "\n<!-- stats.foot -->\n" . $footStat; } ?>
 <script>
 (function () {
   var d = document.documentElement, b = document.getElementById('darkToggle');
@@ -171,6 +209,32 @@ if (!empty($GLOBALS['YC_META'])) {
   lb.addEventListener('click', function (ev) { ev.stopPropagation(); setLang(lm.hidden); });
   document.addEventListener('click', function () { setLang(false); });
   document.addEventListener('keydown', function (ev) { if (ev.key === 'Escape') { setLang(false); } });
+})();
+(function () {
+  var dds = Array.prototype.slice.call(document.querySelectorAll('.nav-dd'));
+  if (!dds.length) return;
+  function closeAll(except) {
+    dds.forEach(function (dd) {
+      if (dd === except) return;
+      dd.classList.remove('open');
+      var b = dd.querySelector('.nav-dd-btn');
+      if (b) b.setAttribute('aria-expanded', 'false');
+    });
+  }
+  dds.forEach(function (dd) {
+    var btn = dd.querySelector('.nav-dd-btn');
+    if (!btn) return;
+    // The top-level item is a link (/downloads): click navigates; the menu opens on hover / focus.
+    if (btn.tagName === 'A') return;
+    btn.addEventListener('click', function (ev) {
+      ev.preventDefault(); ev.stopPropagation();
+      var open = dd.classList.toggle('open');
+      btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+      closeAll(dd);
+    });
+  });
+  document.addEventListener('click', function () { closeAll(null); });
+  document.addEventListener('keydown', function (ev) { if (ev.key === 'Escape') { closeAll(null); } });
 })();
 (function () {
   var nt = document.getElementById('navToggle'), dr = document.getElementById('drawer'), dc = document.getElementById('drawerClose');
@@ -195,6 +259,5 @@ document.addEventListener('error', function (e) {
   }
 }, true);
 </script>
-<?php $footStat = stat_html('stats.foot'); if ($footStat !== '') { echo "\n<!-- stats.foot -->\n" . $footStat; } ?>
 </body>
 </html>

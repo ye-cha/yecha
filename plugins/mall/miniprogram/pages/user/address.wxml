@@ -1,0 +1,26 @@
+<view class="ad">
+  <view wx:if="{{!editing}}">
+    <view class="ai" wx:for="{{list}}" wx:key="id" bindtap="pickAddr" data-id="{{item.id}}">
+      <view class="aih"><text class="ain">{{item.name}}</text><text class="aim">{{item.mobile}}</text>
+        <text class="def" wx:if="{{item.is_default}}">默认</text></view>
+      <view class="aia">{{item.province}}{{item.city}}{{item.county}}{{item.address_detail}}</view>
+      <view class="aop" wx:if="{{!pick}}">
+        <text bindtap="setDefault" data-id="{{item.id}}">设为默认</text>
+        <text bindtap="edit" data-id="{{item.id}}">编辑</text>
+        <text bindtap="del" data-id="{{item.id}}">删除</text>
+      </view>
+    </view>
+    <view class="empty" wx:if="{{list.length === 0}}">还没有收货地址</view>
+    <view class="btn-primary add" bindtap="add">新增收货地址</view>
+  </view>
+
+  <view wx:if="{{editing}}" class="form">
+    <view class="fi"><text>姓名</text><input data-f="name" value="{{form.name}}" bindinput="onField" placeholder="收货人"/></view>
+    <view class="fi"><text>手机</text><input data-f="mobile" value="{{form.mobile}}" bindinput="onField" placeholder="手机号"/></view>
+    <view class="fi"><text>省</text><input data-f="province" value="{{form.province}}" bindinput="onField" placeholder="如 云南省"/></view>
+    <view class="fi"><text>市</text><input data-f="city" value="{{form.city}}" bindinput="onField" placeholder="如 西双版纳"/></view>
+    <view class="fi"><text>区/县</text><input data-f="county" value="{{form.county}}" bindinput="onField" placeholder="如 勐海县"/></view>
+    <view class="fi"><text>详细</text><input data-f="address_detail" value="{{form.address_detail}}" bindinput="onField" placeholder="街道门牌"/></view>
+    <view class="row" style="padding:20rpx"><button class="btn-ghost" bindtap="back">取消</button><view class="gap"></view><view class="btn-primary" bindtap="save">保存</view></view>
+  </view>
+</view>

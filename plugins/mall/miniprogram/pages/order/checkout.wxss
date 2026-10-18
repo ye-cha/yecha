@@ -1,0 +1,13 @@
+.co { padding-bottom: 120rpx; }
+.addr { padding: 24rpx 20rpx; }
+.an { font-size: 30rpx; font-weight: 600; }
+.aaddr { color: #666; font-size: 26rpx; margin-top: 8rpx; line-height: 1.6; }
+.ogi { display: flex; padding: 16rpx 0; border-bottom: 1rpx solid #f5f5f5; }
+.goimg { width: 120rpx; height: 120rpx; background: #eee; margin-right: 16rpx; }
+.gob { flex: 1; }
+.got { font-size: 28rpx; }
+.gos { color: #999; font-size: 24rpx; margin: 6rpx 0; }
+.remark { width: 100%; height: 120rpx; font-size: 26rpx; }
+.cbar { position: fixed; left: 0; right: 0; bottom: 0; height: 100rpx; display: flex; align-items: center; background: #fff; border-top: 1rpx solid #eee; padding: 0 16rpx; }
+.ct { flex: 1; font-size: 30rpx; }
+.cbar .btn-primary { height: 76rpx; line-height: 76rpx; padding: 0 48rpx; }

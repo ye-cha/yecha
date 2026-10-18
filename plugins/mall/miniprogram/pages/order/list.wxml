@@ -1,0 +1,20 @@
+<view class="ol">
+  <view class="tabs">
+    <view class="tab {{tab === index ? 'on' : ''}}" wx:for="{{tabs}}" wx:key="*this" bindtap="switchTab" data-i="{{index}}">{{item}}</view>
+  </view>
+
+  <view class="oc" wx:for="{{list}}" wx:key="order_no" bindtap="goDetail" data-no="{{item.order_no}}">
+    <view class="och">订单号 {{item.order_no}} · {{item.status_text}}</view>
+    <view class="ogi" wx:for="{{item.goods}}" wx:for-item="g" wx:key="title">
+      <image class="goimg" src="{{g.cover}}" mode="aspectFill"></image>
+      <view class="gob">
+        <view class="got">{{g.title}}</view>
+        <view class="gos">{{g.spec_text}} ×{{g.num}}</view>
+        <view class="price"><text class="y">¥</text>{{g.price}}</view>
+      </view>
+    </view>
+    <view class="ocf">实付：<text class="price"><text class="y">¥</text>{{item.pay_price}}</text></view>
+  </view>
+
+  <view class="empty" wx:if="{{list.length === 0}}">暂无订单</view>
+</view>

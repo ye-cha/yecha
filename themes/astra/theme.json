@@ -1,0 +1,52 @@
+{
+  "name": "Astra 蓝调轻盈",
+  "version": "1.0.0",
+  "requires_core": "1.0.0",
+  "description": "Astra for YeCha —— 蓝调轻盈博客主题",
+  "author": "YeCha",
+  "settings": [
+    {
+      "key": "width",
+      "type": "select",
+      "label": "页面宽度",
+      "def": "",
+      "opts": {
+        "": "默认 1180px",
+        "760": "窄 760px",
+        "1040": "1040px",
+        "1180": "宽 1180px"
+      }
+    },
+    {
+      "key": "accent",
+      "type": "color",
+      "label": "强调色",
+      "help": "主色 hex，默认 #1f6feb",
+      "def": "#1f6feb"
+    },
+    {
+      "key": "per_page",
+      "type": "number",
+      "label": "每页文章数",
+      "def": "10",
+      "min": 5,
+      "max": 50
+    },
+    {
+      "key": "latest_n",
+      "type": "number",
+      "label": "侧栏最新文章数",
+      "def": "8",
+      "min": 3,
+      "max": 20
+    },
+    {
+      "key": "show_sidebar",
+      "type": "checkbox",
+      "label": "显示右侧栏",
+      "help": "分类 / 最新 / 标签 / 归档",
+      "def": "1"
+    }
+  ],
+  "home": "landing"
+}

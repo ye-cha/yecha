@@ -5,6 +5,7 @@ declare(strict_types=1);
 
 require __DIR__ . '/helpers.php';
 require_once __DIR__ . '/version.php';
+require_once __DIR__ . '/_scheme.php';   // ⑤ scheme 多源判定（HTTPS / X-Forwarded-Proto / CF-Visitor / SERVER_PORT=443 等）
 
 error_reporting(cfg('DEBUG', false) ? E_ALL : E_ALL & ~E_DEPRECATED);
 ini_set('display_errors', cfg('DEBUG', false) ? '1' : '0');
@@ -19,7 +20,7 @@ if (session_status() === PHP_SESSION_NONE) {
     session_set_cookie_params([
         'lifetime' => 0,
         'path'     => '/',
-        'secure'   => isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off',
+        'secure'   => (yc_theme_scheme() === 'https'),
         'httponly' => true,
         'samesite' => 'Lax',
     ]);
@@ -60,8 +61,21 @@ function get_option(string $name, mixed $default = null): mixed
 function set_option(string $name, mixed $value, int $autoload = 1): void
 {
     $v = is_scalar($value) || $value === null ? (string)$value : json_encode($value, JSON_UNESCAPED_UNICODE);
-    Db::deleteBy('options', 'name=?', [$name]);
-    Db::insert('options', ['name' => $name, 'value' => $v, 'autoload' => $autoload]);
+
+    /* ★ 单条原子 upsert（2026-09-27 修）。
+       改前是 `DELETE` + `INSERT` 两条独立语句，**不在事务里** ⇒ 两次调用之间只要有另一路径
+       把该行插回来，`INSERT` 就撞主键、抛 `Uncaught PDOException`（1062 Duplicate entry），
+       而且崩溃停在中途 ⇒ 行**被删了没插回来**、库里缺条目，`get_option()` 全靠默认值兜底，
+       **站点看着正常而配置已经丢了**。实测原文：
+         SQLSTATE[23000]: Integrity constraint violation: 1062 Duplicate entry 'theme.default' for key 'PRIMARY'
+       本写法只用**一条**语句完成"有则改、无则插"，中间没有可被插入的窗口。
+       语义与改前一致：`ye_options.name` 是主键，`autoload` 一并更新；`updated_at` 由
+       `ON UPDATE CURRENT_TIMESTAMP` 维护。注意：MySQL 的 `VALUES()` 在 8.0.20+ 被标记为
+       弃用（仍可用），换成别名语法则 5.7 不认 —— 为兼容 5.7/8.x 一律沿用 `VALUES()`。 */
+    $sql = 'INSERT INTO ' . Db::t('options') . ' (`name`,`value`,`autoload`) VALUES (?,?,?)'
+        . ' ON DUPLICATE KEY UPDATE `value`=VALUES(`value`), `autoload`=VALUES(`autoload`)';
+    Db::run($sql, [$name, $v, $autoload]);
+
     $GLOBALS['YE_OPTIONS'][$name] = $v;
     Cache::flush('misc');
 }
@@ -231,20 +245,53 @@ function theme_opt_set(array $kv): void
     set_option('theme.options', json_encode($arr, JSON_UNESCAPED_UNICODE));
 }
 
+
+/* ---------- 主题声明：theme.json 元信息 + 可配置项 schema ---------- */
+function theme_json(string $id): array
+{
+    $f = dirname(__DIR__) . '/themes/' . $id . '/theme.json';
+    if (!is_file($f)) { return []; }
+    $j = json_decode((string)@file_get_contents($f), true);
+    return is_array($j) ? $j : [];
+}
+
+function theme_meta(?string $id = null): array
+{
+    $id = ($id !== null && $id !== '') ? $id : (string)get_option('theme.default', 'yecha');
+    $j = theme_json($id);
+    $raw = $j['settings'] ?? [];
+    $s = [];
+    foreach ((array)$raw as $x) {
+        if (is_array($x) && !empty($x['key'])) { $s[] = $x; }
+    }
+    return [
+        'id' => $id,
+        'name' => (string)($j['name'] ?? $id),
+        'version' => (string)($j['version'] ?? ''),
+        'author' => (string)($j['author'] ?? ''),
+        'description' => (string)($j['description'] ?? ''),
+        'settings' => $s,
+    ];
+}
+
 /* ---------- 多语默认：zh(默认) + en(English)，AI 接口默认 DeepSeek（无 key 仅人工翻译） ---------- */
 function poly_defaults(): void
 {
-    // 语言：确保含 zh 与 en（英文默认开通；已在运行的站会就地补上）
-    $raw = get_option('site.languages', null);
-    $list = is_string($raw) ? (json_decode($raw, true) ?: []) : [];
-    if (!is_array($list) || !in_array('en', $list, true)) {
-        set_option('site.languages', json_encode(['zh', 'en'], JSON_UNESCAPED_UNICODE));
-    }
-    if (get_option('site.default_lang', null) === null) {
-        set_option('site.default_lang', 'zh');
-    }
-    foreach (['ai.base' => 'https://api.deepseek.com/chat/completions', 'ai.model' => 'deepseek-chat', 'ai.key' => '', 'ai.protect' => 'YeCha,夜叉'] as $k => $v) {
-        if (get_option($k, null) === null) { set_option($k, $v); }
+    // 多语言为可选插件：仅当 plugins/poly 存在时才写多语与 AI 默认
+    $polyIn = is_dir(dirname(__DIR__) . '/plugins/poly');
+    if ($polyIn) {
+        // 语言：确保含 zh 与 en（英文默认开通；已在运行的站会就地补上）
+        $raw = get_option('site.languages', null);
+        $list = is_string($raw) ? (json_decode($raw, true) ?: []) : [];
+        if (!is_array($list) || !in_array('en', $list, true)) {
+            set_option('site.languages', json_encode(['zh', 'en'], JSON_UNESCAPED_UNICODE));
+        }
+        if (get_option('site.default_lang', null) === null) {
+            set_option('site.default_lang', 'zh');
+        }
+        foreach (['ai.base' => 'https://api.deepseek.com/chat/completions', 'ai.model' => 'deepseek-chat', 'ai.key' => '', 'ai.protect' => 'YeCha,夜叉'] as $k => $v) {
+            if (get_option($k, null) === null) { set_option($k, $v); }
+        }
     }
     // P-4 评论防骚扰默认值
     if (get_option('comment.blacklist', null) === null) {

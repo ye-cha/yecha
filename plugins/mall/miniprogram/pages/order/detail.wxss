@@ -1,0 +1,15 @@
+.od { padding-bottom: 120rpx; }
+.ost { font-size: 34rpx; font-weight: 700; color: #a21400; }
+.addr { color: #555; font-size: 26rpx; margin-top: 12rpx; line-height: 1.6; }
+.ogi { display: flex; padding: 16rpx 0; border-bottom: 1rpx solid #f5f5f5; }
+.goimg { width: 120rpx; height: 120rpx; background: #eee; margin-right: 16rpx; }
+.gob { flex: 1; }
+.got { font-size: 28rpx; }
+.gos { color: #999; font-size: 24rpx; margin: 6rpx 0; }
+.sum { margin-top: 16rpx; font-size: 26rpx; color: #555; line-height: 1.9; }
+.sum .price { font-size: 30rpx; }
+.remark { color: #999; font-size: 24rpx; margin-top: 10rpx; }
+.bar { position: fixed; left: 0; right: 0; bottom: 0; display: flex; background: #fff; border-top: 1rpx solid #eee; padding: 12rpx 16rpx; }
+.bar-btn { flex: 1; text-align: center; height: 76rpx; line-height: 76rpx; margin-left: 16rpx; font-size: 28rpx; color: #fff; }
+.bar-btn.cancel { background: #999; }
+.bar-btn.pay { background: #a21400; }

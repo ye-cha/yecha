@@ -40,7 +40,14 @@ final class Markdown
             // 标题（层级如实：### -> h3）
             if (preg_match('/^(#{1,6})\s+(.*)$/', $t, $m)) {
                 $lv = strlen($m[1]);
-                $out .= '<h' . $lv . '>' . self::inline(e(trim($m[2]))) . '</h' . $lv . '>';
+                $txt = trim($m[2]);
+                $hid = '';
+                // t38：支持显式锚点 `## 标题 {#anchor}`（Front::post 会沿用该 id 生成目录）
+                if (preg_match('/\s*\{#([A-Za-z0-9_-]{1,40})\}\s*$/', $txt, $ma)) {
+                    $hid = $ma[1];
+                    $txt = trim(substr($txt, 0, -strlen($ma[0])));
+                }
+                $out .= '<h' . $lv . ($hid !== '' ? ' id="' . $hid . '"' : '') . '>' . self::inline(e($txt)) . '</h' . $lv . '>';
                 $i++;
                 continue;
             }
@@ -115,6 +122,26 @@ final class Markdown
             || preg_match('/^#{1,6}\s+/', $t) === 1
             || preg_match('/^\s*([-*+]|\d+[.)])\s+/', $t) === 1
             || (str_contains($t, '|') && preg_match('/^\s*\|?[\s:|-]+\|/', $t) === 1 && self::looksLikeTableRow($t));
+    }
+
+    /**
+     * 安全清洗导来的富文本 HTML（如 51puer 资讯）：去掉 script/style/iframe/object/embed、
+     * on* 事件属性、javascript: 协议，并清掉 Word 复制残留的 style/class/lang 等属性。
+     * 保留结构标签与 <img> 的 width/height/src/alt。供博客正文与商城资讯共用。
+     * （内核合流 2026-09-26，来源：yecha-dev core/Markdown.php）
+     */
+    public static function sanitizeForeignHtml(string $h): string
+    {
+        $h = preg_replace('#<script\b.*?</script>#is', '', $h);
+        $h = preg_replace('#<style\b.*?</style>#is', '', $h);
+        $h = preg_replace('#<iframe\b.*?</iframe>#is', '', $h);
+        $h = preg_replace('#<object\b.*?</object>#is', '', $h);
+        $h = preg_replace('#<embed\b[^>]*/?>#i', '', $h);
+        $h = preg_replace('#\s+on\w+\s*=\s*("[^"]*"|\'[^\']*\')#i', '', $h);
+        $h = preg_replace('#\s+(?:href|src)\s*=\s*("javascript:[^"]*"|\'javascript:[^\']*\')#i', ' src="#"', $h);
+        $h = preg_replace('#</?o:p\s*/?>#i', '', $h);
+        $h = preg_replace('#\s+(?:style|class|lang|face|size|vspace|hspace|clear|type)\s*=\s*("[^"]*"|\'[^\']*\')#i', '', $h);
+        return $h;
     }
 
     private static function looksLikeTableRow(string $t): bool

@@ -1,0 +1,74 @@
+/* 企业官网主题 · 律政庄重（律所 / 法律 / 咨询）
+   气质：墨黑 + 酒红 + 暗金，衬线标题（宋体/Georgia）；直角细线、卡片左侧金线；
+        区块标题带红色标记，稳而不冷。 */
+.sc-root{
+  --sc-primary:#7b2d33;--sc-deep:#1c1c1e;--sc-accent:#a8834a;
+  --sc-bg:#ffffff;--sc-surface:#f7f5f1;--sc-line:#e2ddd4;--sc-text:#2c2a27;--sc-muted:#6f6a62;
+  --sc-card:#fdfcfa;--sc-card-line:#e6e1d8;--sc-img-bg:linear-gradient(160deg,#efeae1,#e6dfd3);--sc-img-radius:0;
+  --sc-radius:3px;--sc-maxw:1140px;
+  --sc-heading-font:'Songti SC','SimSun','Times New Roman',serif;--sc-heading-tracking:1px;
+  --sc-hero-bg:#1c1c1e;
+  --sc-footer-bg:#17171a;
+  --sc-header-bg:#ffffff;--sc-nav-fg:#6f6a62;
+  --sc-on-primary:#ffffff;
+  --sc-btn-bg:#7b2d33;--sc-btn-fg:#ffffff;--sc-btn-hover:#5f2027;
+  --sc-ghost-line:#c9c2b6;--sc-ghost-fg:#7b2d33;--sc-input-line:#c9c2b6;
+  --sc-eyebrow-track:3px;
+  --sc-footer-fg:rgba(255,255,255,.7);--sc-footer-strong:#f0e6d8;
+  --sc-flash-bg:#f7f5f1;--sc-flash-line:#ddd2c2;--sc-flash-fg:#7b2d33;
+  --sc-empty-fg:#9a938a;
+}
+
+/* Hero：深墨底 + 竖向律条（章程感） */
+.sc-hero-art::before{content:"";position:absolute;left:0;top:0;right:0;bottom:0;background-image:repeating-linear-gradient(90deg,rgba(255,255,255,.10) 0 1px,transparent 1px 34px)}
+.sc-hero-art::after{content:"";position:absolute;left:36px;bottom:34px;width:52px;height:52px;border-left:2px solid var(--sc-accent);border-bottom:2px solid var(--sc-accent)}
+.sc-hero h1{font-size:33px;line-height:1.5}
+
+/* 区块标题：红色标记线（庄重书卷感） */
+.sc-sec h2{padding-left:12px;border-left:3px solid var(--sc-primary)}
+.sc-sec.sc-alt h2{background:transparent}
+/* 卡片：左侧金线 */
+.sc-card,.sc-feat,.sc-job{border-left:2px solid var(--sc-accent)}
+.sc-feat b,.sc-card b{font-weight:500}
+/* 表格更像是「条款」 */
+.sc-table th{background:#f7f5f1}
+
+/* ============================================================================
+   版式：大所正统（Linear Authority）
+   调研依据：律所官网 = 通栏大标题 hero（衬线、深底）+ 专业人员数据条 +
+   「业务领域」纯文字列表（极少图卡）+ 律师个人卡（正装方形像 + 职称）+
+   脱敏业绩列表。这里刻意去掉所有卡片的圆角与阴影，用金线竖向分隔；
+   业务领域改双列文字列表带箭头，律师卡用半身方像占位。
+   ============================================================================ */
+.sc-hero{display:block;background:var(--sc-hero-bg);color:var(--sc-on-primary);padding:0}
+.sc-hero-text{padding:92px 24px 84px;max-width:760px}
+.sc-hero-art{display:none}
+.sc-hero h1{font-size:38px;font-weight:500}
+.sc-hero-eyebrow{color:var(--sc-accent);letter-spacing:3px}
+.sc-hero-intro{color:rgba(255,255,255,.82)}
+.sc-hero-cta .sc-btn-ghost{border-color:rgba(255,255,255,.45);color:var(--sc-on-primary)}
+.sc-stat-bar{grid-template-columns:repeat(4,minmax(0,1fr));gap:0;border-top:1px solid var(--sc-line);border-bottom:1px solid var(--sc-line)}
+.sc-stat-bar li{border:0;border-left:1px solid var(--sc-line);border-radius:0;background:transparent;padding:18px 22px}
+.sc-stat-bar li:first-child{border-left:0}
+.sc-stat-bar li b{font-size:19px}
+.sc-plist{max-width:100%;columns:2;column-gap:36px}
+.sc-plist li{break-inside:avoid}
+.sc-plist li a{position:relative;padding:16px 26px 16px 0;border-bottom:1px solid var(--sc-line)}
+.sc-plist li a::after{content:"\2192";position:absolute;right:0;top:16px;color:var(--sc-accent);font-size:15px}
+.sc-plist li b{font-size:17px}
+.sc-people{grid-template-columns:repeat(4,minmax(0,1fr));gap:20px}
+.sc-person{text-align:left;padding:0;background:transparent;border:0}
+.sc-avatar{width:100%;height:150px;border-radius:0;margin:0 0 12px;font-size:26px}
+.sc-person b{font-size:17px}
+.sc-person em{font-size:13px}
+.sc-timeline{max-width:100%}
+.sc-footer-base{border-top:1px solid var(--sc-footer-line)}
+@media (max-width:900px){.sc-plist{columns:1}.sc-stat-bar,.sc-people{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:560px){.sc-people{grid-template-columns:repeat(2,minmax(0,1fr))}.sc-stat-bar{grid-template-columns:minmax(0,1fr)}}
+
+/* 有实拍图时：通栏深底 hero 以法院/律所实景照片铺底，压暗保证文字可读 */
+.sc-hero{position:relative}
+.sc-hero-art[data-img]{display:block;position:absolute;inset:0;min-height:0;opacity:.38}
+.sc-hero-art[data-img]::before{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(30,10,12,.88) 0%,rgba(30,10,12,.35) 70%,rgba(30,10,12,.15) 100%)}
+.sc-hero-art[data-img]::after{display:none}
+.sc-hero-text{position:relative;z-index:1}

@@ -10,7 +10,7 @@ final class Feed
     private static function baseUrl(): string
     {
         $host = $_SERVER['HTTP_HOST'] ?? 'localhost:8082';
-        $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+        $scheme = yc_theme_scheme();
         return $scheme . '://' . $host;
     }
 
@@ -153,7 +153,67 @@ final class Feed
             }
             $out .= self::url($zh, $last, '0.8', $alt);
         }
+
+        // ★ 商城（mall 插件）：商品/分类/品牌/资讯/关键页
+        //   修复前 sitemap 只有博客内容 —— 一个 1400+ 商品的电商站，
+        //   商品详情页全不在地图里（但详情页本身有 canonical/description，说明设计上要进搜索引擎）。
+        //   插件未启用或表不存在时整段跳过，不影响非商城站点。
+        //   （内核合流 2026-09-26，来源：yecha-dev core/Feed.php）
+        $out .= self::sitemapMall($base);
+
         return $out . '</urlset>';
+    }
+
+    /** 商城部分的 sitemap 条目（插件关闭/表不存在则返回空串） */
+    private static function sitemapMall(string $base): string
+    {
+        try {
+            if (!class_exists('Plugins') || !Plugins::isOn('mall')) { return ''; }
+            if (!Plugins::tableExists('mall_goods')) { return ''; }
+        } catch (Throwable $e) {
+            return '';
+        }
+        $out = '';
+        // 关键功能页
+        foreach ([['/list.html', '0.9'], ['/brand', '0.5'], ['/promo', '0.5'],
+                  ['/article/lists.html', '0.7'], ['/mall/tag/', '0.5']] as $p) {
+            $out .= self::url($base . $p[0], '', $p[1]);
+        }
+        // 商品分类
+        try {
+            foreach (Db::rows('SELECT id FROM ' . Db::t('mall_goods_category')
+                . ' WHERE is_delete_time=0 ORDER BY sort ASC, id ASC') as $c) {
+                $out .= self::url($base . '/list.html?category_id=' . (int)$c['id'], '', '0.7');
+            }
+        } catch (Throwable $e) {
+        }
+        // 品牌
+        try {
+            foreach (Db::rows('SELECT id FROM ' . Db::t('mall_brand') . ' WHERE is_show=1 ORDER BY id ASC') as $b) {
+                $out .= self::url($base . '/brand/' . (int)$b['id'] . '/', '', '0.4');
+            }
+        } catch (Throwable $e) {
+        }
+        // 商品详情（上架 + 未删）
+        try {
+            foreach (Db::rows('SELECT id, updated_at FROM ' . Db::t('mall_goods')
+                . ' WHERE status=1 AND is_delete_time=0 ORDER BY id ASC') as $g) {
+                $out .= self::url($base . '/goods-' . (int)$g['id'] . '.html',
+                    (string)($g['updated_at'] ?? ''), '0.8');
+            }
+        } catch (Throwable $e) {
+        }
+        // 商城资讯（51puer 导入文章，slug 形如 p51-{id}）
+        try {
+            foreach (Db::rows("SELECT id, published_at, updated_at FROM " . Db::t('contents')
+                . " WHERE type='post' AND status='publish' AND deleted_at IS NULL"
+                . " AND slug LIKE 'p51-%' ORDER BY id ASC") as $a) {
+                $out .= self::url($base . '/article-' . (int)$a['id'] . '.html',
+                    (string)($a['published_at'] ?? $a['updated_at']), '0.6');
+            }
+        } catch (Throwable $e) {
+        }
+        return $out;
     }
 
     private static function url(string $loc, string $lastmod, string $priority, string $alternates = ''): string

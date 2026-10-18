@@ -10,7 +10,8 @@ if (!is_file($ROOT . '/config.inc.php')) {
 require $ROOT . '/config.inc.php';
 require $ROOT . '/core/bootstrap.php';
 require __DIR__ . '/posts.inc.php';
-require __DIR__ . '/poly.inc.php';
+// 多语言已为云市场插件：poly.inc 随插件存在（兼容：若在则加载）
+if (is_file(__DIR__ . '/poly.inc.php')) { require __DIR__ . '/poly.inc.php'; }
 require __DIR__ . '/metas.inc.php';
 require __DIR__ . '/notes.inc.php';
 Plugins::boot(); // 加载第三方插件（Hooks 注册等）
@@ -283,6 +284,22 @@ if ($authed && $isAdmin && ($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
         header('Location: /admin/?s=upgrade');
         exit;
     }
+    if ($do === 'upgrade-remote') {
+        $rm = Upgrade::remoteStatus();
+        if (!$rm || !Upgrade::isUpdateAvailable($rm)) {
+            $_SESSION['flash'] = '当前已是最新或未配置更新源';
+            header('Location: /admin/?s=upgrade');
+            exit;
+        }
+        $bk = tools_backup();
+        Upgrade::log('=== remote upgrade to ' . (string)$rm['version'] . ' backup=' . basename($bk) . ' by ' . (Auth::user()['username'] ?? '?') . ' ===');
+        $res = Upgrade::applyRemote($rm);
+        $_SESSION['flash'] = $res['ok']
+            ? ('升级成功：' . $res['msg'] . ' 备份：' . basename($bk))
+            : ('升级失败：' . ($res['msg'] ?? '未知错误') . '（备份：' . basename($bk) . '，可回滚）');
+        header('Location: /admin/?s=upgrade');
+        exit;
+    }
     if ($do === 'upgrade-config') {
         set_option('upgrade.manifest_url', trim((string)($_POST['manifest_url'] ?? '')));
         $_SESSION['flash'] = '更新源设置已保存（上线后填写 update/manifest.json 或 GitHub raw 地址）';
@@ -291,31 +308,39 @@ if ($authed && $isAdmin && ($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
     }
     if ($do === 'plugin-uninstall') {
         $id = (string)($_POST['id'] ?? '');
+        /* 卸载语义（内核合流 2026-09-26，来源：yecha-dev admin/index.php）：
+           purge=1 → 卸载并删除插件自有数据表与配置；purge=0 → 仅卸载（停用并移出列表，数据与配置保留，
+           可随时重装继续用）。改前**任何卸载都 DROP 表**，是破坏性操作。 */
+        $purge = (($_POST['purge'] ?? '') === '1');
         $info = Plugins::uninstallInfo($id);
         if (!$info) {
             $_SESSION['flash'] = '该插件为常驻能力或不存在，不可卸载';
             header('Location: /admin/?s=plugins');
             exit;
         }
-        // 1) 自动全库备份
+        // 1) 自动全库备份（任何卸载都先备份）
         $bk = tools_backup();
-        // 2) 清理插件自有数据表
-        foreach (($info['tables'] ?? []) as $tb) {
-            $t = Db::t($tb);
-            Db::run("DROP TABLE IF EXISTS {$t}");
+        if ($purge) {
+            // 2) 卸载并删除配置：清理插件自有数据表
+            foreach (($info['tables'] ?? []) as $tb) {
+                $t = Db::t($tb);
+                Db::run("DROP TABLE IF EXISTS {$t}");
+            }
+            // 3) 清理插件自有选项（精确 + LIKE 前缀）
+            foreach (($info['options'] ?? []) as $name) {
+                Db::deleteBy('options', 'name=?', [$name]);
+            }
+            foreach (($info['like'] ?? []) as $pat) {
+                Db::run("DELETE FROM " . Db::t('options') . " WHERE name LIKE ?", [$pat]);
+            }
         }
-        // 3) 清理插件自有选项（精确 + LIKE 前缀）
-        foreach (($info['options'] ?? []) as $name) {
-            Db::deleteBy('options', 'name=?', [$name]);
-        }
-        foreach (($info['like'] ?? []) as $pat) {
-            Db::run("DELETE FROM " . Db::t('options') . " WHERE name LIKE ?", [$pat]);
-        }
-        // 4) 标记已卸载（恒停用，数据不再被引用）
+        // 4) 标记已卸载（恒停用，数据不再被引用；仅卸载时表与选项保留）
         set_option('plugin.' . $id . '.removed', '1');
         Cache::flush('pages');
         Cache::flush('blocks');
-        $_SESSION['flash'] = '插件 ' . $id . ' 已卸载（备份：' . basename($bk) . '；如需恢复请还原该备份）';
+        $_SESSION['flash'] = $purge
+            ? ('插件 ' . $id . ' 已卸载并删除配置（备份：' . basename($bk) . '；如需恢复请还原该备份）')
+            : ('插件 ' . $id . ' 已卸载，数据与配置已保留（备份：' . basename($bk) . '；重装后可继续使用）');
         header('Location: /admin/?s=plugins');
         exit;
     }
@@ -343,6 +368,9 @@ if ($authed && $isAdmin && ($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
     }
     if ($do === 'poly-ai-en') {
         pc_poly_ai();
+    }
+    if ($do === 'poly-ai-row') {
+        pc_ai_row();   // 文章/页面列表里的「AI 翻译」按钮
     }
     if ($do === 'upload') {
         pc_upload();
@@ -526,24 +554,29 @@ if ($authed && $isAdmin && ($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
         exit;
     }
     if ($do === 'theme-save') {
-        theme_opt_set([
-            'width' => in_array((string)($_POST['width'] ?? ''), ['760', '1040', '1180'], true) ? (string)$_POST['width'] : '',
-            'accent' => preg_match('/^#[0-9a-fA-F]{3,8}$/', (string)($_POST['accent'] ?? '')) ? (string)$_POST['accent'] : '',
-            'per_page' => max(5, min(50, (int)($_POST['per_page'] ?? 10))),
-            'latest_n' => max(3, min(20, (int)($_POST['latest_n'] ?? 8))),
-            'show_sidebar' => isset($_POST['show_sidebar']) ? '1' : '0',
-        ]);
-        if ((string)get_option('theme.default', '') === 'teadoc') {
-            $hk = [];
-            foreach (['hero_badge', 'hero_title', 'hero_subtitle', 'hero_btn1_text', 'hero_btn1_url', 'hero_btn2_text', 'hero_btn2_url'] as $k) {
-                $hk[$k] = trim((string)($_POST[$k] ?? ''));
+        // 声明式保存：仅收集当前主题 theme.json settings 声明的字段
+        $cur = (string)get_option('theme.default', 'yecha');
+        $meta = theme_meta($cur);
+        $kv = [];
+        foreach ($meta['settings'] as $s) {
+            $k = (string)($s['key'] ?? '');
+            if ($k === '') { continue; }
+            $t = (string)($s['type'] ?? 'text');
+            if ($t === 'checkbox') { $kv[$k] = isset($_POST[$k]) && (string)($_POST[$k] ?? '') === '1' ? '1' : '0'; continue; }
+            $val = (string)($_POST[$k] ?? '');
+            if ($t === 'number') {
+                $kv[$k] = (string)max((int)($s['min'] ?? 0), min((int)($s['max'] ?? 999999), (int)$val));
+                continue;
             }
-            for ($i = 1; $i <= 3; $i++) {
-                $hk['feature_' . $i . '_title'] = trim((string)($_POST['feature_' . $i . '_title'] ?? ''));
-                $hk['feature_' . $i . '_desc'] = trim((string)($_POST['feature_' . $i . '_desc'] ?? ''));
+            if ($t === 'select') {
+                $allowed = array_map('strval', array_keys((array)($s['opts'] ?? [])));
+                $kv[$k] = in_array($val, $allowed, true) ? $val : ((string)($s['def'] ?? ''));
+                continue;
             }
-            theme_opt_set($hk);
+            if ($t === 'color' || $k === 'accent') { $kv[$k] = preg_match('/^#[0-9a-fA-F]{3,8}$/', $val) ? $val : ''; continue; }
+            $kv[$k] = trim($val);
         }
+        theme_opt_set($kv);
         Cache::flush('pages');
         Cache::flush('blocks');
         $_SESSION['flash'] = '主题设置已保存并生效';
@@ -619,7 +652,7 @@ function adm_render(string $title, string $section, string $content): void
         . 'a{color:inherit;text-decoration:none}'
         . 'header{background:#fff;border-bottom:1px solid #e6e6e2;display:flex;align-items:center;gap:16px;padding:0 20px;min-height:54px;position:sticky;top:0;z-index:40}'
         . 'header .logo b{font-size:16px} header .spacer{flex:1} header a.c{color:#6f767e;font-size:13px} header a.c:hover{color:#b3541e}'
-        . '.wrap{display:grid;grid-template-columns:200px 1fr;gap:20px;max-width:1200px;margin:20px auto;padding:0 18px;align-items:start}'
+        . '.wrap{display:grid;grid-template-columns:' . (!empty($GLOBALS['YC_ADMIN_FOCUS']) ? '1fr' : '200px 1fr') . ';gap:20px;max-width:' . (!empty($GLOBALS['YC_ADMIN_FOCUS']) ? '1240px' : '1200px') . ';margin:20px auto;padding:0 18px;align-items:start}'
         . 'aside{background:#fff;border:1px solid #e6e6e2;border-radius:8px;padding:8px}'
         . 'aside ul{list-style:none;margin:0;padding:0}'
         . 'aside li a{display:flex;align-items:center;justify-content:space-between;padding:7px 12px;border-radius:6px;color:#3d4147;font-size:14px}'
@@ -635,8 +668,15 @@ function adm_render(string $title, string $section, string $content): void
         . 'td,th{padding:7px 8px;border-bottom:1px solid #f1f1ee;text-align:left;vertical-align:top}'
         . 'th{color:#6f767e;font-size:12px;font-weight:500}'
         . 'button,.btn{background:#b3541e;color:#fff;border:0;border-radius:6px;padding:6px 14px;font-size:13px;cursor:pointer}'
-        . '.btn.ghost{background:#fff;color:#b3541e;border:1px solid #e3c5b6;padding:4px 12px}'
-        . '.btn.mini{padding:2px 10px;font-size:12px;background:#6f767e} form.inline{display:inline}'
+        . '.btn.ghost{background:#fff;color:#3f4650;border:1px solid #dfe2e7;padding:4px 12px}'
+        . '.btn.ghost:hover{background:#f6f7f9;border-color:#c9ced6;color:#20252c}'
+        . '.btn.ghost:active{background:#eceff2}'
+        . '.btn.mini{padding:2px 10px;font-size:12px} .btn.ghost.mini{background:#fff}'
+        . '.btn.danger{color:#b42318!important;border-color:#e9c8c4!important}'
+        . '.btn.danger:hover{background:#fdf4f3!important;border-color:#d9a49e!important;color:#8f1c12!important}'
+        . '.btn.ai{color:#1a56db!important;border-color:#c7d7f8!important}'
+        . '.btn.ai:hover{background:#f3f7ff!important;border-color:#9fbcf2!important;color:#1543ad!important}'
+        . ' form.inline{display:inline}'
         . '.err{color:#9c3f1b;background:#fdf0ec;border:1px solid #efc8ba;border-radius:6px;padding:8px 12px;font-size:13px;margin-bottom:14px}'
         . '.ok{color:#2e6b34;background:#eef4ee;border:1px solid #cfe2d0;border-radius:6px;padding:8px 12px;font-size:13px;margin-bottom:14px}'
         . '.stub{color:#6f767e;background:#fbfbf8;border:1px dashed #e0e0d8;border-radius:6px;padding:14px 16px;font-size:13.5px}'
@@ -649,7 +689,7 @@ function adm_render(string $title, string $section, string $content): void
         . '<a class="c" href="/">查看站点 ↗</a><span class="spacer"></span>'
         . '<span style="color:#6f767e;font-size:13px;">博主：' . $name . '</span>'
         . '<a class="c" href="/admin/?action=logout">退出</a></header>'
-        . '<div class="wrap"><aside><ul>' . $navHtml . '</ul></aside><main>' . $content . '</main></div>'
+        . '<div class="wrap">' . (!empty($GLOBALS['YC_ADMIN_FOCUS']) ? '' : '<aside><ul>' . $navHtml . '</ul></aside>') . '<main>' . $content . '</main></div>'
         . '</body></html>';
 }
 
@@ -705,6 +745,21 @@ switch ($sec) {
             $recentHtml .= '<tr><td>' . e(mb_substr((string)$r['body'], 0, 44))
                 . ($r['kind'] === 'segment' ? ' <span style="color:#b3541e;font-size:11.5px;">段评</span>' : '')
                 . '</td><td>' . e((string)$r['author_name']) . '</td><td>' . e($smap[$r['status']] ?? $r['status']) . '</td><td>' . e(substr((string)$r['created_at'], 0, 16)) . '</td></tr>';
+        }
+        // 在线升级提示：仪表盘醒目提示（同类后台的通用做法）；remoteStatus 已短缓存，不影响仪表盘速度
+        $upgB = '';
+        if (class_exists('Upgrade')) {
+            $rmU = Upgrade::remoteStatus();
+            if ($rmU && Upgrade::isUpdateAvailable($rmU)) {
+                $csrfU = Csrf::field();
+                $upgB = '<div class="card" style="border-left:4px solid #2F7D46;background:#f0f7f1;">'
+                    . '<h3 style="margin:0 0 6px;color:#2F7D46;">发现新版本 v' . e((string)$rmU['version']) . '</h3>'
+                    . '<p style="margin:0 0 12px;color:#565b61;">检测到线上可用新版本，建议一键在线升级（执行前自动生成全库 SQL 备份）。</p>'
+                    . '<form method="post" action="/admin/?s=upgrade" style="display:inline">' . $csrfU
+                    . '<input type="hidden" name="do" value="upgrade-remote">'
+                    . '<button class="btn" type="submit">立即在线升级</button></form> '
+                    . '<a class="btn ghost" href="/admin/?s=upgrade">进入系统升级</a></div>';
+            }
         }
         $out = '<div class="stats">'
             . '<div class="stat"><b>' . $publish . '</b><span>文章（草稿 ' . $drafts . '）</span></div>'
@@ -904,11 +959,11 @@ switch ($sec) {
             . '.sb-name{flex:1}.sb-ops{display:inline-flex;gap:2px}'
             . '.sb-ops button{background:#fff;color:#6f767e;border:1px solid #e0e0d8;border-radius:5px;padding:1px 7px;font-size:11px;line-height:1.6;cursor:pointer}'
             . '.sb-ops button:hover{border-color:#b3541e;color:#b3541e}'
-            . '.sb-del{color:#9c3f1b!important;border-color:#e3c5b6!important}'
-            . '.sb-del:hover{background:#fdf0ec!important}'
+            . '.sb-del{color:#b42318!important;border-color:#e9c8c4!important}'
+            . '.sb-del:hover{background:#fdf4f3!important}'
             . '.sb-pool{margin-top:8px;color:#6f767e;font-size:12.5px;line-height:2.1}'
-            . '.sb-pool-add{background:#fff;color:#b3541e;border:1px dashed #e3c5b6;border-radius:999px;padding:1px 11px;font-size:12.5px;cursor:pointer;margin-right:6px}'
-            . '.sb-pool-add:hover{background:#f6ece4;border-style:solid}'
+            . '.sb-pool-add{background:#fff;color:#3f4650;border:1px dashed #d5d9df;border-radius:999px;padding:1px 11px;font-size:12.5px;cursor:pointer;margin-right:6px}'
+            . '.sb-pool-add:hover{background:#f0f2f5;border-style:solid}'
             . '</style>'
             . '<script>(function(){'
             . 'function poolEmptyHint(pool){if(pool&&pool.children.length===0){var s=document.createElement("span");s.className="sb-none";s.textContent="（已全部启用；✕ 移除后该项会回到这里）";pool.appendChild(s);}}'
@@ -1084,7 +1139,7 @@ switch ($sec) {
                 . '<td>' . ($db !== null ? '<span style="color:#2e6b34;">已登记</span>' : '<span style="color:#9a9a90;">扫描</span>') . '</td>'
                 . '<td><form method="post" action="/admin/?s=attachments" onsubmit="return confirm(\'删除该附件文件？文中引用将失效。\')" style="display:inline;">' . $csrfA
                 . '<input type="hidden" name="do" value="attach-del"><input type="hidden" name="path" value="' . e($rel) . '">'
-                . '<button class="btn ghost mini" style="border-color:#e3c5b6;color:#9c3f1b;">删除</button></form></td></tr>';
+                . '<button class="btn ghost mini danger">删除</button></form></td></tr>';
         }
         $out = '<div class="card"><h3>附件管理 <small>统一上传记录 + uploads 目录扫描（' . $count . ' 个文件 / ' . number_format($totalBytes) . ' B）· 正文引用的图片删文件后前台会断图，请谨慎</small></h3>'
             . '<p style="color:#6f767e;font-size:13px;margin:0 0 6px;">仅列出前 600 个（按修改时间倒序）。「已登记」= 在 ye_attachments 有记录；「扫描」= uploads 里存在但未登记（如导入图）。</p>'
@@ -1093,38 +1148,61 @@ switch ($sec) {
             . '</table></div>';
         break;
     case 'themes': {
-        $w = (string)theme_opt('width', '');
-        $ac = (string)theme_opt('accent', '');
-        $pp = (int)theme_opt('per_page', 10);
-        $ln = (int)theme_opt('latest_n', 8);
-        $sb = (string)theme_opt('show_sidebar', '1');
+        $cur = (string)get_option('theme.default', 'yecha');
+        $meta = theme_meta($cur);
         $sel = fn(string $v, string $cur) => $v === $cur ? ' selected' : '';
-        $heroBlock = '';
-        if ((string)get_option('theme.default', '') === 'teadoc') {
-            $hv = fn(string $k, string $d) => e((string)theme_opt($k, (string)get_option('xuecha.' . $k, $d)));
-            $heroBlock = '<h4 style="margin:18px 0 2px;border-top:1px solid #eee;padding-top:12px;font-size:14px;">TeaDoc 首页内容（保存即时生效）</h4>'
-                . '<label class="pf">Hero 角标</label><input name="hero_badge" value="' . $hv('hero_badge', 'YeCha 博客系统') . '" placeholder="文档 v1 · 持续更新">'
-                . '<label class="pf">主标题</label><input name="hero_title" value="' . $hv('hero_title', 'YeCha 夜叉') . '">'
-                . '<label class="pf">副标题</label><input name="hero_subtitle" value="' . $hv('hero_subtitle', 'Typecho 式极简博客系统：纯 PHP + MySQL，多语言 / 插件市场 / 评论先审后发') . '">'
-                . '<label class="pf">按钮一文字 / 链接</label><input name="hero_btn1_text" value="' . $hv('hero_btn1_text', '下载 YeCha') . '"><input name="hero_btn1_url" value="' . $hv('hero_btn1_url', 'https://yecha.org/download.html') . '" placeholder="/what-is-tea.html 或 https://…">'
-                . '<label class="pf">按钮二文字 / 链接</label><input name="hero_btn2_text" value="' . $hv('hero_btn2_text', '应用市场') . '"><input name="hero_btn2_url" value="' . $hv('hero_btn2_url', 'https://yecha.org/market.html') . '">';
-            for ($i = 1; $i <= 3; $i++) {
-                $heroBlock .= '<label class="pf">特性卡 ' . $i . ' · 标题</label><input name="feature_' . $i . '_title" value="' . $hv('feature_' . $i . '_title', '') . '">'
-                    . '<label class="pf">特性卡 ' . $i . ' · 描述</label><textarea name="feature_' . $i . '_desc" rows="2">' . $hv('feature_' . $i . '_desc', '') . '</textarea>';
+        $mkField = function (array $s, string $k, string $val) use ($sel): string {
+            $t = (string)($s['type'] ?? 'text');
+            $lab = '<label class="pf">' . e((string)($s['label'] ?? $k));
+            if (trim((string)($s['help'] ?? '')) !== '') { $lab .= '<span style="color:#9a9a90;font-weight:400;"> · ' . e((string)$s['help']) . '</span>'; }
+            $lab .= '</label>';
+            $v = e($val);
+            if ($t === 'checkbox') {
+                $chk = ($val === '1') ? ' checked' : '';
+                return $lab . '<span><label style="display:inline-flex;gap:6px;align-items:center;"><input type="checkbox" name="' . e($k) . '" value="1"' . $chk . '> 开启</label></span>';
             }
+            if ($t === 'select') {
+                $h = $lab . '<select name="' . e($k) . '"><option value="">默认</option>';
+                foreach ((array)($s['opts'] ?? []) as $ov => $ol) {
+                    $h .= '<option value="' . e((string)$ov) . '"' . $sel((string)$ov, $val) . '>' . e((string)$ol) . '</option>';
+                }
+                return $h . '</select>';
+            }
+            if ($t === 'textarea') {
+                return $lab . '<textarea name="' . e($k) . '" rows="3">' . $v . '</textarea>';
+            }
+            $extra = '';
+            if ($t === 'number') {
+                $extra = ' type="number"';
+                if (isset($s['min'])) { $extra .= ' min="' . (int)$s['min'] . '"'; }
+                if (isset($s['max'])) { $extra .= ' max="' . (int)$s['max'] . '"'; }
+            } elseif ($t === 'color') {
+                $extra = ' placeholder="#b3541e"';
+            } else {
+                $extra = ' type="text"';
+            }
+            return $lab . '<input name="' . e($k) . '"' . $extra . ' value="' . $v . '">';
+        };
+        $info = '<div class="card"><h3>' . e($meta['name']) . ' <small>当前主题 · v' . e($meta['version'])
+            . ($meta['author'] !== '' ? ' · ' . e($meta['author']) : '') . '（' . e($meta['id']) . '）</small></h3>'
+            . ($meta['description'] !== '' ? '<p style="color:#565b61;line-height:1.8;margin:6px 0 0;font-size:13.5px;">' . e($meta['description']) . '</p>' : '')
+            . '<p style="color:#9a9a90;font-size:12.5px;margin:8px 0 0;">配置项来自该主题 theme.json 的 settings 声明；通用博客项（宽度/强调色/分页/侧栏）已并入各主题声明。</p></div>';
+        $fields = '';
+        if ($meta['settings']) {
+            foreach ($meta['settings'] as $s) {
+                $k = (string)$s['key'];
+                $fields .= $mkField($s, $k, (string)theme_opt($k, (string)($s['def'] ?? '')));
+            }
+        } else {
+            $fields = '<p style="color:#9a9a90;">该主题尚未在 theme.json 声明 settings，暂无主题专属设置。</p>';
         }
-        $out = '<div class="card"><h3>主题设置 <small>当前主题：yecha（默认极简）· 保存即时生效</small></h3>'
+        $out = $info
+            . '<div class="card"><h3>主题设置 <small>保存即时生效</small></h3>'
             . '<form method="post" action="/admin/?s=themes">' . Csrf::field()
             . '<input type="hidden" name="do" value="theme-save">'
-            . '<label class="pf">页面宽度</label><select name="width"><option value=""' . $sel('', $w) . '>默认 1040px</option>'
-            . '<option value="760"' . $sel('760', $w) . '>窄 760px</option><option value="1040"' . $sel('1040', $w) . '>1040px</option><option value="1180"' . $sel('1180', $w) . '>宽 1180px</option></select>'
-            . '<label class="pf">强调色（hex，如 #b3541e）</label><input name="accent" value="' . e($ac) . '" placeholder="#b3541e">'
-            . $heroBlock . '<div style="display:grid;grid-template-columns:1fr 1fr;gap:0 16px;max-width:560px;">'
-            . '<div><label class="pf">每页文章数</label><input type="number" name="per_page" value="' . $pp . '" min="5" max="50"></div>'
-            . '<div><label class="pf">侧栏最新文章数</label><input type="number" name="latest_n" value="' . $ln . '" min="3" max="20"></div></div>'
-            . '<label class="pf" style="display:flex;align-items:center;gap:6px;"><input type="checkbox" name="show_sidebar" value="1"' . ($sb === '1' ? ' checked' : '') . '> 显示右侧栏（分类/最新/标签/归档）</label>'
+            . $fields
             . '<div style="margin-top:12px;"><button class="btn" type="submit">保存主题设置</button></div></form></div>'
-            . '<style>.pf{display:block;font-size:12.5px;color:#6f767e;margin:10px 0 2px}.pf+input,.pf+select{max-width:560px;width:100%;box-sizing:border-box;border:1px solid #e6e6e2;border-radius:6px;padding:6px 9px;font:inherit}</style>';
+            . '<style>.pf{display:block;font-size:12.5px;color:#6f767e;margin:10px 0 2px}.pf+input,.pf+select,.pf+textarea{max-width:560px;width:100%;box-sizing:border-box;border:1px solid #e6e6e2;border-radius:6px;padding:6px 9px;font:inherit}</style>';
         break;
     }
     case 'market': {
@@ -1219,9 +1297,12 @@ switch ($sec) {
                 : '<span style="color:#9a9a90;font-size:12.5px;">常驻（随核心）</span>';
             $uinfo = Plugins::uninstallInfo($pid);
             if ($uinfo) {
-                $act .= '<form method="post" action="/admin/?s=plugins" style="display:inline;" onsubmit="return confirm(\'卸载将删除插件自有数据表并清理选项（卸载前会自动全库备份，可随时还原备份恢复）。确认卸载？\')">' . $csrfP
-                    . '<input type="hidden" name="do" value="plugin-uninstall"><input type="hidden" name="id" value="' . e($pid) . '">'
-                    . '<button class="btn ghost mini" style="border-color:#e3c5b6;color:#9c3f1b;" type="submit">卸载</button></form>';
+                $act .= '<form method="post" action="/admin/?s=plugins" style="display:inline;" onsubmit="return confirm(\'仅卸载：插件停用并从列表移除，数据表与配置保留（可随时到云市场重装继续用）。确认？\')">' . $csrfP
+                    . '<input type="hidden" name="do" value="plugin-uninstall"><input type="hidden" name="id" value="' . e($pid) . '"><input type="hidden" name="purge" value="0">'
+                    . '<button class="btn ghost mini" style="border-color:#d9c9b5;color:#8a6d3b;" type="submit">卸载</button></form> '
+                    . '<form method="post" action="/admin/?s=plugins" style="display:inline;" onsubmit="return confirm(\'卸载并删除配置：将同时删除插件自有数据表与配置选项（不可恢复，卸载前会自动全库备份）。确认？\')">' . $csrfP
+                    . '<input type="hidden" name="do" value="plugin-uninstall"><input type="hidden" name="id" value="' . e($pid) . '"><input type="hidden" name="purge" value="1">'
+                    . '<button class="btn ghost mini" style="border-color:#e3c5b6;color:#9c3f1b;" type="submit">卸载并删除配置</button></form>';
             }
             $adminSec = $isExt ? 'plug_' . $pid : (string)($pd['admin'] ?? '');
             $enter = ($on && $adminSec !== '' && $adminSec !== '0') ? ' <a class="btn ghost mini" href="/admin/?s=' . rawurlencode($adminSec) . '">进入 →</a>' : '';
@@ -1237,6 +1318,17 @@ switch ($sec) {
     }
     case 'upgrade': {
         $csrfU = Csrf::field();
+        $rm = Upgrade::remoteStatus();
+        $banner = '';
+        if ($rm && Upgrade::isUpdateAvailable($rm)) {
+            $banner = '<div style="background:#eef6ef;border:1px solid #bcd6c2;border-radius:10px;padding:12px 16px;margin:0 0 12px;">'
+                . '<b>发现新版本 v' . e((string)$rm['version']) . '</b> 可在线升级'
+                . (!empty($rm['notes']) ? ' — ' . e(mb_substr((string)$rm['notes'], 0, 220)) : '')
+                . '<div style="margin-top:8px"><form method="post" action="/admin/?s=upgrade" style="display:inline">' . $csrfU
+                . '<input type="hidden" name="do" value="upgrade-remote">'
+                . '<button class="btn" type="submit" onclick="return confirm(\'将自动全库备份并在线升级到 v' . e((string)$rm['version']) . '，确认？\')">立即在线升级</button>'
+                . '</form></div></div>';
+        }
         $st = Upgrade::status();
         $rows = '';
         foreach ($st as $comp => $s) {
@@ -1256,7 +1348,7 @@ switch ($sec) {
         $lastBk = $bk ? e(basename($bk[0])) . '（' . date('Y-m-d H:i', filemtime($bk[0])) . '）' : '暂无';
         $log = @file_get_contents(dirname(__DIR__) . '/var/log/upgrade.log');
         $tail = $log ? e(mb_substr($log, -800)) : '（暂无日志）';
-        $out = '<div class="card"><h3>系统升级 <small>WordPress 式一键升级：执行前自动全库备份，迁移逐条记录（ye_migrations）</small></h3>'
+        $out = $banner . '<div class="card"><h3>系统升级 <small>一键升级：执行前自动全库备份，迁移逐条记录（ye_migrations）</small></h3>'
             . '<p style="color:#9c3f1b;background:#fdf0ec;border:1px solid #efc8ba;border-radius:8px;padding:8px 12px;font-size:13px;margin:0 0 10px;">'
             . '⚠ 安全提醒：升级会修改数据库结构。每次升级前系统会<b>自动生成全库备份</b>（var/backup）；'
             . '建议先到「工具 → 数据备份」再手动另存一份；生产环境请先在测试站验证。'
@@ -1300,7 +1392,7 @@ switch ($sec) {
                 . '<td><a class="btn ghost mini" href="/admin/?s=tools&action=download&file=' . rawurlencode($n) . '">下载</a> '
                 . '<form method="post" action="/admin/?s=tools" style="display:inline;" onsubmit="return confirm(\'删除该备份文件？此操作不可恢复。\')">' . Csrf::field()
                 . '<input type="hidden" name="do" value="backup-del"><input type="hidden" name="file" value="' . e($n) . '">'
-                . '<button class="btn ghost mini" style="border-color:#e3c5b6;color:#9c3f1b;">删除</button></form></td></tr>';
+                . '<button class="btn ghost mini danger">删除</button></form></td></tr>';
         }
         $out = '<div class="card"><h3>缓存</h3><p style="color:#565b61;margin:0 0 10px;">全页缓存（未登录访客）与侧栏区块缓存均为文件驱动；写事件自动失效，这里提供兜底清理。</p>'
             . '<form method="post" action="/admin/?s=tools"><input type="hidden" name="do" value="flush-cache">' . Csrf::field()

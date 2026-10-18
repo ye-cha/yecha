@@ -1,0 +1,25 @@
+<view class="ct" wx:if="{{list.length > 0}}">
+  <view class="ci" wx:for="{{list}}" wx:key="cart_id">
+    <image class="ciimg" src="{{item.cover}}" mode="aspectFill" bindtap="goDetail" data-id="{{item.goods_id}}"></image>
+    <view class="cibody">
+      <view class="cit" bindtap="goDetail" data-id="{{item.goods_id}}">{{item.title}}</view>
+      <view class="cis">{{item.spec_text}}</view>
+      <view class="row">
+        <view class="price"><text class="y">¥</text>{{item.price}}</view>
+        <view class="gap"></view>
+        <view class="stepper">
+          <view class="step" bindtap="changeNum" data-id="{{item.cart_id}}" data-d="-1">−</view>
+          <view class="num">{{item.num}}</view>
+          <view class="step" bindtap="changeNum" data-id="{{item.cart_id}}" data-d="1">＋</view>
+        </view>
+      </view>
+    </view>
+    <view class="del" bindtap="del" data-id="{{item.cart_id}}">×</view>
+  </view>
+
+  <view class="cbar">
+    <view class="ctotal">合计：<text class="price"><text class="y">¥</text>{{total}}</text></view>
+    <view class="btn-primary" bindtap="goCheckout">去结算</view>
+  </view>
+</view>
+<view class="empty" wx:else>购物车是空的</view>

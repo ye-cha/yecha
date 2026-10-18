@@ -1,0 +1,15 @@
+{
+  "name": "墨白 Mobai",
+  "version": "2.0.0",
+  "requires_core": "1.0.0",
+  "author": "YeCha",
+  "description": "u.sb 烧饼博客风格：暖灰单色系、居中大字标题、1080px 两列卡片网格、首篇横跨大卡、等宽 meta。",
+  "home": "landing",
+  "settings": [
+    {"key": "width", "type": "number", "label": "版心宽度", "def": "1180", "min": 960, "max": 1440},
+    {"key": "accent", "type": "color", "label": "强调色", "def": "#0c0a09"},
+    {"key": "per_page", "type": "number", "label": "每页条数", "def": "10", "min": 3, "max": 50},
+    {"key": "latest_n", "type": "number", "label": "首页最新条数", "def": "6", "min": 3, "max": 12},
+    {"key": "show_sidebar", "type": "checkbox", "label": "显示侧栏", "def": "1"}
+  ]
+}
