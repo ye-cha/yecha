@@ -22,7 +22,6 @@ final class Plugins
             'guard'  => ['name' => '评论防骚扰',   'ver' => '1.0.0', 'toggle' => false, 'admin' => 'settings', 'desc' => '关键词 / 链接上限 / 昵称邮箱黑名单 / 频率拦截（P-4）'],
             'notify' => ['name' => '@提及与通知',  'ver' => '1.0.0', 'toggle' => false, 'admin' => 'comments', 'desc' => '评论 @提及、站内通知、可选 SMTP 邮件（E10）'],
             'stats'  => ['name' => '统计代码位',   'ver' => '1.0.0', 'toggle' => false, 'admin' => 'settings', 'desc' => '页头 / 页脚注入任意统计代码（百度 / 51la / 自建）'],
-            'poly'   => ['name' => '多语言',      'ver' => '1.0.0', 'toggle' => true,  'admin' => 'poly',     'desc' => '翻译组 + AI 翻译 + /en/ 多语路径与 hreflang（P-5）'],
             'backup' => ['name' => '备份与还原',   'ver' => '1.0.0', 'toggle' => false, 'admin' => 'tools',    'desc' => '全库 SQL 备份 / 还原（E9）'],
         ];
     }
@@ -125,8 +124,26 @@ final class Plugins
     public static function compat(array $m): bool
     {
         $needCore = (string)($m['requires']['core'] ?? '');
-        if ($needCore !== '' && defined('YC_VERSION') && version_compare(YC_VERSION, $needCore, '<')) { return false; }
-        return true;
+        if ($needCore === '' || !defined('YC_VERSION')) { return true; }
+        // 忽略预发布/构建后缀比较：'1.0.0-beta' 视同 1.0.0 满足 requires 1.0.0
+        /* 预发布后缀可能是**空格**分隔（本构建 YC_VERSION = '1.0 Beta Build20260910'）：
+           原正则 [-+] 去不掉空格后缀 → ersion_compare('1.0 Beta Build20260910','1.0.0','>=') = false，
+           于是**所有第三方插件的 register_file 一律不被 include**（/subscribe 404、autosave 钩子不注册）。
+           2026-09-11 修：空白 / 连字符 / 加号三种都切。见 themes/gushu/CORE-PATCH.md。 */
+        /* 版本归一（2026-09-11 修，见 themes/gushu/CORE-PATCH.md）：
+           ① 预发布/构建后缀可能是**空格**分隔（本构建 YC_VERSION = '1.0 Beta Build20260910'），
+              原正则 `[-+]` 去不掉空格后缀 → version_compare('1.0 Beta Build20260910','1.0.0','>=') = false
+              → **所有第三方插件的 register_file 一律不被 include**（/subscribe 404、autosave 钩子不注册）。
+           ② 只按空白切还会剩 '1.0'，而 version_compare('1.0','1.0.0','>=') **仍是 false**（段数少即视作更小），
+              故必须**补足到三段**：'1.0' → '1.0.0'。两条一起才真正修好。 */
+        $norm = static function (string $v): string {
+            if (preg_match('/^\s*(\d+(?:\.\d+)*)/', $v, $m)) { $v = $m[1]; }
+            else { $v = (string)preg_replace('/[\s\-+].*$/', '', $v); }
+            $p = explode('.', $v);
+            while (count($p) < 3) { $p[] = '0'; }
+            return implode('.', $p);
+        };
+        return version_compare($norm((string)YC_VERSION), $norm($needCore), '>=');
     }
 
     public static function isOn(string $id): bool
@@ -141,10 +158,8 @@ final class Plugins
     public static function uninstallInfo(string $id): array
     {
         $map = [
+            // 注：多语言(poly)已迁移为云市场插件 plugins/poly（卸载/清数据语义由其 manifest 声明）
             'notes' => ['tables' => ['notes'], 'options' => ['plugin.notes.enabled']],
-            'poly'  => ['tables' => ['poly_contents'],
-                        'options' => ['plugin.poly.enabled'],
-                        'like' => ['site.languages', 'site.default_lang', 'ai.%', 'poly.%']],
         ];
         $base = $map[$id] ?? [];
         $e = self::ext($id);
@@ -262,5 +277,26 @@ final class Plugins
         $fn = $m['admin_fn'] ?? ('yc_' . $id . '_admin');
         if (!function_exists($fn)) { return '<div class="card"><h3>' . e($m['name'] ?? $id) . '</h3><div class="stub">缺少管理函数 ' . $fn . '。</div></div>'; }
         return (string)$fn();
+    }
+
+    /** 文档解析钩子：内容未命中时把 {slug} 交给插件（如超大型动态目录 svg_items），供 /{slug}.html 路由回退
+     *  插件 manifest：doc_file（文件名，可选）/ doc_fn（函数名，可选，默认 yc_<id>_doc）。
+     *  函数签名：fn(string $slug): ?array 返回 ['html'=>..,'title'=>..,'description'=>..(可选),'page'=>bool(可选)] 或 null。 */
+    public static function resolveDoc(string $slug): ?array
+    {
+        foreach (self::extList() as $id => $m) {
+            if (!self::isOn($id) || !self::compat($m)) { continue; }
+            if (empty($m['doc_fn']) && empty($m['doc_file'])) { continue; }
+            $dir = self::extDir() . '/' . $m['dir'];
+            $file = $m['doc_file'] ?? null;
+            if ($file !== null && is_file($dir . '/' . $file)) {
+                require_once $dir . '/' . $file;
+            }
+            $fn = $m['doc_fn'] ?? ('yc_' . $id . '_doc');
+            if (!function_exists($fn)) { continue; }
+            $r = ($fn)($slug);
+            if (is_array($r)) { return $r; }
+        }
+        return null;
     }
 }

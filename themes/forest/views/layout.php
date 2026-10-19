@@ -274,8 +274,12 @@ foreach ($catNav as $fv) { $navCatPrefix[(string)$fv['chk']] = $fv; }
 </div>
 
 <footer class="site-footer"><div class="wrap">
-  <?php $privacyHref = isset($lp) ? $lp . '/privacy-policy.html' : '/privacy-policy.html'; ?>
-<span class="foot-copy"><span>© <?= date('Y') ?> <?= e(trim((string)get_option('site.name_en', '')) !== '' ? (string)get_option('site.name_en', '') : site_label()) ?></span> · <a href="<?= e($privacyHref) ?>"><?= e(__('nav.privacy')) ?></a> · <a href="https://yecha.org/" rel="noopener" target="_blank" title="YeCha Blog System">Powered by YeCha</a> · <a class="fc-wp" href="https://yecha.org/" rel="noopener" target="_blank" title="Forest Theme">Forest</a><?php $icp = trim((string)get_option('site.icp', '')); if ($icp !== ''): ?> · <a href="<?= e((string)get_option('site.icp_link', 'https://beian.miit.gov.cn/')) ?>" rel="noopener" target="_blank"><?= e($icp) ?></a><?php endif; ?></span>
+  <?php $privacyHref = isset($lp) ? $lp . '/privacy-policy.html' : '/privacy-policy.html';
+        /* 页脚「订阅」入口：仅当站点装了并启用了邮件订阅插件时出现（没装的站不受影响） */
+        $subNav = (class_exists('Plugins') && Plugins::isOn('subscribe'));
+        $subIsEn = (isset($curLangShort) ? $curLangShort : (class_exists('Lang') ? Lang::short() : 'zh')) === 'en';
+        $subHref = ($lp ?? '') . '/subscribe'; ?>
+<span class="foot-copy"><span>© <?= date('Y') ?> <?= e(trim((string)get_option('site.name_en', '')) !== '' ? (string)get_option('site.name_en', '') : site_label()) ?></span> · <a href="<?= e($privacyHref) ?>"><?= e(__('nav.privacy')) ?></a><?php if ($subNav): ?> · <a href="<?= e($subHref) ?>"><?= e($subIsEn ? 'Subscribe' : '订阅') ?></a><?php endif; ?> · <a href="https://yecha.org/" rel="noopener" target="_blank" title="YeCha Blog System">Powered by YeCha</a> · <a class="fc-wp" href="https://yecha.org/" rel="noopener" target="_blank" title="Forest Theme">Forest</a><?php $icp = trim((string)get_option('site.icp', '')); if ($icp !== ''): ?> · <a href="<?= e((string)get_option('site.icp_link', 'https://beian.miit.gov.cn/')) ?>" rel="noopener" target="_blank"><?= e($icp) ?></a><?php endif; ?></span>
 </div></footer>
 <script>
 (function () {

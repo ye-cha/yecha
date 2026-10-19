@@ -1,0 +1,14 @@
+{
+  "name": "帮助 Help",
+  "version": "2.3.0",
+  "requires_core": "1.0.0",
+  "author": "YeCha",
+  "description": "在线帮助（Help Center）主题：左固定文档目录（分类→条目）+ 顶栏工具条 + 主区三段式，灰白双层底色，方角无圆角，正文 + 右侧章节目录。适合产品帮助文档 / FAQ / 知识库。",
+  "settings": [
+    {"key": "width", "type": "number", "label": "版心宽度", "def": "1180", "min": 960, "max": 1440},
+    {"key": "accent", "type": "color", "label": "强调色（链接/标题色块）", "def": "#3273dc"},
+    {"key": "per_page", "type": "number", "label": "每页条数", "def": "10", "min": 3, "max": 50},
+    {"key": "show_sidebar", "type": "checkbox", "label": "显示文档目录", "def": "1"},
+    {"key": "show_toc", "type": "checkbox", "label": "显示文章右侧目录", "def": "1"}
+  ]
+}

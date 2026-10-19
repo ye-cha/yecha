@@ -1,0 +1,46 @@
+{
+  "name": "寒砚 Hanyan",
+  "version": "1.0.0",
+  "requires_core": "1.0.0",
+  "author": "YeCha",
+  "description": "寒砚 Hanyan —— 仿 XiaoHanys 的高对比黑白极简：纯白底、近黑文字 #000、单色强调、克制排版（theme-color #000）。",
+  "home": "landing",
+  "settings": [
+    {
+      "key": "width",
+      "type": "number",
+      "label": "版心宽度",
+      "def": "1180",
+      "min": 960,
+      "max": 1440
+    },
+    {
+      "key": "accent",
+      "type": "color",
+      "label": "强调色",
+      "def": "#111111"
+    },
+    {
+      "key": "per_page",
+      "type": "number",
+      "label": "每页条数",
+      "def": "10",
+      "min": 3,
+      "max": 50
+    },
+    {
+      "key": "latest_n",
+      "type": "number",
+      "label": "首页最新条数",
+      "def": "6",
+      "min": 3,
+      "max": 12
+    },
+    {
+      "key": "show_sidebar",
+      "type": "checkbox",
+      "label": "显示侧栏",
+      "def": "1"
+    }
+  ]
+}

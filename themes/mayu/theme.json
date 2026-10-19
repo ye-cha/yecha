@@ -1,0 +1,15 @@
+{
+  "name": "码语 Mayu",
+  "version": "1.0.0",
+  "requires_core": "1.0.0",
+  "author": "YeCha",
+  "description": "码语 Mayu —— 仿 CodingLife 开发者社区：科技青蓝强调、浅灰底、Helvetica 无衬线、清爽技术风。",
+  "home": "landing",
+  "settings": [
+    {"key": "width", "type": "number", "label": "版心宽度", "def": "1180", "min": 960, "max": 1440},
+    {"key": "accent", "type": "color", "label": "强调色", "def": "#01aaed"},
+    {"key": "per_page", "type": "number", "label": "每页条数", "def": "10", "min": 3, "max": 50},
+    {"key": "latest_n", "type": "number", "label": "首页最新条数", "def": "6", "min": 3, "max": 12},
+    {"key": "show_sidebar", "type": "checkbox", "label": "显示侧栏", "def": "1"}
+  ]
+}

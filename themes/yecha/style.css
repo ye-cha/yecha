@@ -398,3 +398,64 @@ html.dark ::selection{background:rgba(217,133,63,.35)}
   .c-item{gap:10px}
   .c-actions{flex-wrap:wrap}
 }
+
+/* ---------- B：独立页面（type=page）的表格样式（2026-09-11 新增） ----------
+   背景：文章页模板 partials/post.php 的正文容器带 id="articleBody"，主题已为它写了
+   窄屏横向滚动；而独立页面模板 partials/page.php 的容器只有 class="article-content"，
+   全站此前**没有任何 table 规则** —— 于是页面里的宽表在窄屏会溢出，桌面端也无边框。
+   这里按与 #articleBody 完全相同的思路补齐，只作用于 .article-content，不影响其它模块。
+   回滚：删除本注释块（含下面两条规则与 @media 段）即恢复原状。 */
+.article-content table{border-collapse:collapse;margin:1.1em 0;font-size:14px;width:100%}
+.article-content th,.article-content td{border:1px solid var(--line);padding:7px 10px;text-align:left;vertical-align:top}
+.article-content th{background:var(--soft);font-weight:600;white-space:nowrap}
+.article-content td{word-break:break-word}
+@media(max-width:760px){
+  .article-content table{display:block;width:auto;max-width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch}
+  .article-content th,.article-content td{padding:6px 8px;font-size:13.5px}
+}
+
+/* ---------- t38：顶部菜单二级下拉 + 抽屉二级项 ---------- */
+.nav-dd{position:relative;display:flex;align-items:center}
+.nav-dd-btn{display:inline-flex;align-items:center;gap:4px;font:inherit;font-size:14px;color:var(--muted);background:transparent;border:0;border-bottom:2px solid transparent;border-radius:999px;padding:6px 16px;cursor:pointer;white-space:nowrap}
+.nav-dd-btn:hover{background:var(--soft);color:var(--fg)}
+.nav-dd-btn.active{color:var(--fg);background:var(--soft);border-bottom-color:var(--accent);font-weight:600}
+.nav-dd-ico{width:13px;height:13px;opacity:.65;transition:transform .15s}
+.nav-dd:hover .nav-dd-ico,.nav-dd.open .nav-dd-ico{transform:rotate(180deg)}
+.nav-dd-menu{display:none;position:absolute;top:calc(100% + 4px);left:50%;transform:translateX(-50%);background:#fff;border:1px solid var(--line);border-radius:12px;box-shadow:0 12px 30px rgba(0,0,0,.13);min-width:178px;padding:6px;z-index:70;flex-direction:column;gap:2px}
+.nav-dd:hover .nav-dd-menu,.nav-dd:focus-within .nav-dd-menu,.nav-dd.open .nav-dd-menu{display:flex}
+.nav-dd-menu a{display:block;padding:8px 13px;border-radius:8px;font-size:13.5px;color:var(--fg);white-space:nowrap}
+.nav-dd-menu a:hover{background:var(--soft);color:var(--accent)}
+.nav-dd-menu a.active{background:var(--accent-soft);color:var(--accent);font-weight:700}
+html.dark .nav-dd-btn.active{background:#2a2f36}
+html.dark .nav-dd-menu{background:#1f2328;border-color:#333}
+html.dark .nav-dd-menu a:hover{background:#2a2f36}
+html.dark .nav-dd-menu a.active{background:#33251c;color:#f0a176}
+.drawer-sub{margin:2px 0 6px}
+.drawer-sub-cap{font-size:12px;letter-spacing:1.2px;color:var(--muted);padding:8px 4px 2px;text-transform:uppercase}
+.drawer-nav .drawer-sub-a{font-size:16px;padding:10px 4px 10px 16px;border-bottom:1px dashed var(--line);font-weight:500}
+.drawer-nav .drawer-sub-a.active{color:var(--accent);font-weight:700}
+@media(max-width:980px){
+  .nav a,.nav-dd-btn{padding:6px 10px;font-size:13px}
+}
+
+/* t38：一级只留「下载 / 论坛」——下载为分组大下拉，其余栏目全在二级 */
+.nav-mega-menu{display:none;grid-template-columns:repeat(4,minmax(140px,1fr));gap:10px 18px;min-width:620px;width:max-content;max-width:calc(100vw - 40px);padding:16px 18px;left:50%;transform:translateX(-50%)}
+.nav-dd:hover .nav-mega-menu,.nav-dd:focus-within .nav-mega-menu,.nav-dd.open .nav-mega-menu{display:grid}
+.nav-mega-col{min-width:140px}
+.nav-mega-cap{font-size:11.5px;letter-spacing:1.4px;text-transform:uppercase;color:#9a9a90;padding:0 8px 6px;border-bottom:1px solid var(--line);margin-bottom:4px}
+.nav-mega-col a{display:block;padding:6px 8px;border-radius:7px;font-size:13.5px;color:var(--fg);white-space:nowrap}
+.nav-mega-col a:hover{background:var(--soft);color:var(--accent)}
+.nav-mega-col a.active{background:var(--accent-soft);color:var(--accent);font-weight:700}
+html.dark .nav-mega-cap{color:#8b929a;border-color:#333}
+html.dark .nav-mega-col a.active{background:#33251c;color:#f0a176}
+.drawer-sub-cap2{font-size:11.5px;letter-spacing:1.2px;text-transform:uppercase;color:#9a9a90;padding:10px 4px 2px}
+.drawer-sub-cap{display:block;font-size:13px;letter-spacing:1.2px;color:var(--muted);padding:10px 4px 2px;text-transform:uppercase}
+.drawer-sub-cap.active{color:var(--accent)}
+/* t39：顶部一级「下载」主按钮（与站点主色一致；移动端收进抽屉） */
+.nav .nav-cta,.nav .nav-dd-btn.nav-cta{background:var(--accent);color:#fff;font-weight:700;padding:7px 20px;box-shadow:0 6px 14px rgba(179,84,30,.18);border-bottom-color:transparent}
+.nav .nav-cta:hover,.nav .nav-dd-btn.nav-cta:hover{background:#9c4517;color:#fff}
+.nav .nav-dd-btn.nav-cta.active{background:var(--accent);color:#fff;box-shadow:inset 0 0 0 2px rgba(255,255,255,.35)}
+.nav-dd-btn.nav-cta .nav-dd-ico{opacity:.9}
+html.dark .nav .nav-cta,html.dark .nav .nav-dd-btn.nav-cta{background:#c05a22}
+html.dark .nav .nav-cta:hover,html.dark .nav .nav-dd-btn.nav-cta:hover{background:#d06a32}
+@media(max-width:980px){.nav .nav-cta,.nav .nav-dd-btn.nav-cta{padding:6px 14px;font-size:13px}}

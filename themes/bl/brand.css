@@ -1,0 +1,159 @@
+/* ============================================================================
+ * 浏览工坊 BrowseLab —— 换肤覆盖层（由 lq_tokens.mjs 生成，请勿手改）
+ * 用法：themes/yecha/views/layout.php 里 style.css 之后加一行
+ *         <link rel="stylesheet" href="<?= e(View::asset('brand.css')) ?>">
+ * 回滚：删掉那一行 + 删掉本文件。style.css 一个字节未动。
+ * ==========================================================================*/
+
+/* ---------- L1 令牌别名层（映射到实机主题已有变量名 ⇒ 137 条既有规则自动生效）---------- */
+:root{
+  --line: #E3E6E3;
+  --muted: #6B736C;
+  --fg: #141714;
+  --accent: #0B7ED0;
+  --soft: #F7F8F7;
+  --codebg: #F1F3F1;
+  --accent-soft: #EAF3FB;
+  --wide-w: 1200px;
+  --bg: #FFFFFF;
+  --c-bg: #FFFFFF;
+  --c-bg-subtle: #F7F8F7;
+  --c-bg-inset: #F1F3F1;
+  --c-border: #E3E6E3;
+  --c-border-strong: #CFD5D0;
+  --c-text: #141714;
+  --c-text-secondary: #3D4540;
+  --c-text-muted: #6B736C;
+  --c-text-on-accent: #FFFFFF;
+  --c-accent: #0B7ED0;
+  --c-accent-hover: #0A6CB2;
+  --c-accent-subtle: #EAF3FB;
+  --c-brand: #1A7F37;
+  --c-brand-strong: #2EA043;
+  --c-brand-subtle: #E8F4EC;
+  --c-health-alive: #1A7F37;
+  --c-health-slow: #B26A00;
+  --c-health-dead: #C4381F;
+  --c-health-unknown: #6B736C;
+  --c-pick: #E8873A;
+  --c-pick-subtle: #FDF1E7;
+  --c-header-bg: rgba(255,255,255,0.82);
+  --r-badge: 4px;
+  --r-control: 8px;
+  --r-card: 12px;
+  --r-panel: 16px;
+  --r-pill: 999px;
+  --h-h: 64px;
+  --m-fast: 120ms cubic-bezier(0.25,0.46,0.45,0.94);
+  --m-move: 320ms cubic-bezier(0.16,1,0.3,1);
+  color-scheme: light dark;
+}
+
+/* ---------- L2 深色补全层 ----------
+ * 实机主题的深色是**不完整**的：它盖了 lang-menu / drawer / btn-login / icon-btn / nav-toggle，
+ * 但实测仍有 19 处 #fff、12 处 background:#fff 硬编码 ⇒ 深色下页头、语言菜单、搜索框、
+ * 评论输入框、侧栏搜索框**仍是白底**。下面按选择器逐个补。
+ * 触发用 html.dark（实机主题的切换方式），不用媒体查询 —— 它已有 localStorage 记忆。 */
+html.dark{
+  --line: rgba(255,255,255,0.10);
+  --muted: #8A948E;
+  --fg: #F2F5F3;
+  --accent: #4EA3E0;
+  --soft: #141A18;
+  --codebg: #0A0D0C;
+  --accent-soft: rgba(78,163,224,0.14);
+  --bg: #0E1211;
+  --c-bg: #0E1211;
+  --c-bg-subtle: #141A18;
+  --c-bg-inset: #0A0D0C;
+  --c-border: rgba(255,255,255,0.10);
+  --c-border-strong: rgba(255,255,255,0.22);
+  --c-text: #F2F5F3;
+  --c-text-secondary: #C3CCC6;
+  --c-text-muted: #8A948E;
+  --c-accent: #4EA3E0;
+  --c-accent-hover: #6FB6EB;
+  --c-accent-subtle: rgba(78,163,224,0.14);
+  --c-brand: #2EA043;
+  --c-brand-strong: #4CC463;
+  --c-brand-subtle: rgba(46,160,67,0.16);
+  --c-health-alive: #3FB950;
+  --c-health-slow: #D29922;
+  --c-health-dead: #F85149;
+  --c-health-unknown: #8A948E;
+  --c-pick: #F09A52;
+  --c-pick-subtle: rgba(240,154,82,0.16);
+  --c-header-bg: rgba(14,18,17,0.82);
+  color-scheme: dark;
+}
+/* 页头 / 抽屉 / 语言菜单 */
+html.dark .site-header{background:var(--c-header-bg);border-bottom-color:var(--c-border)}
+html.dark .lang-menu{background:var(--c-bg-subtle);border-color:var(--c-border)}
+html.dark .lang-menu a{color:var(--c-text)}
+html.dark .drawer{background:var(--c-bg)}
+/* 搜索类（三处，原都是白底） */
+html.dark .h-search{background:var(--c-bg-inset);border-color:var(--c-border)}
+html.dark .side-search input{background:var(--c-bg-inset);color:var(--c-text);border-color:var(--c-border)}
+html.dark .side-search button{background:var(--c-bg-inset);color:var(--c-text-muted);border-color:var(--c-border)}
+html.dark .search-page-form input{background:var(--c-bg-inset);color:var(--c-text);border-color:var(--c-border)}
+/* 评论输入与引用块（原 #fff / #2c3035） */
+html.dark .c-input{background:var(--c-bg-inset);color:var(--c-text);border-color:var(--c-border)}
+html.dark .c-text{color:var(--c-text-secondary)}
+html.dark .anchor-quote{background:var(--c-bg-subtle);border-color:var(--c-border)}
+/* 正文与摘要里写死的浅色文（原 #24292f / #3d4147 / #565b61 / #2c3035） */
+html.dark .article-content{color:var(--c-text-secondary)}
+html.dark .post-excerpt{color:var(--c-text-secondary)}
+html.dark .side-bio{color:var(--c-text-secondary);background:var(--c-bg-subtle);border-color:var(--c-border)}
+html.dark .media-body .lead{color:var(--c-text-muted)}
+html.dark .c-who time{color:var(--c-text-muted)}
+/* 虚线分隔（原 #f0f0ec / #f1f1ee —— 亮色专用，深底上几乎不可见） */
+html.dark .c-item,
+html.dark .side-list li{border-bottom-color:var(--c-border)}
+/* 高亮与选中（原 #ffe08a / #d96a35 写死亮色专用值） */
+html.dark .article mark{background:#5a4a1e;color:var(--c-text)}
+html.dark .nav-toggle{background:var(--c-accent);color:var(--c-text-on-accent)}
+/* 深色下的"面"必须靠亮 hairline（linear 实测结论）：给卡片类元素补边 */
+html.dark .reader-bar,
+html.dark .c-cta,
+html.dark .c-form{border-color:var(--c-border);background:var(--c-bg-subtle)}
+
+/* 浅色下把"亮色专用"的硬编码也收进令牌（否则换 --soft 时这几处不跟随） */
+.reader-bar{border-color:var(--c-border);background:var(--c-bg-subtle)}
+.c-item,.side-list li{border-bottom-color:var(--c-border)}
+.lang-menu{background:var(--c-bg);border-color:var(--c-border)}
+.lang-menu a{color:var(--c-text)}
+.h-search,.side-search input,.side-search button,.c-input,.search-page-form input{background:var(--c-bg);border-color:var(--c-border)}
+/* 页头底色/边框两套主题都要跟着令牌走（实机主题原来写死 #fff + border-color:var(--line)） */
+.site-header{background:var(--c-header-bg);border-bottom-color:var(--c-border)}
+
+/* ---------- L3 视觉升级层（只动观感、不动结构）---------- */
+/* 容器宽 1040 → 1200（令牌值）。**注意**：6 列栅格属结构批，本层不动栅格。 */
+:root{--wide-w:1200px}
+
+/* 无障碍两件套：实机主题缺 —— 实测 style.css 里 :focus-visible 规则 0 条 */
+:focus-visible{outline:2px solid var(--c-accent);outline-offset:2px;border-radius:var(--r-control)}
+@media (prefers-reduced-motion: reduce){
+  *,*::before,*::after{transition-duration:0.01ms !important;animation-duration:0.01ms !important;
+    animation-iteration-count:1 !important;scroll-behavior:auto !important}
+}
+
+/* 圆角统一到令牌（原主题混用 8px / 10px / 12px / 999px） */
+.lang-menu,.c-form{border-radius:var(--r-card)}
+.c-input,.search-page-form input,.drawer-nav a{border-radius:var(--r-control)}
+.reader-bar,.c-cta,.side-bio{border-radius:var(--r-card)}
+.article-content pre{border-radius:var(--r-control)}
+
+/* 正文排版：15px/1.85 → 16px/1.75（中文长文按阅读排，见设计取舍 3）
+ * 字距：中文不做负字距，小字号给轻微正字距 */
+body{font-size:16px;line-height:1.75;letter-spacing:0}
+.article-content{font-size:16px;line-height:1.9}
+.caption,.post-meta,.article-meta,.crumb,.site-footer{letter-spacing:0.01em}
+.side-list .d,.drawer-cap,.tags-label,.pager{letter-spacing:0.02em}
+
+/* 页头高 60 → 64（令牌值），并对齐 sticky + 半透明 + 模糊 */
+.site-header{position:sticky;top:0;z-index:100;background:var(--c-header-bg);
+  backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
+.site-header .wrap{min-height:var(--h-h)}
+
+/* 动效双档（只动颜色/背景/边框这类合成器友好属性） */
+a,.nav a,.icon-btn,.btn-login,.tag,.chip{transition:color var(--m-fast),background-color var(--m-fast),border-color var(--m-fast)}

@@ -36,31 +36,24 @@ $back = $lp2 . '/' . e((string)$p['slug']) . '.html';
     <span><?= e(__('meta.reads')) ?><?= Str::num((int)$p['views']) ?></span>
     <span><?= e(__('meta.comments')) ?><?= (int)$comment_total ?></span>
   </div>
-  <?php
-  // 摘要去重 v2：若摘要只是正文开头部分的原样摘抄，则不再在正文上方重复显示 lead。
-  // 修复 v1 两个缺陷：① markdown 渲染后正文以 <p>/<strong> 起始，去标签转空格会带前导空格，
-  //    使“前缀匹配”永远失败、摘要几乎总被显示；② 只比前 40 字、逐字精确，标点/加粗差异即漏判。
-  // v2：剥离内联标签 → 空白归一 → 摘要前 80 字与正文开头（含少许余量）做相似度比较，
-  //    相似 ≥82% 判定为同文摘抄，不再重复显示；摘要字段仍用于列表/搜索/description。
-  $showLead = false;
-  if (($p['excerpt'] ?? '') !== '') {
-      $h = (string)($html ?? '');
-      $h = (string)preg_replace('#<(?:strong|em|b|i|u|s|code|a|span)[^>]*>#i', '', $h);
-      $h = (string)preg_replace('#</(?:strong|em|b|i|u|s|code|a|span)>#i', '', $h);
-      $plainLead = trim((string)preg_replace('/\s+/u', ' ', (string)preg_replace('/<[^>]+>/', ' ', $h)));
-      $excerptN = trim((string)preg_replace('/\s+/u', ' ', (string)$p['excerpt']));
-      if ($excerptN === '' || $plainLead === '') {
-          $showLead = false;
-      } else {
-          $probe = mb_substr($excerptN, 0, 80);
-          $headT = mb_substr($plainLead, 0, mb_strlen($probe) + 20);
-          similar_text($probe, $headT, $pct);
-          $showLead = $pct < 82;
-      }
-  }
-  if ($showLead): ?><p style="color:var(--muted)"><?= e($p['excerpt']) ?></p><?php endif; ?>
 
   <div class="article-content" id="articleBody"><?= $html ?></div>
+
+  <?php
+  // 内容提要：摘要不再出现在正文上方，改在正文之后、标签之前作为收尾提要
+  //（自带 accent-faint 底色 + accent 左边条 + text-soft 文字，与正文明显区分）
+  $recapCap = ['zh' => '内容提要', 'tw' => '內容提要', 'en' => 'Summary', 'ja' => '要旨', 'ko' => '요약',
+               'es' => 'Resumen', 'fr' => 'Résumé', 'de' => 'Zusammenfassung',
+               'ar' => 'ملخص', 'ru' => 'Кратко'][Lang::short()] ?? '内容提要';
+  $recapTxt = trim((string)($p['excerpt'] ?? ''));
+  ?>
+  <?php if ($recapTxt !== ''): ?>
+  <aside class="art-recap" aria-label="<?= e($recapCap) ?>">
+    <div class="art-recap-cap"><?= e($recapCap) ?></div>
+    <p><?= e($recapTxt) ?></p>
+  </aside>
+  <?php endif; ?>
+
 
   <?php if (!empty($p['tags'])): ?>
   <div class="article-tags">

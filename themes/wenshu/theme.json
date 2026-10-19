@@ -1,0 +1,15 @@
+{
+  "name": "文枢 Wenshu",
+  "version": "1.0.0",
+  "requires_core": "1.0.0",
+  "author": "YeCha",
+  "description": "文枢 Wenshu —— 仿 Mkdocs Material 文档站：靛蓝(Indigo)强调色、洁净浅色底、系统无衬线字体、清晰文档感排版。",
+  "home": "landing",
+  "settings": [
+    {"key": "width", "type": "number", "label": "版心宽度", "def": "1320", "min": 960, "max": 1440},
+    {"key": "accent", "type": "color", "label": "强调色", "def": "#6a5fd0"},
+    {"key": "per_page", "type": "number", "label": "每页条数", "def": "10", "min": 3, "max": 50},
+    {"key": "latest_n", "type": "number", "label": "首页最新条数", "def": "6", "min": 3, "max": 12},
+    {"key": "show_sidebar", "type": "checkbox", "label": "显示侧栏", "def": "1"}
+  ]
+}

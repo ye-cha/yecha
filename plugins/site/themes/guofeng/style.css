@@ -1,0 +1,87 @@
+/* 企业官网主题 · 国风自然（茶 / 文化 / 农产品 / 东方美学）
+   气质：暖米底 + 黛绿 + 茶褐点缀；楷体只进标题层（正文仍无衬线保可读）；
+        居中对称版式；直角细线框 2px。 */
+.sc-root{
+  --sc-primary:#3e5c47;--sc-deep:#2e4636;--sc-accent:#6b5d3f;
+  --sc-bg:#f8f4ea;--sc-surface:#f4efe2;--sc-line:#ddd2b8;--sc-text:#4a3d22;--sc-muted:#8a7c5c;
+  --sc-card:#fbf8f0;--sc-card-line:#cfc3a0;--sc-img-bg:#e9e2cd;--sc-img-radius:0;
+  --sc-radius:2px;--sc-maxw:1080px;
+  --sc-kai:'KaiTi','STKaiti','SimKai',serif;
+  --sc-heading-font:var(--sc-kai);--sc-heading-tracking:3px;
+  --sc-header-bg:#f4efe2;--sc-nav-fg:#6b5d3f;
+  --sc-on-primary:#f8f4ea;
+  --sc-btn-bg:#3e5c47;--sc-btn-fg:#f8f4ea;--sc-btn-hover:#2e4636;
+  --sc-ghost-line:#b9ab84;--sc-ghost-fg:#5a4a28;--sc-input-line:#b9ab84;
+  --sc-hero-art:none;--sc-eyebrow-track:4px;
+  --sc-footer-fg:rgba(248,244,234,.75);--sc-footer-strong:#f8f4ea;--sc-footer-line:rgba(248,244,234,.15);--sc-footer-dim:rgba(248,244,234,.5);
+  --sc-flash-bg:#eef0e2;--sc-flash-line:#cfd3b4;--sc-flash-fg:#3e5c47;
+  --sc-empty-fg:#8a7c5c;
+}
+
+/* 居中对称版式 */
+.sc-flash,.sc-empty{text-align:center}
+.sc-nav{gap:18px}
+
+/* Hero：居中式（国风「端方、静」） */
+.sc-hero{flex-direction:column;text-align:center;padding:56px 24px 44px;position:relative}
+.sc-hero-text{padding:0;max-width:620px;margin:0 auto}
+.sc-hero h1{font-size:32px;font-weight:500;line-height:1.5;margin:0 0 16px}
+.sc-hero-intro{margin:0 auto 24px}
+.sc-hero-cta{gap:14px;justify-content:center}
+/* 装饰：四方细线框（替代商务的圆环），四个角各一框 */
+.sc-hero::before{content:"";position:absolute;left:6%;top:40px;width:70px;height:70px;border:0.5px solid var(--sc-line);opacity:.6}
+.sc-hero::after{content:"";position:absolute;right:6%;bottom:40px;width:70px;height:70px;border:0.5px solid var(--sc-line);opacity:.6}
+
+/* 按钮 / 横幅：直角、字距 */
+.sc-btn{padding:10px 24px;letter-spacing:2px}
+.sc-banner-list li{text-align:center}
+.sc-banner-list li b{font-family:var(--sc-kai);letter-spacing:2px}
+
+/* 卡片 / 区块：米色纸感、无圆角 */
+.sc-card b,.sc-feat b,.sc-job header b{font-family:var(--sc-kai);letter-spacing:1px}
+.sc-card-img,.sc-detail-img{border-radius:0}
+
+/* 内核页面覆写（楷体进标题层、直角细线、米色卡片；正文仍用无衬线保可读） */
+.sc-article h1,.sc-article .sc-content h2,.sc-article .sc-content h3,.uc-card h1,.uc-card h2,
+.sc-inner .page-head h1,.sc-inner .post-item h2,.sc-account-side>b,.sc-ai-answer h3{font-family:var(--sc-kai);letter-spacing:2px}
+.sc-article .sc-content h2{border-left:none;border-bottom:0.5px solid var(--sc-line);padding:0 0 8px;text-align:center}
+.sc-inner .meta-chip,.uc-card,.sc-ai-answer,.sc-job{background:var(--sc-card)}
+.sc-inner .post-item h2 a:hover{color:var(--sc-primary)}
+.sc-crumb,.sc-search-stat{text-align:center;justify-content:center}
+.sc-article{max-width:760px;margin:0 auto}
+.sc-article .sc-art-head{text-align:center}
+.sc-article .sc-art-meta{letter-spacing:1px}
+.sc-article .sc-content img{margin:18px auto}
+.sc-inner .post-list{text-align:center}
+.sc-inner .post-meta,.sc-inner .meta-index{justify-content:center}
+.sc-search-page{margin:24px auto 8px}
+.sc-ai-answer{border-left:none;border-top:2px solid var(--sc-accent);border-bottom:0.5px solid var(--sc-line);text-align:center}
+.sc-auth{margin:44px auto 70px}
+.sc-footer,.sc-feat{text-align:center}
+
+/* ============================================================================
+   版式：东方长卷
+   调研依据：茶 / 文创品牌多为「浅米宣纸底 + 居中留白 + 工序叙事 + 品鉴装方图」，
+   图片小而方、名次紧凑，讲产地与工艺。这里去掉卡片边框与色块，改四列小方图，
+   并把「优势」换成居中的圆形工序节点，案例改写作竖式年表（茶山纪事）。
+   ============================================================================ */
+.sc-stats .sc-stat-bar{grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.sc-stat-bar li{background:transparent;border:0;border-top:1px solid var(--sc-line);border-radius:0;text-align:center;padding:14px 8px}
+.sc-stat-bar li b{font-size:16px;letter-spacing:1px}
+.sc-feats{grid-template-columns:repeat(2,minmax(0,1fr));gap:20px}
+.sc-feat{background:transparent;border:0;border-top:1px solid var(--sc-line);border-radius:0;padding:16px 0}
+.sc-feat b{font-size:17px;letter-spacing:1px;color:var(--sc-deep)}
+.sc-steps{grid-template-columns:repeat(4,minmax(0,1fr));gap:22px}
+.sc-steps li{border:0;background:transparent;text-align:center;padding:0}
+.sc-steps li i{width:46px;height:46px;line-height:46px;margin:0 auto 10px;border:1px solid var(--sc-accent);border-radius:50%;font-size:13px}
+.sc-steps li b{font-size:15px;letter-spacing:1px}
+.sc-cards{grid-template-columns:repeat(4,minmax(0,1fr));gap:16px}
+.sc-card{background:transparent;border-color:transparent;padding:6px}
+.sc-card-img{aspect-ratio:1/1;height:auto;border-radius:0}
+.sc-card b{font-size:15px;letter-spacing:1px;text-align:center}
+.sc-card span{text-align:center}
+.sc-timeline{max-width:760px}
+.sc-timeline li em{border-radius:0}
+.sc-cta-box{background:transparent;border:1px solid var(--sc-line);border-radius:0}
+@media (max-width:900px){.sc-cards,.sc-steps{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:560px){.sc-cards,.sc-steps{grid-template-columns:minmax(0,1fr)}}

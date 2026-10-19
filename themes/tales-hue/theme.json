@@ -1,0 +1,24 @@
+{
+  "name": "Tales Hue（Tales 彩）",
+  "version": "1.0.0",
+  "requires_core": "1.0.0",
+  "author": "YeCha",
+  "description": "CNTales 故事图录主题 · 多彩版：白底墨字为骨，国色六色（朱砂/赭石/藤黄/松绿/石青/黛紫）做焦点；索引式图录 + 彩色字牌 + 整色块栏目；文章页左栏故事目录，整页 1280 与首页一致；明暗双色、中英双语。",
+  "settings": [
+    {
+      "key": "accent",
+      "type": "color",
+      "label": "强调色（覆盖默认）",
+      "help": "留空用主题默认：Hue=朱砂 #c8402f / Ink=松绿 #0f6b4d",
+      "def": ""
+    },
+    {
+      "key": "per_page",
+      "type": "number",
+      "label": "每页故事数",
+      "def": "12",
+      "min": 3,
+      "max": 48
+    }
+  ]
+}

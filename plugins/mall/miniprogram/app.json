@@ -1,0 +1,36 @@
+{
+  "pages": [
+    "pages/index/index",
+    "pages/goods/list",
+    "pages/goods/detail",
+    "pages/article/list",
+    "pages/article/detail",
+    "pages/cart/cart",
+    "pages/order/list",
+    "pages/order/detail",
+    "pages/order/checkout",
+    "pages/user/user",
+    "pages/user/address"
+  ],
+  "window": {
+    "navigationBarBackgroundColor": "#a21400",
+    "navigationBarTextStyle": "white",
+    "navigationBarTitleText": "51普洱茶网",
+    "backgroundColor": "#f4f4f4"
+  },
+  "tabBar": {
+    "color": "#999999",
+    "selectedColor": "#a21400",
+    "backgroundColor": "#ffffff",
+    "borderStyle": "black",
+    "list": [
+      { "pagePath": "pages/index/index", "text": "首页" },
+      { "pagePath": "pages/goods/list", "text": "商品" },
+      { "pagePath": "pages/article/list", "text": "资讯" },
+      { "pagePath": "pages/cart/cart", "text": "购物车" },
+      { "pagePath": "pages/user/user", "text": "我的" }
+    ]
+  },
+  "style": "v2",
+  "sitemapLocation": "sitemap.json"
+}

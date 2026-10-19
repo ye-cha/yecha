@@ -1,0 +1,29 @@
+<view class="home">
+  <view class="banner">勐海直发 · 茶山好物</view>
+
+  <view class="cats">
+    <view class="cat" wx:for="{{cats}}" wx:key="id" bindtap="goGoods" data-id="{{item.id}}">{{item.name}}</view>
+  </view>
+
+  <view class="title-2">推荐商品</view>
+  <view class="grid">
+    <view class="g" wx:for="{{recommend}}" wx:key="id" bindtap="goDetail" data-id="{{item.id}}">
+      <image class="gimg" src="{{item.cover}}" mode="aspectFill"></image>
+      <view class="gt">{{item.title}}</view>
+      <view class="price"><text class="y">¥</text>{{item.price}}</view>
+      <view class="market" wx:if="{{item.market_price > 0}}">¥{{item.market_price}}</view>
+    </view>
+  </view>
+
+  <view class="title-2">最新资讯</view>
+  <view class="news">
+    <view class="n" wx:for="{{articles}}" wx:key="id" bindtap="goArticle" data-id="{{item.id}}">
+      <image class="nimg" src="{{item.thumb}}" mode="aspectFill"></image>
+      <view class="nbody">
+        <view class="nt">{{item.title}}</view>
+        <view class="nd">{{item.excerpt}}</view>
+      </view>
+    </view>
+  </view>
+  <view class="empty" wx:if="{{articles.length === 0}}">暂无资讯</view>
+</view>

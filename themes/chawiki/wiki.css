@@ -1,0 +1,243 @@
+/* ============================================================
+   ChaWiki · Wiki 版式层（2026-09-18）
+   ------------------------------------------------------------
+   背景：上一版是从 themes/teadoc（文档型）改的 —— 左栏「全部文章」树
+        13 分类 × 30 条 = 390 条链接，实测左栏高度 10,799px，
+        而模板类词条正文区只有 558px ⇒ 左栏/正文 = 19.35 倍，正文被淹没。
+
+   本文件只做「版式重排」，不改任何配色令牌与既有组件外观：
+   ① 内容优先：正文紧接面包屑+标题，信息框与目录进正文右侧栏，可 sticky 跟随；
+   ② 左栏紧凑：改成 wiki 导航栏（wnav）——分类 13 条 + 只展开当前分类（≤30 条），
+      并给整栏加 max-height 硬上限 + 内部滚动 ⇒ 结构上不可能再「侧栏 ≫ 正文」；
+   ③ 折叠全部用 <details>/CSS，零 JS；
+   ④ 加宽版心（1120 → 1280），三档（390/768/1280）都要 0 横向溢出、0 遮挡。
+   加载顺序在 style.css / chawiki.css 之后 ⇒ 同权重下本文件生效。
+   ============================================================ */
+
+/* 版心：不动 style.css 的 --wide-w（首页/门户页的宽度与遮挡基线必须保持不变），
+   只给 wiki 版式的两栏外壳一个与顶栏 docs-header-inner(1280) 对齐的宽度。 */
+:root { --wiki-w: 1280px; --wiki-rail-w: 232px; --wiki-side-w: 264px; --wiki-gap: 32px; }
+
+/* ---------- 1. 三栏 → 「导航栏 + 正文」两栏（右栏由信息框/目录接管） ---------- */
+.layout.wiki:not(.is-home) {
+  padding: 22px 68px 40px 24px;   /* 右侧 68px：给右下角固定工具条留净空（>60px ⇒ 0 遮挡） */
+  max-width: var(--wiki-w);
+  gap: var(--wiki-gap);
+}
+.layout.wiki.has-left { grid-template-columns: var(--wiki-rail-w) minmax(0, 1fr); }
+.layout.wiki.has-left.has-right { grid-template-columns: var(--wiki-rail-w) minmax(0, 1fr) 280px; }
+.layout.wiki.no-side:not(.has-left) { grid-template-columns: minmax(0, 1fr); }
+.layout.wiki.toc-rail .main { max-width: 100%; }
+
+/* ---------- 2. 左栏 = wiki 导航栏 .wnav ---------- */
+.leftnav.wnav { display: none; }                 /* 窄屏收进顶栏抽屉（既有能力） */
+@media (min-width: 1024px) { .leftnav.wnav { display: block; } }
+
+.leftnav.wnav {
+  min-width: 0; align-self: start;
+  position: sticky; top: calc(var(--nav-h) + 12px);
+  /* ★ 硬上限：min(46vh, 330px) —— 顶到上限时内部滚动。
+     330 这个数不是随手取的：全站最短的「模板条」正文区只有 ~370px（36 字词条），
+     上限必须 ≤ 该值才能保证「左栏高度 / 正文高度 ≤ 1.0」在任何页面都成立。
+     不展开时栏内自然高度 ≈ 325px（13 个分类 × 23px + 栏头），刚好放得下 ⇒ 默认不滚动。 */
+  max-height: min(46vh, 330px);
+  overflow-y: auto; overscroll-behavior: contain;
+  padding: 2px 6px 2px 2px;
+  scrollbar-width: thin;
+}
+.wnav-inner { display: flex; flex-direction: column; gap: 14px; }
+.wnav-box { min-width: 0; }
+.wnav-cap {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 11.5px; letter-spacing: 1.3px; font-weight: 800; text-transform: uppercase;
+  color: var(--text-soft); padding: 0 8px 6px; margin-bottom: 5px;
+  border-bottom: 1px dashed var(--border);
+}
+.wnav-more { margin-left: auto; font-size: 12px; font-weight: 600; letter-spacing: 0; text-transform: none; color: var(--accent); }
+
+.wnav-list, .wnav-cats, .wnav-items { list-style: none; margin: 0; padding: 0; }
+.wnav-list a, .wnav-cat {
+  display: flex; align-items: center; gap: 6px;
+  padding: 3px 8px; border-radius: 7px;
+  font-size: 13.5px; line-height: 1.3; color: var(--text);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.wnav-list a:hover, .wnav-cat:hover { background: var(--accent-soft); color: var(--accent); }
+
+/* 分类行：当前分类高亮 */
+.wnav-catli { margin: 0; }
+.wnav-catli.on > .wnav-cat,
+.wnav-catli.on > .wnav-grp > .wnav-sum { background: var(--accent-soft); color: var(--accent-deep); }
+.wnav-catli.on > .wnav-cat .wnav-gname,
+.wnav-catli.on > .wnav-grp > .wnav-sum .wnav-gname { font-weight: 700; }
+.wnav-gname { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.wnav-n {
+  margin-left: auto; flex: none;
+  font-size: 11px; color: var(--text-faint);
+  background: var(--bg-soft); border-radius: 999px; padding: 0 7px;
+}
+
+/* 折叠：<details> 原生，零 JS */
+.wnav-grp { margin: 0; }
+.wnav-sum {
+  display: flex; align-items: center; gap: 6px;
+  padding: 3px 8px; border-radius: 7px; cursor: pointer;
+  font-size: 13.5px; line-height: 1.3; color: var(--text);
+  list-style: none;
+}
+.wnav-sum::-webkit-details-marker { display: none; }
+.wnav-sum::before { content: "▸"; flex: none; width: 11px; font-size: 10px; color: var(--text-faint); }
+.wnav-grp[open] > .wnav-sum::before { content: "▾"; color: var(--accent); }
+.wnav-sum:hover { background: var(--accent-soft); }
+
+.wnav-items {
+  margin: 2px 0 6px 15px; padding-left: 8px;
+  border-left: 2px solid var(--border);
+}
+.wnav-items a { display: block; }
+.wnav-all { padding: 4px 8px; font-size: 12.5px; color: var(--accent); border-radius: 7px; }
+.wnav-all:hover { background: var(--accent-soft); }
+.wnav-item {
+  display: block; padding: 3px 8px; border-radius: 7px;
+  font-size: 13px; line-height: 1.3; color: var(--text-soft);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.wnav-item:hover { background: var(--accent-soft); color: var(--accent); }
+.wnav-item.on { background: var(--accent); color: #fff; font-weight: 600; }
+.wnav-item.on:hover { background: var(--accent-deep); color: #fff; }
+/* 「本词条」补位行（不在该分类 30 条样本里时插入，带一个小圆点标记） */
+.wnav-item.cur::after { content: "●"; font-size: 8px; margin-left: 6px; opacity: .85; vertical-align: middle; }
+
+/* ---------- 3. 词条页：紧凑标题区 + 面包屑 ---------- */
+.article.chawiki-entry { border-radius: 8px; padding: 22px 26px 24px; }
+.chawiki-entry .breadcrumb { margin: 0 0 10px; }
+.article-header { margin: 0; }
+.article-title {
+  font-size: 27px; line-height: 1.32; margin: 0 0 8px; padding-bottom: 8px;
+  border-bottom: 1px solid var(--line);
+}
+.article-meta {
+  gap: 14px; margin: 0 0 12px; padding: 0 0 10px;
+  border-bottom: 1px dashed var(--border); font-size: 12.5px;
+}
+/* 编辑 / 历史 入口（wiki 惯例）；未上线时对非管理员完全不渲染 */
+.w-actions { margin-left: auto; display: inline-flex; align-items: center; gap: 12px; }
+.w-act { font-size: 12.5px; font-weight: 600; color: var(--accent); white-space: nowrap; }
+.w-act:hover { color: var(--accent-deep); text-decoration: underline; }
+.w-soon { color: var(--text-faint); font-weight: 400; cursor: default; }
+.w-soon:hover { color: var(--text-faint); text-decoration: none; }
+
+.term-bar { margin: 0 0 12px; gap: 6px; }
+.laolv-note { margin: 0 0 14px; padding: 10px 14px; }
+
+/* ---------- 4. 正文 + 右侧「信息栏」（信息框 + 目录） ---------- */
+.w-body { display: block; min-width: 0; }
+.w-body-main { min-width: 0; }
+.w-body-side { margin-top: 16px; }
+.w-body-solo .w-body-side { display: none; }
+.w-body-side .infobox { margin: 14px 0 0; }
+.w-body-side .wtoc + .infobox { margin-top: 14px; }
+.w-body-side > :first-child { margin-top: 0; }
+
+@media (min-width: 1024px) {
+  .w-body {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) var(--wiki-side-w);
+    gap: 26px; align-items: start;
+  }
+  .w-body-solo { grid-template-columns: minmax(0, 1fr); }
+  .w-body-main { grid-column: 1; grid-row: 1; }
+  .w-body-side {
+    grid-column: 2; grid-row: 1; margin-top: 0;
+    position: sticky; top: calc(var(--nav-h) + 14px);
+    max-height: calc(100vh - var(--nav-h) - 28px);
+    overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin;
+  }
+}
+@media (max-width: 1023px) { .wtoc-d { display: none; } }
+@media (min-width: 1024px) { .wtoc-m { display: none; } }
+
+/* ---------- 5. 目录 TOC（<details> 可折叠，零 JS） ---------- */
+.wtoc {
+  border: 1px solid var(--border); border-radius: 8px;
+  background: var(--card-soft); margin: 0;
+}
+.wtoc-cap {
+  display: flex; align-items: center; gap: 6px;
+  padding: 8px 12px; cursor: pointer; list-style: none;
+  font-size: 12px; letter-spacing: 1.3px; font-weight: 800;
+  color: var(--text-soft); text-transform: uppercase;
+}
+.wtoc-cap::-webkit-details-marker { display: none; }
+.wtoc-cap::before { content: "▾"; font-size: 10px; color: var(--accent); flex: none; }
+.wtoc:not([open]) > .wtoc-cap::before { content: "▸"; }
+.wtoc-n { margin-left: auto; font-size: 11px; letter-spacing: 0; color: var(--text-faint); }
+.wtoc-list { list-style: none; margin: 0; padding: 0 8px 10px; }
+.wtoc-list li { margin: 0; }
+.wtoc-list a {
+  display: block; padding: 4px 8px 4px 10px; font-size: 13px; line-height: 1.5;
+  color: var(--text-soft); border-left: 2px solid var(--border); border-radius: 0 7px 7px 0;
+}
+.wtoc-list a:hover { color: var(--accent); background: var(--accent-soft); border-left-color: var(--accent); }
+.wtoc-list li.wl3 a { padding-left: 20px; font-size: 12.6px; }
+.wtoc-list li.wl4 a { padding-left: 30px; font-size: 12.4px; }
+.wtoc-list li.wl5 a { padding-left: 40px; font-size: 12.2px; }
+.wtoc-m { margin: 0 0 14px; }
+
+/* ---------- 6. 相关词条（wiki 惯例） ---------- */
+.w-related { margin-top: 22px; padding-top: 12px; border-top: 1px dashed var(--border); }
+.w-related h3 {
+  font-family: var(--font-serif); color: var(--tea-brown);
+  font-size: 15px; margin: 0 0 9px;
+}
+.w-related ul { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
+.w-related a {
+  display: inline-block; border: 1px solid var(--border); border-radius: 999px;
+  padding: 3px 12px; font-size: 13px; color: var(--text);
+}
+.w-related a:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); }
+
+/* ---------- 7. 正文密度（wiki 读者是来查资料的） ---------- */
+.prose-wiki { line-height: 1.85; }
+.prose-wiki p { margin: .7em 0; }
+.prose-wiki h2 { margin: 1.35rem 0 .5rem; }
+.prose-wiki h3 { margin: 1.1rem 0 .45rem; }
+.refs-block { margin-top: 20px; }
+
+/* ★ 首屏优先：正文第一个元素若是大图（实测「坐杯」的首图 756px 高，把正文全挤到首屏之外），
+   在宽屏上给首图封顶 34vh —— wiki 的引图本来就不该占满一屏（维基惯例：导语图 ≤ 一屏 1/3）。 */
+@media (min-width: 700px) {
+  .prose-wiki > figure:first-child img,
+  .prose-wiki > p:first-child > img:only-child,
+  .prose-wiki > img:first-child {
+    width: auto; max-width: 100%; max-height: 34vh;
+    margin-left: auto; margin-right: auto;
+  }
+  .prose-wiki > figure:first-child { margin-top: 0; }
+}
+
+/* ---------- 8. 响应式（390 / 768 / 1280 三档：0 横向溢出、0 遮挡） ---------- */
+@media (max-width: 1023px) {
+  .layout.wiki.has-left,
+  .layout.wiki.has-left.has-right { grid-template-columns: minmax(0, 1fr); }
+  .layout.wiki:not(.is-home) { gap: 22px; padding-right: 56px; }
+}
+@media (max-width: 900px) {
+  .layout.wiki:not(.is-home) { padding: 18px 56px 30px 14px; gap: 20px; }
+  .article.chawiki-entry { padding: 16px 14px 18px; }
+  .article-title { font-size: 22px; }
+  .w-body-side { margin-top: 14px; }
+}
+@media (max-width: 640px) {
+  .layout.wiki:not(.is-home) { padding-right: 54px; }
+  .article-meta { gap: 10px; font-size: 12px; }
+  .w-actions { width: 100%; margin-left: 0; }
+}
+
+/* 阅读模式（既有功能）：正文铺满、左右栏都收掉 */
+body.reading-mode .leftnav.wnav { display: none !important; }
+body.reading-mode .w-body { display: block; }
+body.reading-mode .w-body-side { position: static; max-height: none; overflow: visible; }
+
+/* 首页/门户页不受本层影响（landing 走 .layout.is-home 的原样式） */
+.layout.wiki.is-home { max-width: none; }

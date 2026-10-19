@@ -1,0 +1,14 @@
+{
+  "name": "知库",
+  "version": "1.0.0",
+  "requires_core": "1.0.0",
+  "author": "YeCha",
+  "description": "知识库文档风：浅灰蓝底、白色简洁卡片、知乎式文档蓝、克制的阴影与圆角。",
+  "settings": [
+    {"key": "width", "type": "number", "label": "版心宽度", "def": "1180", "min": 960, "max": 1440},
+    {"key": "accent", "type": "color", "label": "强调色", "def": "#1772F6"},
+    {"key": "per_page", "type": "number", "label": "每页条数", "def": "10", "min": 3, "max": 50},
+    {"key": "latest_n", "type": "number", "label": "首页最新条数", "def": "6", "min": 3, "max": 12},
+    {"key": "show_sidebar", "type": "checkbox", "label": "显示侧栏", "def": "1"}
+  ]
+}

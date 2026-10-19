@@ -1,0 +1,76 @@
+/* ============================================================================
+   主题展示厅 /site/themes —— 独立外壳样式（自包含，不依赖企业官网 sc-* 令牌）
+   设计目标：页面只做「风格包选型」一件事，不带企业 header/导航/搜索/页脚/AI 浮窗，
+   因此这里自成一套中性灰白 + 靛蓝点缀的版式，任何行业风格包下展示厅观感都一致。
+   ============================================================================ */
+.tg{--tg-primary:#33415c;--tg-accent:#4f5ee0;--tg-bg:#f6f7f9;--tg-card:#fff;--tg-line:#e4e6ea;
+    --tg-text:#2f3338;--tg-muted:#767c85;--tg-radius:12px;
+    font-family:-apple-system,"PingFang SC","Microsoft YaHei","Segoe UI",sans-serif;
+    color:var(--tg-text);background:var(--tg-bg);font-size:15px;line-height:1.7;-webkit-font-smoothing:antialiased}
+.tg *,.tg *::before,.tg *::after{box-sizing:border-box}
+.tg a{color:inherit;text-decoration:none}
+.tg h1,.tg h2,.tg h3{margin:0;font-weight:600;letter-spacing:-.2px}
+.tg p{margin:0}
+.tg img{display:block}
+
+/* 顶部：只介绍「共多少款」，不放企业菜单 */
+.tg-head{max-width:1180px;margin:0 auto;padding:44px 24px 26px}
+.tg-kicker{font-size:12px;letter-spacing:2px;color:var(--tg-accent);text-transform:uppercase;margin-bottom:8px}
+.tg-head h1{font-size:30px;line-height:1.4;color:var(--tg-primary)}
+.tg-count{margin:14px 0 0;font-size:16px;color:var(--tg-text)}
+.tg-count b{font-size:26px;color:var(--tg-accent);font-weight:700;margin:0 4px;vertical-align:-2px}
+.tg-note{margin:6px 0 0;font-size:13px;color:var(--tg-muted)}
+
+/* 网格 */
+.tg-grid{max-width:1180px;margin:0 auto;padding:8px 24px 40px;display:grid;
+         grid-template-columns:repeat(3,minmax(0,1fr));gap:22px}
+.tg-card{background:var(--tg-card);border:1px solid var(--tg-line);border-radius:var(--tg-radius);
+         overflow:hidden;display:flex;flex-direction:column;transition:transform .18s,box-shadow .18s,border-color .18s}
+.tg-card:hover{transform:translateY(-3px);box-shadow:0 10px 26px rgba(24,32,48,.10);border-color:#c9cdd6}
+.tg-shot{position:relative;display:block;height:180px;background:#e9ebef;border-bottom:1px solid var(--tg-line);overflow:hidden}
+.tg-shot img{width:100%;height:100%;object-fit:cover;object-position:top center;transition:opacity .18s}
+.tg-shot .tg-ph{display:block;width:100%;height:100%}
+.tg-hover{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;gap:6px;
+          color:#fff;font-size:14px;background:rgba(24,32,48,.45);opacity:0;transition:opacity .18s}
+.tg-shot:hover .tg-hover{opacity:1}
+.tg-shot:hover img{opacity:.9}
+
+.tg-body{padding:16px 18px 18px;display:flex;flex-direction:column;flex:1}
+.tg-body h2{font-size:17px;color:var(--tg-primary);line-height:1.5}
+.tg-badge{display:inline-block;margin-left:8px;padding:1px 8px;font-size:11px;font-style:normal;font-weight:500;
+          color:#fff;background:var(--tg-accent);border-radius:20px;vertical-align:2px}
+.tg-use{margin:8px 0 0;font-size:13px;color:var(--tg-text)}
+.tg-use i{display:inline-block;margin-right:6px;padding:0 7px;font-size:11px;font-style:normal;
+          color:var(--tg-muted);border:1px solid var(--tg-line);border-radius:20px}
+.tg-desc{margin:8px 0 0;font-size:13px;color:var(--tg-muted);line-height:1.75}
+.tg-tags{list-style:none;display:flex;flex-wrap:wrap;gap:6px;margin:12px 0 0;padding:0}
+.tg-tags li{padding:2px 9px;font-size:12px;color:var(--tg-muted);background:#f1f2f5;border-radius:20px}
+.tg-pal{display:flex;align-items:center;gap:6px;margin:12px 0 0;font-size:12px;color:var(--tg-muted)}
+.tg-pal i{display:block;width:16px;height:16px;border-radius:50%;box-shadow:0 0 0 1px rgba(0,0,0,.06) inset}
+.tg-pal em{margin-left:2px;font-style:normal;letter-spacing:.3px}
+.tg-open{display:block;margin:16px 0 0;padding:10px 16px;text-align:center;font-size:14px;color:#fff;
+         background:var(--tg-accent);border-radius:8px;transition:background .18s}
+.tg-open:hover{background:#3d4cd0}
+.tg-links{display:flex;flex-wrap:wrap;gap:4px 14px;margin:12px 0 0;padding-top:12px;border-top:1px solid var(--tg-line)}
+.tg-links a{font-size:13px;color:var(--tg-accent)}
+.tg-links a:hover{text-decoration:underline}
+
+/* 底部：一行说明 + 语言切换（小），不是企业菜单 */
+.tg-foot{border-top:1px solid var(--tg-line);background:#fff}
+.tg-foot-in{max-width:1180px;margin:0 auto;padding:20px 24px;display:flex;flex-wrap:wrap;gap:12px 24px;
+            align-items:center;justify-content:space-between;font-size:13px;color:var(--tg-muted)}
+.tg-foot-in code{padding:1px 6px;font-size:12px;background:#f1f2f5;border-radius:4px;color:var(--tg-primary)}
+.tg-langs{display:flex;flex-wrap:wrap;gap:10px}
+.tg-langs a{font-size:13px;color:var(--tg-muted)}
+.tg-langs a.on{color:var(--tg-accent);font-weight:600}
+
+@media (max-width:980px){.tg-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:640px){
+  .tg-grid{grid-template-columns:minmax(0,1fr)}
+  .tg-head{padding:32px 18px 20px}
+  .tg-head h1{font-size:24px}
+  .tg-grid{padding:4px 18px 28px}
+}
+[dir="rtl"] .tg-use i{margin-right:0;margin-left:6px}
+[dir="rtl"] .tg-badge{margin-left:0;margin-right:8px}
+[dir="rtl"] .tg-open,[dir="rtl"] .tg-body h2{text-align:right}

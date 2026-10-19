@@ -1,0 +1,40 @@
+C
+# 方案 C（冷蓝）· 生效覆盖层 —— 首装 20260924-025734，logo/头尾批 20260924-034956 更新
+# 覆盖层文件（themes/bl/ 下，按 layout.php 里的 link 顺序加载）：
+palette-c.css            ff4c945f72623ffaf39f2fd9d1449b4b8b0927133800102b0de8b61752a2f43b  19466 B
+palette-c-dark-fix.css   2c1b7cf30a81993e5c7fc5c28382142f45c444e37b3b0d464313934c6ae96cac  2419 B
+#
+# ★ logo = 方案 C2（单色 / 近单色）—— 站主 2026-09-24 批准
+#   源：.lqplan/taste/lv/logo-c/C2/{light,dark}/  + C2/logo-mono.svg
+#   进站口径 = 浅底一套 + logo-mono.svg = 18771 B = 18.3 KB（<= 30 KB）
+#   ★ 每个引用都带 ?v=<filemtime>：主题静态资源是 cache-control: public, max-age=2592000, immutable
+#     （30 天）+ CF 边缘缓存 ⇒ 不带版本串改了也看不见（实测裸 URL=HIT / ?v=1=MISS）
+#
+# 实测落盘（themes/bl/，os.stat）：
+#   logo.svg                    2984 B  sha=4c32238f6e9c
+#   logo-512.png                8924 B  sha=804cb0c9c581
+#   logo-192.png                1440 B  sha=bd1e3881cd8c
+#   favicon-32.png               121 B  sha=70d746f9eb17
+#   favicon-16.png                95 B  sha=c61ac231c83f
+#   favicon.ico                  417 B  sha=9bb9b5668c50
+#   apple-touch-icon.png        1776 B  sha=1851fac886df
+#   logo-mono.svg               3014 B  sha=3034cc2afb23
+#   （旧 logo-oni.png 58,833 B ★ 保留未删，但已不再被引用）
+#
+# 头尾：
+#   站头 = 品牌位(logo + 浏览工坊 + BrowseLab) + 本站六栏目导航(带真实计数) + 真搜索框 + 明暗
+#   页脚 = 按真实栏目分组 5 列 + 版权行（★ 去掉 Powered by YeCha）+ Sitemap/RSS/明暗
+#   栏目与计数来自站点选项：nav.custom / nav.hide_top / nav.hide_foot / theme.{tool,tips,links}_count
+#   ★ 不再引用带 oni 的遗留文件名（文件保留，只是不再引用）
+#
+# 源（本地真源，服务器上不放）：.lqplan/taste/lv/overlays/C_cool.css · C_dark_fix.css · logo-c/ · headfoot/
+# 令牌真源：.lqplan/taste/lq/lq_tokens.mjs
+# 判据：.lqplan/taste/lv/CRITERIA.md（执行细则）+ .lqplan/liulanqi-revamp-plan.md 的 P.4b–P.4e（主判据区）
+# 回滚：bash /root/rollback_headfoot.sh   （或删 layout.php 里那几行 link + 删覆盖层 + 清 var/cache/pages/ + 重建）
+#
+# ★ 插件页内抬头 + 两按钮文案（2026-09-24 站主批准 方案A + B1）
+#   plugins/links/page.php  sha=34cc3e9c0911c599f0a202cc344401997267694e24a08bd5b20734640187ff69  65350 B
+#   抬头 = site_label() + get_option('site.subtitle')（★ 不写死文案）
+#   按钮 = 「随机逛一个收录站」(/random, 302) · 「提交我的站点」(/submit, 200) —— 功能保留，只改文案
+#   生效范围：/links /links-health /submit /circle /selected（5 页）
+#   回滚 = cp /www/wwwroot/liulanqi-yecha/plugins/links/page.php.bak_mast2_* page.php

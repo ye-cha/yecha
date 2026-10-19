@@ -1,0 +1,45 @@
+<view class="gd" wx:if="{{g.id}}">
+  <swiper class="sw" indicator-dots="true" autoplay="true" interval="3500" duration="400" wx:if="{{g.images.length > 0}}">
+    <swiper-item wx:for="{{g.images}}" wx:key="*this"><image class="swimg" src="{{item}}" mode="aspectFill"></image></swiper-item>
+  </swiper>
+  <image class="swimg" wx:if="{{g.images.length === 0}}" src="{{g.cover}}" mode="aspectFill"></image>
+
+  <view class="info card">
+    <view class="gt">{{g.title}}</view>
+    <view class="sub" wx:if="{{g.subtitle}}">{{g.subtitle}}</view>
+    <view class="row">
+      <view class="price"><text class="y">¥</text>{{g.price}}</view>
+      <view class="market" wx:if="{{g.market_price > 0}}">¥{{g.market_price}}</view>
+      <view class="gap"></view>
+      <view class="sales">已售{{g.sales}}</view>
+    </view>
+  </view>
+
+  <view class="sku card" wx:if="{{skus.length > 0}}">
+    <view class="sku-t">规格</view>
+    <view class="sku-list">
+      <view class="sk {{skuIdx === index ? 'on' : ''}}" wx:for="{{skus}}" wx:key="id" bindtap="selSku" data-i="{{index}}">
+        {{item.spec_text || '默认'}} · ¥{{item.price}}
+      </view>
+    </view>
+    <view class="row num-row">
+      <text>数量</text>
+      <view class="stepper">
+        <view class="step" bindtap="changeNum" data-d="-1">−</view>
+        <view class="num">{{num}}</view>
+        <view class="step" bindtap="changeNum" data-d="1">＋</view>
+      </view>
+    </view>
+  </view>
+
+  <view class="detail card">
+    <view class="sku-t">商品详情</view>
+    <rich-text nodes="{{g.detail}}"></rich-text>
+  </view>
+
+  <view class="bar">
+    <view class="bar-btn cart" bindtap="addCart">加入购物车</view>
+    <view class="bar-btn buy" bindtap="buyNow">立即购买</view>
+  </view>
+</view>
+<view class="empty" wx:else>加载中…</view>

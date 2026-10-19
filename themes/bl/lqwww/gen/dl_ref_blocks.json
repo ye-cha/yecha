@@ -1,0 +1,99 @@
+{
+ "_meta": {
+  "what": "参照 liulanqi.com/download/<slug> 的三块逐字节 outerHTML（相邻篇 nav.adjacent / 最新文章 aside.lq-rel / 相关技巧 aside.side）",
+  "from": "https://liulanqi.com/download/<slug>",
+  "extracted": "2026-10-14（第十棒 t10_blocks.mjs）",
+  "gate": "三块内 href 去重 64 条 ⇒ 本实例逐条 curl 全 200（t10_blocks_run.sh）",
+  "consumer": "themes/bl/views/partials/post.php 的 download 分支（缺键即回落既有数据驱动实现）"
+ },
+ "360": {
+  "adj": "<nav class=\"adjacent\">\n    <a rel=\"prev\" href=\"/download/uc\"><b>← 上一篇</b>UC 浏览器 下载 —— 官网与官方安装包</a>\n        <a rel=\"next\" href=\"/download/qq\" class=\"nx\"><b>下一篇 →</b>QQ 浏览器 下载 —— 官网与官方安装包</a>\n      </nav>",
+  "rel": "<aside class=\"lq-rel\"><h2 class=\"lq-rel-cap\">最新文章</h2><ul><li><a href=\"/download/other\">其他浏览器下载 —— 官网与镜像入口</a></li><li><a href=\"/download/samsung\">Samsung Internet 下载 —— 官网与官方安装包</a></li><li><a href=\"/download/quark\">夸克浏览器 下载 —— 官网与官方安装包</a></li><li><a href=\"/download/duckduckgo\">DuckDuckGo 下载 —— 官网与官方安装包</a></li><li><a href=\"/download/arc\">Arc 下载 —— 官网与官方安装包</a></li><li><a href=\"/download/vivaldi\">Vivaldi 下载 —— 官网与官方安装包</a></li></ul></aside>",
+  "side": "<aside class=\"side\">\n    <div class=\"side-box\"><h4>相关技巧</h4><ul class=\"side-list\"><li><a href=\"/tips/browser-kernel\">浏览器内核是什么</a></li><li><a href=\"/tips/fast-browser\">轻量浏览器怎么选</a></li><li><a href=\"/tips/shortcuts\">浏览器快捷键大全</a></li></ul></div>\n      </aside>",
+  "ref_title": "360 安全浏览器 下载 —— 官网与官方安装包 · 浏览工坊"
+ },
+ "arc": {
+  "adj": "<nav class=\"adjacent\">\n    <a rel=\"prev\" href=\"/download/duckduckgo\"><b>← 上一篇</b>DuckDuckGo 下载 —— 官网与官方安装包</a>\n        <a rel=\"next\" href=\"/download/vivaldi\" class=\"nx\"><b>下一篇 →</b>Vivaldi 下载 —— 官网与官方安装包</a>\n      </nav>",
+  "rel": "<aside class=\"lq-rel\"><h2 class=\"lq-rel-cap\">最新文章</h2><ul><li><a href=\"/download/other\">其他浏览器下载 —— 官网与镜像入口</a></li><li><a href=\"/download/samsung\">Samsung Internet 下载 —— 官网与官方安装包</a></li><li><a href=\"/download/quark\">夸克浏览器 下载 —— 官网与官方安装包</a></li><li><a href=\"/download/duckduckgo\">DuckDuckGo 下载 —— 官网与官方安装包</a></li><li><a href=\"/download/vivaldi\">Vivaldi 下载 —— 官网与官方安装包</a></li><li><a href=\"/download/brave\">Brave 下载 —— 官网与国内镜像安装包</a></li></ul></aside>",
+  "side": "<aside class=\"side\">\n    <div class=\"side-box\"><h4>相关技巧</h4><ul class=\"side-list\"><li><a href=\"/tips/browser-kernel\">浏览器内核是什么</a></li><li><a href=\"/tips/fast-browser\">轻量浏览器怎么选</a></li><li><a href=\"/tips/devtools\">开发者工具入门</a></li></ul></div>\n      </aside>",
+  "ref_title": "Arc 下载 —— 官网与官方安装包 · 浏览工坊"
+ },
+ "brave": {
+  "adj": "<nav class=\"adjacent\">\n    <a rel=\"prev\" href=\"/download/vivaldi\"><b>← 上一篇</b>Vivaldi 下载 —— 官网与官方安装包</a>\n        <a rel=\"next\" href=\"/download/uc\" class=\"nx\"><b>下一篇 →</b>UC 浏览器 下载 —— 官网与官方安装包</a>\n      </nav>",
+  "rel": "<aside class=\"lq-rel\"><h2 class=\"lq-rel-cap\">最新文章</h2><ul><li><a href=\"/download/other\">其他浏览器下载 —— 官网与镜像入口</a></li><li><a href=\"/download/samsung\">Samsung Internet 下载 —— 官网与官方安装包</a></li><li><a href=\"/download/quark\">夸克浏览器 下载 —— 官网与官方安装包</a></li><li><a href=\"/download/duckduckgo\">DuckDuckGo 下载 —— 官网与官方安装包</a></li><li><a href=\"/download/arc\">Arc 下载 —— 官网与官方安装包</a></li><li><a href=\"/download/vivaldi\">Vivaldi 下载 —— 官网与官方安装包</a></li></ul></aside>",
+  "side": "<aside class=\"side\">\n    <div class=\"side-box\"><h4>相关技巧</h4><ul class=\"side-list\"><li><a href=\"/tips/adblock\">浏览器广告拦截</a></li><li><a href=\"/tips/browser-history\">浏览器历史记录管理</a></li><li><a href=\"/tips/fast-browser\">轻量浏览器怎么选</a></li></ul></div>\n      </aside>",
+  "ref_title": "Brave 下载 —— 官网与国内镜像安装包 · 浏览工坊"
+ },
+ "chrome": {
+  "adj": "<nav class=\"adjacent\">\n    <a rel=\"prev\" href=\"/download/firefox\"><b>← 上一篇</b>Mozilla Firefox 下载 —— 官网与国内镜像安装包</a>\n        <a rel=\"next\" href=\"/tool/zodiac\" class=\"nx\"><b>下一篇 →</b>生肖查询 - liulanqi 在线工具</a>\n      </nav>",
+  "rel": "<aside class=\"lq-rel\"><h2 class=\"lq-rel-cap\">最新文章</h2><ul><li><a href=\"/download/other\">其他浏览器下载 —— 官网与镜像入口</a></li><li><a href=\"/download/samsung\">Samsung Internet 下载 —— 官网与官方安装包</a></li><li><a href=\"/download/quark\">夸克浏览器 下载 —— 官网与官方安装包</a></li><li><a href=\"/download/duckduckgo\">DuckDuckGo 下载 —— 官网与官方安装包</a></li><li><a href=\"/download/arc\">Arc 下载 —— 官网与官方安装包</a></li><li><a href=\"/download/vivaldi\">Vivaldi 下载 —— 官网与官方安装包</a></li></ul></aside>",
+  "side": "<aside class=\"side\">\n    <div class=\"side-box\"><h4>相关技巧</h4><ul class=\"side-list\"><li><a href=\"/tips/chrome-bookmarks\">Chrome 收藏夹整理</a></li><li><a href=\"/tips/chrome-extensions\">Chrome 扩展安装与权限</a></li><li><a href=\"/tips/chrome-tabs\">Chrome 标签页效率</a></li><li><a href=\"/tips/chrome-passwords\">Chrome 密码管理</a></li><li><a href=\"/tips/chrome-downloads\">Chrome 下载管理</a></li><li><a href=\"/tips/chrome-profile\">Chrome 多用户管理</a></li><li><a href=\"/tips/chrome-omnibox\">Chrome 地址栏玩法</a></li><li><a href=\"/tips/chrome-shortcuts\">Chrome 快捷键与画中画</a></li><li><a href=\"/tips/chrome-tips\">Chrome 技巧合集</a></li></ul></div>\n      </aside>",
+  "ref_title": "Google Chrome 下载 —— 官网与国内镜像安装包 · 浏览工坊"
+ },
+ "duckduckgo": {
+  "adj": "<nav class=\"adjacent\">\n    <a rel=\"prev\" href=\"/download/quark\"><b>← 上一篇</b>夸克浏览器 下载 —— 官网与官方安装包</a>\n        <a rel=\"next\" href=\"/download/arc\" class=\"nx\"><b>下一篇 →</b>Arc 下载 —— 官网与官方安装包</a>\n      </nav>",
+  "rel": "<aside class=\"lq-rel\"><h2 class=\"lq-rel-cap\">最新文章</h2><ul><li><a href=\"/download/other\">其他浏览器下载 —— 官网与镜像入口</a></li><li><a href=\"/download/samsung\">Samsung Internet 下载 —— 官网与官方安装包</a></li><li><a href=\"/download/quark\">夸克浏览器 下载 —— 官网与官方安装包</a></li><li><a href=\"/download/arc\">Arc 下载 —— 官网与官方安装包</a></li><li><a href=\"/download/vivaldi\">Vivaldi 下载 —— 官网与官方安装包</a></li><li><a href=\"/download/brave\">Brave 下载 —— 官网与国内镜像安装包</a></li></ul></aside>",
+  "side": "<aside class=\"side\">\n    <div class=\"side-box\"><h4>相关技巧</h4><ul class=\"side-list\"><li><a href=\"/tips/browser-history\">浏览器历史记录管理</a></li><li><a href=\"/tips/adblock\">浏览器广告拦截</a></li><li><a href=\"/tips/browser-kernel\">浏览器内核是什么</a></li></ul></div>\n      </aside>",
+  "ref_title": "DuckDuckGo 下载 —— 官网与官方安装包 · 浏览工坊"
+ },
+ "edge": {
+  "adj": "<nav class=\"adjacent\">\n    <a rel=\"prev\" href=\"/download/opera\"><b>← 上一篇</b>Opera 下载 —— 官网与官方安装包</a>\n        <a rel=\"next\" href=\"/download/firefox\" class=\"nx\"><b>下一篇 →</b>Mozilla Firefox 下载 —— 官网与国内镜像安装包</a>\n      </nav>",
+  "rel": "<aside class=\"lq-rel\"><h2 class=\"lq-rel-cap\">最新文章</h2><ul><li><a href=\"/download/other\">其他浏览器下载 —— 官网与镜像入口</a></li><li><a href=\"/download/samsung\">Samsung Internet 下载 —— 官网与官方安装包</a></li><li><a href=\"/download/quark\">夸克浏览器 下载 —— 官网与官方安装包</a></li><li><a href=\"/download/duckduckgo\">DuckDuckGo 下载 —— 官网与官方安装包</a></li><li><a href=\"/download/arc\">Arc 下载 —— 官网与官方安装包</a></li><li><a href=\"/download/vivaldi\">Vivaldi 下载 —— 官网与官方安装包</a></li></ul></aside>",
+  "side": "<aside class=\"side\">\n    <div class=\"side-box\"><h4>相关技巧</h4><ul class=\"side-list\"><li><a href=\"/tips/edge-profile\">Edge 个人资料与同步</a></li><li><a href=\"/tips/edge-vertical-tabs\">Edge 垂直标签页</a></li><li><a href=\"/tips/edge-collections\">Edge 集锦</a></li><li><a href=\"/tips/edge-pdf\">Edge 看 PDF</a></li><li><a href=\"/tips/edge-translate-reader\">Edge 翻译与沉浸式阅读</a></li><li><a href=\"/tips/edge-sleep-tabs\">Edge 睡眠标签</a></li><li><a href=\"/tips/edge-sidebar\">Edge 侧栏</a></li><li><a href=\"/tips/edge-workspaces\">Edge 工作区</a></li><li><a href=\"/tips/edge\">Edge 技巧合集</a></li></ul></div>\n      </aside>",
+  "ref_title": "Microsoft Edge 下载 —— 官网与官方安装包 · 浏览工坊"
+ },
+ "firefox": {
+  "adj": "<nav class=\"adjacent\">\n    <a rel=\"prev\" href=\"/download/edge\"><b>← 上一篇</b>Microsoft Edge 下载 —— 官网与官方安装包</a>\n        <a rel=\"next\" href=\"/download/chrome\" class=\"nx\"><b>下一篇 →</b>Google Chrome 下载 —— 官网与国内镜像安装包</a>\n      </nav>",
+  "rel": "<aside class=\"lq-rel\"><h2 class=\"lq-rel-cap\">最新文章</h2><ul><li><a href=\"/download/other\">其他浏览器下载 —— 官网与镜像入口</a></li><li><a href=\"/download/samsung\">Samsung Internet 下载 —— 官网与官方安装包</a></li><li><a href=\"/download/quark\">夸克浏览器 下载 —— 官网与官方安装包</a></li><li><a href=\"/download/duckduckgo\">DuckDuckGo 下载 —— 官网与官方安装包</a></li><li><a href=\"/download/arc\">Arc 下载 —— 官网与官方安装包</a></li><li><a href=\"/download/vivaldi\">Vivaldi 下载 —— 官网与官方安装包</a></li></ul></aside>",
+  "side": "<aside class=\"side\">\n    <div class=\"side-box\"><h4>相关技巧</h4><ul class=\"side-list\"><li><a href=\"/tips/firefox-containers\">Firefox 多账号容器</a></li><li><a href=\"/tips/firefox-customize\">Firefox 自定义</a></li><li><a href=\"/tips/firefox-account-sync\">Firefox 账号同步</a></li><li><a href=\"/tips/firefox-privacy-protect\">Firefox 隐私保护</a></li><li><a href=\"/tips/firefox-pocket\">Firefox Pocket</a></li><li><a href=\"/tips/firefox-downloads\">Firefox 下载管理</a></li><li><a href=\"/tips/firefox-quick\">Firefox 效率操作</a></li><li><a href=\"/tips/firefox-tabs-recover\">Firefox 标签恢复</a></li></ul></div>\n      </aside>",
+  "ref_title": "Mozilla Firefox 下载 —— 官网与国内镜像安装包 · 浏览工坊"
+ },
+ "opera": {
+  "adj": "<nav class=\"adjacent\">\n    <a rel=\"prev\" href=\"/download/safari\"><b>← 上一篇</b>Safari 下载 —— 官网与官方安装包</a>\n        <a rel=\"next\" href=\"/download/edge\" class=\"nx\"><b>下一篇 →</b>Microsoft Edge 下载 —— 官网与官方安装包</a>\n      </nav>",
+  "rel": "<aside class=\"lq-rel\"><h2 class=\"lq-rel-cap\">最新文章</h2><ul><li><a href=\"/download/other\">其他浏览器下载 —— 官网与镜像入口</a></li><li><a href=\"/download/samsung\">Samsung Internet 下载 —— 官网与官方安装包</a></li><li><a href=\"/download/quark\">夸克浏览器 下载 —— 官网与官方安装包</a></li><li><a href=\"/download/duckduckgo\">DuckDuckGo 下载 —— 官网与官方安装包</a></li><li><a href=\"/download/arc\">Arc 下载 —— 官网与官方安装包</a></li><li><a href=\"/download/vivaldi\">Vivaldi 下载 —— 官网与官方安装包</a></li></ul></aside>",
+  "side": "<aside class=\"side\">\n    <div class=\"side-box\"><h4>相关技巧</h4><ul class=\"side-list\"><li><a href=\"/tips/opera-account\">Opera 账号与同步</a></li><li><a href=\"/tips/opera-sidebar-flow\">Opera 侧栏与 Flow</a></li><li><a href=\"/tips/opera-gx\">Opera GX</a></li><li><a href=\"/tips/opera-save-block\">Opera Turbo 与广告拦截</a></li><li><a href=\"/tips/opera-web\">Opera 上网技巧</a></li></ul></div>\n      </aside>",
+  "ref_title": "Opera 下载 —— 官网与官方安装包 · 浏览工坊"
+ },
+ "other": {
+  "adj": "<nav class=\"adjacent\">\n    <span></span>    <a rel=\"next\" href=\"/download/samsung\" class=\"nx\"><b>下一篇 →</b>Samsung Internet 下载 —— 官网与官方安装包</a>\n      </nav>",
+  "rel": "<aside class=\"lq-rel\"><h2 class=\"lq-rel-cap\">最新文章</h2><ul><li><a href=\"/download/samsung\">Samsung Internet 下载 —— 官网与官方安装包</a></li><li><a href=\"/download/quark\">夸克浏览器 下载 —— 官网与官方安装包</a></li><li><a href=\"/download/duckduckgo\">DuckDuckGo 下载 —— 官网与官方安装包</a></li><li><a href=\"/download/arc\">Arc 下载 —— 官网与官方安装包</a></li><li><a href=\"/download/vivaldi\">Vivaldi 下载 —— 官网与官方安装包</a></li><li><a href=\"/download/brave\">Brave 下载 —— 官网与国内镜像安装包</a></li></ul></aside>",
+  "side": "<aside class=\"side\">\n    <div class=\"side-box\"><h4>相关技巧</h4><ul class=\"side-list\"><li><a href=\"/tips/browser-kernel\">浏览器内核是什么</a></li><li><a href=\"/tips/browser-rec\">浏览器怎么选</a></li><li><a href=\"/tips/fast-browser\">轻量浏览器怎么选</a></li></ul></div>\n      </aside>",
+  "ref_title": "其他浏览器下载 —— 官网与镜像入口 · 浏览工坊"
+ },
+ "qq": {
+  "adj": "<nav class=\"adjacent\">\n    <a rel=\"prev\" href=\"/download/360\"><b>← 上一篇</b>360 安全浏览器 下载 —— 官网与官方安装包</a>\n        <a rel=\"next\" href=\"/download/safari\" class=\"nx\"><b>下一篇 →</b>Safari 下载 —— 官网与官方安装包</a>\n      </nav>",
+  "rel": "<aside class=\"lq-rel\"><h2 class=\"lq-rel-cap\">最新文章</h2><ul><li><a href=\"/download/other\">其他浏览器下载 —— 官网与镜像入口</a></li><li><a href=\"/download/samsung\">Samsung Internet 下载 —— 官网与官方安装包</a></li><li><a href=\"/download/quark\">夸克浏览器 下载 —— 官网与官方安装包</a></li><li><a href=\"/download/duckduckgo\">DuckDuckGo 下载 —— 官网与官方安装包</a></li><li><a href=\"/download/arc\">Arc 下载 —— 官网与官方安装包</a></li><li><a href=\"/download/vivaldi\">Vivaldi 下载 —— 官网与官方安装包</a></li></ul></aside>",
+  "side": "<aside class=\"side\">\n    <div class=\"side-box\"><h4>相关技巧</h4><ul class=\"side-list\"><li><a href=\"/tips/browser-kernel\">浏览器内核是什么</a></li><li><a href=\"/tips/fast-browser\">轻量浏览器怎么选</a></li><li><a href=\"/tips/browser-history\">浏览器历史记录管理</a></li></ul></div>\n      </aside>",
+  "ref_title": "QQ 浏览器 下载 —— 官网与官方安装包 · 浏览工坊"
+ },
+ "quark": {
+  "adj": "<nav class=\"adjacent\">\n    <a rel=\"prev\" href=\"/download/samsung\"><b>← 上一篇</b>Samsung Internet 下载 —— 官网与官方安装包</a>\n        <a rel=\"next\" href=\"/download/duckduckgo\" class=\"nx\"><b>下一篇 →</b>DuckDuckGo 下载 —— 官网与官方安装包</a>\n      </nav>",
+  "rel": "<aside class=\"lq-rel\"><h2 class=\"lq-rel-cap\">最新文章</h2><ul><li><a href=\"/download/other\">其他浏览器下载 —— 官网与镜像入口</a></li><li><a href=\"/download/samsung\">Samsung Internet 下载 —— 官网与官方安装包</a></li><li><a href=\"/download/duckduckgo\">DuckDuckGo 下载 —— 官网与官方安装包</a></li><li><a href=\"/download/arc\">Arc 下载 —— 官网与官方安装包</a></li><li><a href=\"/download/vivaldi\">Vivaldi 下载 —— 官网与官方安装包</a></li><li><a href=\"/download/brave\">Brave 下载 —— 官网与国内镜像安装包</a></li></ul></aside>",
+  "side": "<aside class=\"side\">\n    <div class=\"side-box\"><h4>相关技巧</h4><ul class=\"side-list\"><li><a href=\"/tips/quark-home\">夸克主页定制</a></li><li><a href=\"/tips/quark-ai\">夸克 AI</a></li><li><a href=\"/tips/quark-netdisk\">夸克网盘</a></li><li><a href=\"/tips/quark-tools\">夸克工具箱</a></li><li><a href=\"/tips/quark-reader\">夸克阅读</a></li><li><a href=\"/tips/quark-guard\">夸克隐私与安全</a></li><li><a href=\"/tips/quark-pc\">夸克电脑版与跨端</a></li><li><a href=\"/tips/quark-download\">夸克下载管理</a></li></ul></div>\n      </aside>",
+  "ref_title": "夸克浏览器 下载 —— 官网与官方安装包 · 浏览工坊"
+ },
+ "safari": {
+  "adj": "<nav class=\"adjacent\">\n    <a rel=\"prev\" href=\"/download/qq\"><b>← 上一篇</b>QQ 浏览器 下载 —— 官网与官方安装包</a>\n        <a rel=\"next\" href=\"/download/opera\" class=\"nx\"><b>下一篇 →</b>Opera 下载 —— 官网与官方安装包</a>\n      </nav>",
+  "rel": "<aside class=\"lq-rel\"><h2 class=\"lq-rel-cap\">最新文章</h2><ul><li><a href=\"/download/other\">其他浏览器下载 —— 官网与镜像入口</a></li><li><a href=\"/download/samsung\">Samsung Internet 下载 —— 官网与官方安装包</a></li><li><a href=\"/download/quark\">夸克浏览器 下载 —— 官网与官方安装包</a></li><li><a href=\"/download/duckduckgo\">DuckDuckGo 下载 —— 官网与官方安装包</a></li><li><a href=\"/download/arc\">Arc 下载 —— 官网与官方安装包</a></li><li><a href=\"/download/vivaldi\">Vivaldi 下载 —— 官网与官方安装包</a></li></ul></aside>",
+  "side": "<aside class=\"side\">\n    <div class=\"side-box\"><h4>相关技巧</h4><ul class=\"side-list\"><li><a href=\"/tips/browser-kernel\">浏览器内核是什么</a></li><li><a href=\"/tips/browser-history\">浏览器历史记录管理</a></li><li><a href=\"/tips/save-webpage\">网页保存为 PDF</a></li></ul></div>\n      </aside>",
+  "ref_title": "Safari 下载 —— 官网与官方安装包 · 浏览工坊"
+ },
+ "samsung": {
+  "adj": "<nav class=\"adjacent\">\n    <a rel=\"prev\" href=\"/download/other\"><b>← 上一篇</b>其他浏览器下载 —— 官网与镜像入口</a>\n        <a rel=\"next\" href=\"/download/quark\" class=\"nx\"><b>下一篇 →</b>夸克浏览器 下载 —— 官网与官方安装包</a>\n      </nav>",
+  "rel": "<aside class=\"lq-rel\"><h2 class=\"lq-rel-cap\">最新文章</h2><ul><li><a href=\"/download/other\">其他浏览器下载 —— 官网与镜像入口</a></li><li><a href=\"/download/quark\">夸克浏览器 下载 —— 官网与官方安装包</a></li><li><a href=\"/download/duckduckgo\">DuckDuckGo 下载 —— 官网与官方安装包</a></li><li><a href=\"/download/arc\">Arc 下载 —— 官网与官方安装包</a></li><li><a href=\"/download/vivaldi\">Vivaldi 下载 —— 官网与官方安装包</a></li><li><a href=\"/download/brave\">Brave 下载 —— 官网与国内镜像安装包</a></li></ul></aside>",
+  "side": "<aside class=\"side\">\n    <div class=\"side-box\"><h4>相关技巧</h4><ul class=\"side-list\"><li><a href=\"/tips/browser-kernel\">浏览器内核是什么</a></li><li><a href=\"/tips/fast-browser\">轻量浏览器怎么选</a></li><li><a href=\"/tips/browser-rec\">浏览器怎么选</a></li></ul></div>\n      </aside>",
+  "ref_title": "Samsung Internet 下载 —— 官网与官方安装包 · 浏览工坊"
+ },
+ "uc": {
+  "adj": "<nav class=\"adjacent\">\n    <a rel=\"prev\" href=\"/download/brave\"><b>← 上一篇</b>Brave 下载 —— 官网与国内镜像安装包</a>\n        <a rel=\"next\" href=\"/download/360\" class=\"nx\"><b>下一篇 →</b>360 安全浏览器 下载 —— 官网与官方安装包</a>\n      </nav>",
+  "rel": "<aside class=\"lq-rel\"><h2 class=\"lq-rel-cap\">最新文章</h2><ul><li><a href=\"/download/other\">其他浏览器下载 —— 官网与镜像入口</a></li><li><a href=\"/download/samsung\">Samsung Internet 下载 —— 官网与官方安装包</a></li><li><a href=\"/download/quark\">夸克浏览器 下载 —— 官网与官方安装包</a></li><li><a href=\"/download/duckduckgo\">DuckDuckGo 下载 —— 官网与官方安装包</a></li><li><a href=\"/download/arc\">Arc 下载 —— 官网与官方安装包</a></li><li><a href=\"/download/vivaldi\">Vivaldi 下载 —— 官网与官方安装包</a></li></ul></aside>",
+  "side": "<aside class=\"side\">\n    <div class=\"side-box\"><h4>相关技巧</h4><ul class=\"side-list\"><li><a href=\"/tips/browser-kernel\">浏览器内核是什么</a></li><li><a href=\"/tips/fast-browser\">轻量浏览器怎么选</a></li><li><a href=\"/tips/browser-history\">浏览器历史记录管理</a></li></ul></div>\n      </aside>",
+  "ref_title": "UC 浏览器 下载 —— 官网与官方安装包 · 浏览工坊"
+ },
+ "vivaldi": {
+  "adj": "<nav class=\"adjacent\">\n    <a rel=\"prev\" href=\"/download/arc\"><b>← 上一篇</b>Arc 下载 —— 官网与官方安装包</a>\n        <a rel=\"next\" href=\"/download/brave\" class=\"nx\"><b>下一篇 →</b>Brave 下载 —— 官网与国内镜像安装包</a>\n      </nav>",
+  "rel": "<aside class=\"lq-rel\"><h2 class=\"lq-rel-cap\">最新文章</h2><ul><li><a href=\"/download/other\">其他浏览器下载 —— 官网与镜像入口</a></li><li><a href=\"/download/samsung\">Samsung Internet 下载 —— 官网与官方安装包</a></li><li><a href=\"/download/quark\">夸克浏览器 下载 —— 官网与官方安装包</a></li><li><a href=\"/download/duckduckgo\">DuckDuckGo 下载 —— 官网与官方安装包</a></li><li><a href=\"/download/arc\">Arc 下载 —— 官网与官方安装包</a></li><li><a href=\"/download/brave\">Brave 下载 —— 官网与国内镜像安装包</a></li></ul></aside>",
+  "side": "<aside class=\"side\">\n    <div class=\"side-box\"><h4>相关技巧</h4><ul class=\"side-list\"><li><a href=\"/tips/browser-kernel\">浏览器内核是什么</a></li><li><a href=\"/tips/tab-manage\">浏览器标签页管理</a></li><li><a href=\"/tips/fast-browser\">轻量浏览器怎么选</a></li></ul></div>\n      </aside>",
+  "ref_title": "Vivaldi 下载 —— 官网与官方安装包 · 浏览工坊"
+ }
+}

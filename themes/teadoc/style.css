@@ -12,30 +12,30 @@
   --font-sans: -apple-system,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei","Noto Sans SC",sans-serif;
   --font-mono: ui-monospace,"SFMono-Regular",Consolas,"Liberation Mono",Menlo,monospace;
 
-  --bg:#F7FAF7; --bg-soft:#F0F5EE; --card:#FFFFFF; --card-soft:#FDFEFD;
-  --line:#E3EAE0; --border:#DFE8DC; --border-strong:#C8D8C5;
-  --fg:#22301F; --ink:#1C2A19; --text:#2A3A26; --text-soft:#6B7A66; --text-faint:#93A08E;
-  --accent:#2F7D46; --accent-deep:#23693A; --accent-strong:#1F5E33;
-  --accent-soft:#EEF6EC; --accent-faint:#E3F0E0;
-  --accent-glow:rgba(47,125,70,.16); --selection:rgba(47,125,70,.22);
-  --codebg:#16261B; --code-fg:#D9F0DD;
+  --bg:#EDF2E6; --bg-soft:#E4ECDC; --card:#F7FAF2; --card-soft:#F0F5EA;
+  --line:#DCE6D1; --border:#D6E2CC; --border-strong:#C2D2B6;
+  --fg:#2B3627; --ink:#222D1F; --text:#3E4C38; --text-soft:#64735A; --text-faint:#8FA183;
+  --accent:#337A4E; --accent-deep:#2A6840; --accent-strong:#245836;
+  --accent-soft:#E4F1DF; --accent-faint:#D9EBD3;
+  --accent-glow:rgba(51,122,78,.15); --selection:rgba(51,122,78,.20);
+  --codebg:#1A2B1E; --code-fg:#DCF0DE;
   --shadow-sm:0 1px 2px rgba(28,52,33,.05);
-  --shadow-md:0 4px 18px rgba(28,52,33,.09);
-  --shadow-lg:0 14px 38px rgba(28,52,33,.14);
+  --shadow-md:0 4px 18px rgba(28,52,33,.08);
+  --shadow-lg:0 14px 38px rgba(28,52,33,.13);
   --header-bg:color-mix(in srgb, var(--card) 82%, transparent);
 }
 /* 暖纸（data-pal=warm）：赭石 + 暖米纸 + 衬线标题 */
 :root[data-pal="warm"] {
-  --bg:#F6F1E6; --bg-soft:#F0E9D9; --card:#FDFBF4; --card-soft:#FAF6EA;
-  --line:#E6DCC4; --border:#E3D7BC; --border-strong:#CEBE9A;
-  --fg:#33291A; --ink:#2C2314; --text:#3B3120; --text-soft:#7A6C52; --text-faint:#9D8F72;
-  --accent:#A8542E; --accent-deep:#8F4626; --accent-strong:#7E3D21;
-  --accent-soft:#F3EADB; --accent-faint:#F7EFE2;
-  --accent-glow:rgba(168,84,46,.16); --selection:rgba(168,84,46,.20);
-  --codebg:#2C2413; --code-fg:#F0E6CF;
-  --shadow-sm:0 1px 2px rgba(100,75,35,.06);
-  --shadow-md:0 4px 18px rgba(100,75,35,.10);
-  --shadow-lg:0 14px 38px rgba(100,75,35,.16);
+  --bg:#F4EDDA; --bg-soft:#EDE3C9; --card:#FBF7EB; --card-soft:#F5EEDB;
+  --line:#E4DBC0; --border:#DFD5B6; --border-strong:#C8BA96;
+  --fg:#3B3322; --ink:#332B1B; --text:#4A4130; --text-soft:#7A6F54; --text-faint:#9C9176;
+  --accent:#8A642A; --accent-deep:#755424; --accent-strong:#65491E;
+  --accent-soft:#F2E6C9; --accent-faint:#F6EED7;
+  --accent-glow:rgba(138,100,42,.16); --selection:rgba(138,100,42,.20);
+  --codebg:#3A2F18; --code-fg:#F0E3C6;
+  --shadow-sm:0 1px 2px rgba(100,80,35,.05);
+  --shadow-md:0 4px 18px rgba(100,80,35,.09);
+  --shadow-lg:0 14px 38px rgba(100,80,35,.14);
   --header-bg:color-mix(in srgb, var(--card) 82%, transparent);
 }
 /* 暗色：绿系 */
@@ -1015,3 +1015,43 @@ html[dir="rtl"] body.side-off .toc-dock { left: 0; right: auto; border-radius: 1
 .post-list .post-item { margin-bottom: 0; }
 .media-row { margin-bottom: 14px; }
 .post-list .media-row { margin-bottom: 0; }
+
+/* 护眼调色收尾：浅色下将硬编码纯白改为纸感变量（暗色不受影响） */
+:root:not(.dark) .is-home .home, :root:not(.dark) .layout.is-home .home { background: var(--card); }
+:root:not(.dark) .site-footer { background: var(--card-soft); }
+/* ============================================================
+   护眼兜底（置底生效）：覆盖后续段落里把 --bg 改回纯白的规则
+   仅作用于浅色；暗色保持原样。默认绿系纸感 / 可选黄系纸感
+   ============================================================ */
+:root:not(.dark):not([data-pal="warm"]),
+:root:not(.dark)[data-pal="green"] {
+  --bg:#EDF2E6; --bg-soft:#E4ECDC; --card:#F7FAF2; --card-soft:#F0F5EA;
+  --line:#DCE6D1; --border:#D6E2CC; --border-strong:#C2D2B6;
+  --fg:#2B3627; --ink:#222D1F; --text:#3E4C38; --text-soft:#64735A; --text-faint:#8FA183;
+  --accent:#337A4E; --accent-deep:#2A6840; --accent-strong:#245836;
+  --accent-soft:#E4F1DF; --accent-faint:#D9EBD3;
+  --accent-glow:rgba(51,122,78,.15); --selection:rgba(51,122,78,.20);
+  --codebg:#1A2B1E; --code-fg:#DCF0DE;
+  --shadow-sm:0 1px 2px rgba(28,52,33,.05);
+  --shadow-md:0 4px 18px rgba(28,52,33,.08);
+  --shadow-lg:0 14px 38px rgba(28,52,33,.13);
+}
+:root:not(.dark)[data-pal="warm"] {
+  --bg:#F4EDDA; --bg-soft:#EDE3C9; --card:#FBF7EB; --card-soft:#F5EEDB;
+  --line:#E4DBC0; --border:#DFD5B6; --border-strong:#C8BA96;
+  --fg:#3B3322; --ink:#332B1B; --text:#4A4130; --text-soft:#7A6F54; --text-faint:#9C9176;
+  --accent:#8A642A; --accent-deep:#755424; --accent-strong:#65491E;
+  --accent-soft:#F2E6C9; --accent-faint:#F6EED7;
+  --accent-glow:rgba(138,100,42,.16); --selection:rgba(138,100,42,.20);
+  --codebg:#3A2F18; --code-fg:#F0E3C6;
+  --shadow-sm:0 1px 2px rgba(100,80,35,.05);
+  --shadow-md:0 4px 18px rgba(100,80,35,.09);
+  --shadow-lg:0 14px 38px rgba(100,80,35,.14);
+}
+:root:not(.dark) body { background: var(--bg); }
+:root:not(.dark) .site-header, :root:not(.dark) .docs-header { background: var(--card); border-color: var(--line); }
+:root:not(.dark) .hero-section { background: color-mix(in srgb, var(--accent) 6%, var(--bg)); }
+:root:not(.dark) .is-home .home, :root:not(.dark) .layout.is-home .home { background: var(--bg); }
+:root:not(.dark) .site-footer { background: var(--bg-soft); }
+:root:not(.dark) .side, :root:not(.dark) .leftnav { background: transparent; }
+:root:not(.dark) .article-content, :root:not(.dark) .card { background: var(--card); }

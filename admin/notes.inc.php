@@ -72,7 +72,7 @@ function notes_list_html(): string
             . '<span style="margin-left:auto;"><a class="btn ghost mini" href="/admin/?s=notes&action=edit&id=' . (int)$r['id'] . '">编辑</a> '
             . '<form class="inline" method="post" action="/admin/?s=notes" style="display:inline;" onsubmit="return confirm(\'删除这条笔记？\')">' . Csrf::field()
             . '<input type="hidden" name="do" value="note-delete"><input type="hidden" name="id" value="' . (int)$r['id'] . '">'
-            . '<button class="btn ghost mini" style="color:#9c3f1b;border-color:#e3c5b6;" type="submit">删除</button></form></span></div>'
+            . '<button class="btn ghost mini danger" type="submit">删除</button></form></span></div>'
             . '<p style="margin:8px 0 0;white-space:pre-wrap;">' . $body . '</p>' . $tagHtml . '</div>';
     }
     return $html;

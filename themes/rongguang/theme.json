@@ -1,0 +1,46 @@
+{
+  "name": "绒光 Rongguang",
+  "version": "1.0.0",
+  "requires_core": "1.0.0",
+  "author": "YeCha",
+  "description": "绒光 Rongguang —— 仿 Tufted Blog（Astro）的 Tufte 纸感极简：暖纸白底 #fffff8、墨蓝强调 #4453a6、衬线留白排版、柔和边框。",
+  "home": "landing",
+  "settings": [
+    {
+      "key": "width",
+      "type": "number",
+      "label": "版心宽度",
+      "def": "1180",
+      "min": 960,
+      "max": 1440
+    },
+    {
+      "key": "accent",
+      "type": "color",
+      "label": "强调色",
+      "def": "#4453a6"
+    },
+    {
+      "key": "per_page",
+      "type": "number",
+      "label": "每页条数",
+      "def": "10",
+      "min": 3,
+      "max": 50
+    },
+    {
+      "key": "latest_n",
+      "type": "number",
+      "label": "首页最新条数",
+      "def": "6",
+      "min": 3,
+      "max": 12
+    },
+    {
+      "key": "show_sidebar",
+      "type": "checkbox",
+      "label": "显示侧栏",
+      "def": "1"
+    }
+  ]
+}

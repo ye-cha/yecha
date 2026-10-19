@@ -1,0 +1,404 @@
+{
+    "tips__chrome-bookmarks": [
+        "tips__chrome-tips",
+        "tips__chrome-profile",
+        "tips__chrome-extensions",
+        "tips__chrome-downloads",
+        "tips__chrome-omnibox",
+        "tips__chrome-tabs",
+        "tips__chrome-passwords",
+        "tips__chrome-shortcuts"
+    ],
+    "tips__chrome-downloads": [
+        "tips__chrome-tips",
+        "tips__chrome-profile",
+        "tips__chrome-bookmarks",
+        "tips__chrome-extensions",
+        "tips__chrome-omnibox",
+        "tips__chrome-tabs",
+        "tips__chrome-passwords",
+        "tips__chrome-shortcuts"
+    ],
+    "tips__chrome-extensions": [
+        "tips__chrome-tips",
+        "tips__chrome-profile",
+        "tips__chrome-bookmarks",
+        "tips__chrome-downloads",
+        "tips__chrome-omnibox",
+        "tips__chrome-tabs",
+        "tips__chrome-passwords",
+        "tips__chrome-shortcuts"
+    ],
+    "tips__chrome-omnibox": [
+        "tips__chrome-tips",
+        "tips__chrome-profile",
+        "tips__chrome-bookmarks",
+        "tips__chrome-extensions",
+        "tips__chrome-downloads",
+        "tips__chrome-tabs",
+        "tips__chrome-passwords",
+        "tips__chrome-shortcuts"
+    ],
+    "tips__chrome-passwords": [
+        "tips__chrome-tips",
+        "tips__chrome-profile",
+        "tips__chrome-bookmarks",
+        "tips__chrome-extensions",
+        "tips__chrome-downloads",
+        "tips__chrome-omnibox",
+        "tips__chrome-tabs",
+        "tips__chrome-shortcuts"
+    ],
+    "tips__chrome-profile": [
+        "tips__chrome-tips",
+        "tips__chrome-bookmarks",
+        "tips__chrome-extensions",
+        "tips__chrome-downloads",
+        "tips__chrome-omnibox",
+        "tips__chrome-tabs",
+        "tips__chrome-passwords",
+        "tips__chrome-shortcuts"
+    ],
+    "tips__chrome-shortcuts": [
+        "tips__chrome-tips",
+        "tips__chrome-profile",
+        "tips__chrome-bookmarks",
+        "tips__chrome-extensions",
+        "tips__chrome-downloads",
+        "tips__chrome-omnibox",
+        "tips__chrome-tabs",
+        "tips__chrome-passwords"
+    ],
+    "tips__chrome-tabs": [
+        "tips__chrome-tips",
+        "tips__chrome-profile",
+        "tips__chrome-bookmarks",
+        "tips__chrome-extensions",
+        "tips__chrome-downloads",
+        "tips__chrome-omnibox",
+        "tips__chrome-passwords",
+        "tips__chrome-shortcuts"
+    ],
+    "tips__chrome-tips": [
+        "tips__chrome-profile",
+        "tips__chrome-bookmarks",
+        "tips__chrome-extensions",
+        "tips__chrome-downloads",
+        "tips__chrome-omnibox",
+        "tips__chrome-tabs",
+        "tips__chrome-passwords",
+        "tips__chrome-shortcuts"
+    ],
+    "tips__edge": [
+        "tips__edge-profile",
+        "tips__edge-vertical-tabs",
+        "tips__edge-collections",
+        "tips__edge-pdf",
+        "tips__edge-translate-reader",
+        "tips__edge-sleep-tabs",
+        "tips__edge-sidebar",
+        "tips__edge-workspaces"
+    ],
+    "tips__edge-collections": [
+        "tips__edge",
+        "tips__edge-profile",
+        "tips__edge-vertical-tabs",
+        "tips__edge-pdf",
+        "tips__edge-translate-reader",
+        "tips__edge-sleep-tabs",
+        "tips__edge-sidebar",
+        "tips__edge-workspaces"
+    ],
+    "tips__edge-pdf": [
+        "tips__edge",
+        "tips__edge-profile",
+        "tips__edge-vertical-tabs",
+        "tips__edge-collections",
+        "tips__edge-translate-reader",
+        "tips__edge-sleep-tabs",
+        "tips__edge-sidebar",
+        "tips__edge-workspaces"
+    ],
+    "tips__edge-profile": [
+        "tips__edge",
+        "tips__edge-vertical-tabs",
+        "tips__edge-collections",
+        "tips__edge-pdf",
+        "tips__edge-translate-reader",
+        "tips__edge-sleep-tabs",
+        "tips__edge-sidebar",
+        "tips__edge-workspaces"
+    ],
+    "tips__edge-sidebar": [
+        "tips__edge",
+        "tips__edge-profile",
+        "tips__edge-vertical-tabs",
+        "tips__edge-collections",
+        "tips__edge-pdf",
+        "tips__edge-translate-reader",
+        "tips__edge-sleep-tabs",
+        "tips__edge-workspaces"
+    ],
+    "tips__edge-sleep-tabs": [
+        "tips__edge",
+        "tips__edge-profile",
+        "tips__edge-vertical-tabs",
+        "tips__edge-collections",
+        "tips__edge-pdf",
+        "tips__edge-translate-reader",
+        "tips__edge-sidebar",
+        "tips__edge-workspaces"
+    ],
+    "tips__edge-translate-reader": [
+        "tips__edge",
+        "tips__edge-profile",
+        "tips__edge-vertical-tabs",
+        "tips__edge-collections",
+        "tips__edge-pdf",
+        "tips__edge-sleep-tabs",
+        "tips__edge-sidebar",
+        "tips__edge-workspaces"
+    ],
+    "tips__edge-vertical-tabs": [
+        "tips__edge",
+        "tips__edge-profile",
+        "tips__edge-collections",
+        "tips__edge-pdf",
+        "tips__edge-translate-reader",
+        "tips__edge-sleep-tabs",
+        "tips__edge-sidebar",
+        "tips__edge-workspaces"
+    ],
+    "tips__edge-workspaces": [
+        "tips__edge",
+        "tips__edge-profile",
+        "tips__edge-vertical-tabs",
+        "tips__edge-collections",
+        "tips__edge-pdf",
+        "tips__edge-translate-reader",
+        "tips__edge-sleep-tabs",
+        "tips__edge-sidebar"
+    ],
+    "tips__firefox-account-sync": [
+        "tips__firefox-containers",
+        "tips__firefox-privacy-protect",
+        "tips__firefox-customize",
+        "tips__firefox-tabs-recover",
+        "tips__firefox-downloads",
+        "tips__firefox-pocket",
+        "tips__firefox-quick"
+    ],
+    "tips__firefox-containers": [
+        "tips__firefox-privacy-protect",
+        "tips__firefox-account-sync",
+        "tips__firefox-customize",
+        "tips__firefox-tabs-recover",
+        "tips__firefox-downloads",
+        "tips__firefox-pocket",
+        "tips__firefox-quick"
+    ],
+    "tips__firefox-customize": [
+        "tips__firefox-containers",
+        "tips__firefox-privacy-protect",
+        "tips__firefox-account-sync",
+        "tips__firefox-tabs-recover",
+        "tips__firefox-downloads",
+        "tips__firefox-pocket",
+        "tips__firefox-quick"
+    ],
+    "tips__firefox-downloads": [
+        "tips__firefox-containers",
+        "tips__firefox-privacy-protect",
+        "tips__firefox-account-sync",
+        "tips__firefox-customize",
+        "tips__firefox-tabs-recover",
+        "tips__firefox-pocket",
+        "tips__firefox-quick"
+    ],
+    "tips__firefox-pocket": [
+        "tips__firefox-containers",
+        "tips__firefox-privacy-protect",
+        "tips__firefox-account-sync",
+        "tips__firefox-customize",
+        "tips__firefox-tabs-recover",
+        "tips__firefox-downloads",
+        "tips__firefox-quick"
+    ],
+    "tips__firefox-privacy-protect": [
+        "tips__firefox-containers",
+        "tips__firefox-account-sync",
+        "tips__firefox-customize",
+        "tips__firefox-tabs-recover",
+        "tips__firefox-downloads",
+        "tips__firefox-pocket",
+        "tips__firefox-quick"
+    ],
+    "tips__firefox-quick": [
+        "tips__firefox-containers",
+        "tips__firefox-privacy-protect",
+        "tips__firefox-account-sync",
+        "tips__firefox-customize",
+        "tips__firefox-tabs-recover",
+        "tips__firefox-downloads",
+        "tips__firefox-pocket"
+    ],
+    "tips__firefox-tabs-recover": [
+        "tips__firefox-containers",
+        "tips__firefox-privacy-protect",
+        "tips__firefox-account-sync",
+        "tips__firefox-customize",
+        "tips__firefox-downloads",
+        "tips__firefox-pocket",
+        "tips__firefox-quick"
+    ],
+    "tips__opera-account": [
+        "tips__opera-web",
+        "tips__opera-sidebar-flow",
+        "tips__opera-gx",
+        "tips__opera-save-block"
+    ],
+    "tips__opera-gx": [
+        "tips__opera-web",
+        "tips__opera-account",
+        "tips__opera-sidebar-flow",
+        "tips__opera-save-block"
+    ],
+    "tips__opera-save-block": [
+        "tips__opera-web",
+        "tips__opera-account",
+        "tips__opera-sidebar-flow",
+        "tips__opera-gx"
+    ],
+    "tips__opera-sidebar-flow": [
+        "tips__opera-web",
+        "tips__opera-account",
+        "tips__opera-gx",
+        "tips__opera-save-block"
+    ],
+    "tips__opera-web": [
+        "tips__opera-account",
+        "tips__opera-sidebar-flow",
+        "tips__opera-gx",
+        "tips__opera-save-block"
+    ],
+    "tips__quark": [
+        "tips__quark-home",
+        "tips__quark-ai",
+        "tips__quark-netdisk",
+        "tips__quark-tools",
+        "tips__quark-reader",
+        "tips__quark-guard",
+        "tips__quark-pc",
+        "tips__quark-download"
+    ],
+    "tips__quark-ai": [
+        "tips__quark",
+        "tips__quark-home",
+        "tips__quark-netdisk",
+        "tips__quark-tools",
+        "tips__quark-reader",
+        "tips__quark-guard",
+        "tips__quark-pc",
+        "tips__quark-download"
+    ],
+    "tips__quark-download": [
+        "tips__quark",
+        "tips__quark-home",
+        "tips__quark-ai",
+        "tips__quark-netdisk",
+        "tips__quark-tools",
+        "tips__quark-reader",
+        "tips__quark-guard",
+        "tips__quark-pc"
+    ],
+    "tips__quark-guard": [
+        "tips__quark",
+        "tips__quark-home",
+        "tips__quark-ai",
+        "tips__quark-netdisk",
+        "tips__quark-tools",
+        "tips__quark-reader",
+        "tips__quark-pc",
+        "tips__quark-download"
+    ],
+    "tips__quark-home": [
+        "tips__quark",
+        "tips__quark-ai",
+        "tips__quark-netdisk",
+        "tips__quark-tools",
+        "tips__quark-reader",
+        "tips__quark-guard",
+        "tips__quark-pc",
+        "tips__quark-download"
+    ],
+    "tips__quark-netdisk": [
+        "tips__quark",
+        "tips__quark-home",
+        "tips__quark-ai",
+        "tips__quark-tools",
+        "tips__quark-reader",
+        "tips__quark-guard",
+        "tips__quark-pc",
+        "tips__quark-download"
+    ],
+    "tips__quark-pc": [
+        "tips__quark",
+        "tips__quark-home",
+        "tips__quark-ai",
+        "tips__quark-netdisk",
+        "tips__quark-tools",
+        "tips__quark-reader",
+        "tips__quark-guard",
+        "tips__quark-download"
+    ],
+    "tips__quark-reader": [
+        "tips__quark",
+        "tips__quark-home",
+        "tips__quark-ai",
+        "tips__quark-netdisk",
+        "tips__quark-tools",
+        "tips__quark-guard",
+        "tips__quark-pc",
+        "tips__quark-download"
+    ],
+    "tips__quark-tools": [
+        "tips__quark",
+        "tips__quark-home",
+        "tips__quark-ai",
+        "tips__quark-netdisk",
+        "tips__quark-reader",
+        "tips__quark-guard",
+        "tips__quark-pc",
+        "tips__quark-download"
+    ],
+    "tips__yandex-account": [
+        "tips__yandex-tips",
+        "tips__yandex-smartbox",
+        "tips__yandex-read",
+        "tips__yandex-turbo-safe"
+    ],
+    "tips__yandex-read": [
+        "tips__yandex-tips",
+        "tips__yandex-account",
+        "tips__yandex-smartbox",
+        "tips__yandex-turbo-safe"
+    ],
+    "tips__yandex-smartbox": [
+        "tips__yandex-tips",
+        "tips__yandex-account",
+        "tips__yandex-read",
+        "tips__yandex-turbo-safe"
+    ],
+    "tips__yandex-tips": [
+        "tips__yandex-account",
+        "tips__yandex-smartbox",
+        "tips__yandex-read",
+        "tips__yandex-turbo-safe"
+    ],
+    "tips__yandex-turbo-safe": [
+        "tips__yandex-tips",
+        "tips__yandex-account",
+        "tips__yandex-smartbox",
+        "tips__yandex-read"
+    ]
+}

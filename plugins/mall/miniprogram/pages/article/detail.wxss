@@ -1,0 +1,11 @@
+.ad { padding-bottom: 120rpx; }
+.at { font-size: 34rpx; font-weight: 700; line-height: 1.5; }
+.meta { color: #999; font-size: 24rpx; margin: 12rpx 0 20rpx; }
+.content { font-size: 28rpx; line-height: 1.8; }
+.cm { padding: 16rpx 20rpx; }
+.ca { font-size: 26rpx; color: #a21400; font-weight: 600; }
+.cb { font-size: 28rpx; margin: 8rpx 0; line-height: 1.6; }
+.ct { color: #bbb; font-size: 22rpx; }
+.cbar { position: fixed; left: 0; right: 0; bottom: 0; display: flex; background: #fff; padding: 12rpx 16rpx; border-top: 1rpx solid #eee; }
+.cin { flex: 1; background: #f4f4f4; padding: 0 20rpx; height: 72rpx; margin-right: 16rpx; }
+.cbar .btn-primary { height: 72rpx; line-height: 72rpx; padding: 0 32rpx; }

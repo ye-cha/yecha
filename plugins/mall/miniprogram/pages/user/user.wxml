@@ -1,0 +1,28 @@
+<view class="uc">
+  <view class="uhead">
+    <image class="avatar" src="{{user.avatar || ''}}" mode="aspectFill"></image>
+    <input class="uname" value="{{user.display_name}}" placeholder="点击修改昵称" bindinput="onName"/>
+    <view class="uid" wx:if="{{user.mobile}}">{{user.mobile}}</view>
+  </view>
+
+  <view class="orders card">
+    <view class="ot" bindtap="goOrders" data-s="0">待付款<text class="num">{{counts.unpaid}}</text></view>
+    <view class="ot" bindtap="goOrders" data-s="1">待发货<text class="num">{{counts.undelivered}}</text></view>
+    <view class="ot" bindtap="goOrders" data-s="2">待收货<text class="num">{{counts.unreceived}}</text></view>
+    <view class="ot" bindtap="goOrders" data-s="3">已完成<text class="num">{{counts.done}}</text></view>
+  </view>
+
+  <view class="menu card">
+    <view class="mi" bindtap="goAddress">
+      <text>我的地址</text><text class="ar">›</text>
+    </view>
+    <view class="mi">
+      <text>我的收藏（{{fav}}）</text><text class="ar">›</text>
+    </view>
+    <view class="mi">
+      <text>地址数量（{{addr}}）</text><text class="ar">›</text>
+    </view>
+  </view>
+
+  <view class="tip">商品浏览 / 资讯 / 支付 / 评论 均已接入小程序</view>
+</view>

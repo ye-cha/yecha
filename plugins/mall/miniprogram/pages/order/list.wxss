@@ -1,0 +1,11 @@
+.tabs { display: flex; background: #fff; position: sticky; top: 0; z-index: 2; }
+.tab { flex: 1; text-align: center; padding: 24rpx 0; font-size: 26rpx; color: #666; }
+.tab.on { color: #a21400; font-weight: 700; border-bottom: 4rpx solid #a21400; }
+.oc { background: #fff; margin: 16rpx; padding: 16rpx; }
+.och { color: #999; font-size: 24rpx; padding-bottom: 12rpx; border-bottom: 1rpx solid #f0f0f0; }
+.ogi { display: flex; padding: 16rpx 0; }
+.goimg { width: 120rpx; height: 120rpx; background: #eee; margin-right: 16rpx; }
+.gob { flex: 1; }
+.got { font-size: 28rpx; line-height: 1.4; }
+.gos { color: #999; font-size: 24rpx; margin: 6rpx 0; }
+.ocf { text-align: right; padding-top: 12rpx; font-size: 28rpx; }

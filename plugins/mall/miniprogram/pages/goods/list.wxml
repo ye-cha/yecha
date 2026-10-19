@@ -1,0 +1,21 @@
+<view class="gl">
+  <view class="search">
+    <input class="sin" placeholder="搜索商品" value="{{kw}}" bindinput="onSearch" confirm-type="search" bindconfirm="doSearch"/>
+    <view class="btn-ghost" bindtap="doSearch">搜索</view>
+  </view>
+
+  <view class="grid">
+    <view class="g" wx:for="{{list}}" wx:key="id" bindtap="goDetail" data-id="{{item.id}}">
+      <image class="gimg" src="{{item.cover}}" mode="aspectFill"></image>
+      <view class="gt">{{item.title}}</view>
+      <view class="row" style="padding:0 16rpx">
+        <view class="price"><text class="y">¥</text>{{item.price}}</view>
+        <view class="market" wx:if="{{item.market_price > 0}}">¥{{item.market_price}}</view>
+      </view>
+      <view class="sales">已售{{item.sales}}</view>
+    </view>
+  </view>
+
+  <view class="empty" wx:if="{{list.length === 0}}">暂无商品</view>
+  <view class="empty" wx:if="{{list.length > 0 && !hasMore}}">没有更多了</view>
+</view>

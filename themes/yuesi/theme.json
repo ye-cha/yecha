@@ -1,0 +1,46 @@
+{
+  "name": "跃思 Yuesi",
+  "version": "1.0.0",
+  "requires_core": "1.0.0",
+  "author": "YeCha",
+  "description": "跃思 Yuesi —— 仿 Fooleap 的清新个人博客：天蓝底 #e8f1fb、青蓝强调 #2ea9df、轻快无衬线、留白通透。",
+  "home": "landing",
+  "settings": [
+    {
+      "key": "width",
+      "type": "number",
+      "label": "版心宽度",
+      "def": "1180",
+      "min": 960,
+      "max": 1440
+    },
+    {
+      "key": "accent",
+      "type": "color",
+      "label": "强调色",
+      "def": "#2ea9df"
+    },
+    {
+      "key": "per_page",
+      "type": "number",
+      "label": "每页条数",
+      "def": "10",
+      "min": 3,
+      "max": 50
+    },
+    {
+      "key": "latest_n",
+      "type": "number",
+      "label": "首页最新条数",
+      "def": "6",
+      "min": 3,
+      "max": 12
+    },
+    {
+      "key": "show_sidebar",
+      "type": "checkbox",
+      "label": "显示侧栏",
+      "def": "1"
+    }
+  ]
+}

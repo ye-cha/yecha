@@ -1,0 +1,7 @@
+.news { background: #fff; margin: 16rpx; }
+.n { display: flex; padding: 20rpx 0; border-bottom: 1rpx solid #f0f0f0; }
+.nimg { width: 180rpx; height: 130rpx; background: #eee; margin-right: 20rpx; }
+.nbody { flex: 1; }
+.nt { font-size: 30rpx; line-height: 1.4; font-weight: 600; }
+.nd { color: #999; font-size: 24rpx; margin-top: 8rpx; line-height: 1.4; height: 64rpx; overflow: hidden; }
+.ntime { color: #bbb; font-size: 22rpx; margin-top: 6rpx; }

@@ -1,0 +1,25 @@
+# yecha.org · robots.txt
+# 官网：https://yecha.org/
+User-agent: *
+Allow: /
+
+# 后台 / 安装器 / 工具与内核目录：不抓
+Disallow: /admin/
+Disallow: /install/
+Disallow: /tools/
+Disallow: /core/
+Disallow: /plugins/
+Disallow: /var/
+
+# 账号与动作端点：不抓
+Disallow: /login
+Disallow: /logout
+Disallow: /register
+Disallow: /user/
+Disallow: /search
+
+# 仅供下载/分发的目录：不抓（说明页已覆盖）
+Disallow: /download/
+Disallow: /market/
+
+Sitemap: https://yecha.org/sitemap.xml

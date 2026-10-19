@@ -1,0 +1,14 @@
+{
+  "name": "朋友圈 Pyq",
+  "version": "2.0.0",
+  "requires_core": "1.0.0",
+  "author": "YeCha",
+  "description": "朋友圈式动态流：#f0f0f0 固定灰底、550px 白色窄栏、300px 封面 + 头像压边、九宫格配图、灰气泡互动区，对标微信朋友圈视觉。",
+  "settings": [
+    {"key": "width", "type": "number", "label": "窄栏宽度", "def": "550", "min": 420, "max": 720},
+    {"key": "accent", "type": "color", "label": "强调色", "def": "#09c362"},
+    {"key": "per_page", "type": "number", "label": "每页条数", "def": "10", "min": 3, "max": 50},
+    {"key": "latest_n", "type": "number", "label": "首页最新条数", "def": "6", "min": 3, "max": 12},
+    {"key": "show_sidebar", "type": "checkbox", "label": "显示侧栏", "def": "1"}
+  ]
+}

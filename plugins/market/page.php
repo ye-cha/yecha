@@ -1,14 +1,36 @@
 <?php
 declare(strict_types=1);
-// 市场收录 · 前台页（/store 卡片市场、/market-app 申请上架）
+// [2026-09-27 官网恢复] 本文件内指向「应用市场说明页」的地址已由 /market.html 改为 /market-guide.html。
+// 原因：market 是 core/Router.php 的 RESERVED 保留字，/{slug}.html 对保留字恒 404。
+// 注意：升级/覆盖本插件会静默丢回旧地址（旧地址会 404）。
+// 市场收录 · 前台申请页（/market-app）
 require_once __DIR__ . '/market_lib.php';
+require_once __DIR__ . '/showcase.php';
 
 function yc_market_page(string $slug): array
 {
+    // t38：主题页 / 插件页（列表 + 详情，见 showcase.php）
+    if ($slug === 'theme' || $slug === 'plugin') { return yc_sc_page($slug); }
+    // t39：应用市场汇总页（/market：主题 / 插件两块 + 计数）
+    if ($slug === 'market') {
+        $GLOBALS['YC_NO_SIDE'] = true;
+        $GLOBALS['YC_SB_TYPE'] = 'page';
+        return ['html' => yc_sc_market(), 'title' => (yc_sc_en() ? 'App market' : '应用市场') . ' · ' . site_label()];
+    }
+    // t38：下载中心（完整包 + 主题包 + 插件包 + 文档入口）
+    if ($slug === 'downloads') {
+        $GLOBALS['YC_NO_SIDE'] = true;
+        $GLOBALS['YC_SB_TYPE'] = 'page';
+        return ['html' => yc_sc_downloads(), 'title' => (Poly::on() && Lang::short() !== Poly::defaultLang() ? 'Download center' : '下载中心') . ' · ' . site_label()];
+    }
     if ($slug === 'store') {
         $GLOBALS['YC_NO_SIDE'] = true;
         $GLOBALS['YC_SB_TYPE'] = 'page';
-        return ['html' => yc_market_store_html(), 'title' => '市场 · ' . site_label()];
+        // t38：英文版应用市场走同一份本地目录数据（界面全英文）
+        if (Poly::on() && Lang::short() !== Poly::defaultLang()) {
+            return ['html' => yc_sc_store_en(), 'title' => 'App market · ' . site_label()];
+        }
+        return ['html' => yc_market_store_html(), 'title' => '应用商店 · ' . site_label()];
     }
     $ok = '';
     $err = '';
@@ -19,7 +41,7 @@ function yc_market_page(string $slug): array
     $state = $err !== '' ? $err : $ok;
     $note = '';
     if ($state === 'ok') {
-        $note = '<p style="color:#2e6b34;background:#eef4ee;border:1px solid #cfe2d0;border-radius:8px;padding:10px 14px;">已收到上架申请 ✔ 我们会在 3–7 天内验证（下载→结构/清单/PHP 语法/SHA 检查），通过后发布到市场；不通过会说明原因，可改进后重新提交。</p>';
+        $note = '<p style="color:#2e6b34;background:#eef4ee;border:1px solid #cfe2d0;border-radius:8px;padding:10px 14px;">已收到上架申请 ✔ 我们会在 3–7 天内验证（下载→结构/清单/PHP 语法/SHA 检查），通过后发布到应用市场；不通过会说明原因，可改进后重新提交。</p>';
     } elseif ($state !== '') {
         $note = '<p style="color:#c0392b;background:#fdf0ec;border:1px solid #efc8ba;border-radius:8px;padding:10px 14px;">' . e($state) . '</p>';
     }
@@ -33,7 +55,7 @@ function yc_market_page(string $slug): array
         . '<li><b>填写</b>：提供可下载 zip 的 http(s) 地址；SHA-256 选填但强烈建议。</li>'
         . '<li><b>时效</b>：提交后 3–7 天人工验证；不通过会写原因；发布后如需下架可联系。</li>'
         . '<li>发布即代表你同意：以 MIT/兼容协议分发、清单真实、出现问题可被下架。</li>'
-        . '</ul><p style="color:#9a9a90;font-size:12.5px;">想先看官方示例？<a href="/store">市场 →</a></p></div>';
+        . '</ul><p style="color:#9a9a90;font-size:12.5px;">想先看官方示例？<a href="/market-guide.html">应用市场 →</a></p></div>';
     $form = '<div class="yc-card"><h2 class="yc-h2">提交上架申请</h2>' . $note
         . '<form method="post" action="/market-app">' . $csrf
         . '<input type="text" name="website2" value="" tabindex="-1" autocomplete="off" style="position:absolute;left:-9999px;" aria-hidden="true">'
@@ -49,12 +71,12 @@ function yc_market_page(string $slug): array
         . '<div><label class="pf">常用邮箱（验证与上架结果通知；不公开）</label><input name="email" type="email" required maxlength="190"></div>'
         . '</div>'
         . '<button class="btn" type="submit" style="margin-top:14px;width:100%;border:0;">提交申请</button></form></div>';
-    $inner = '<div class="page-head" style="max-width:none;"><h1 style="font-size:28px;">申请上架到市场</h1>'
-        . '<span class="sub" style="display:block;color:#6f767e;max-width:820px;line-height:1.9;">YeCha 市场是官方审核的插件/主题目录：先规范、后验证、再发布。我们保证包里没有明显危险、语法可跑、清单有效；但上线后的行为仍需你持续维护。</span></div>'
+    $inner = '<div class="page-head" style="max-width:none;"><h1 style="font-size:28px;">申请上架到应用市场</h1>'
+        . '<span class="sub" style="display:block;color:#6f767e;max-width:820px;line-height:1.9;">YeCha 应用市场是官方审核的插件/主题目录：先规范、后验证、再发布。我们保证包里没有明显危险、语法可跑、清单有效；但上线后的行为仍需你持续维护。</span></div>'
         . '<div class="mkt-two">' . $rules . $form . '</div>';
     $GLOBALS['YC_NO_SIDE'] = true;
     $GLOBALS['YC_SB_TYPE'] = 'page';
-    return ['html' => yc_market_page_css() . $inner, 'title' => '申请上架到市场 · ' . site_label()];
+    return ['html' => yc_market_page_css() . $inner, 'title' => '申请上架应用 · ' . site_label()];
 }
 
 function yc_market_page_css(): string
@@ -62,7 +84,7 @@ function yc_market_page_css(): string
     return '<style>.pf{display:block;font-size:12.5px;color:#6f767e;margin:6px 0 3px}.pf+input,.pf+select{width:100%;box-sizing:border-box;border:1px solid #e6e6e2;border-radius:8px;padding:8px 11px;font:inherit}.mkt-two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:22px}.yc-card{border:1px solid var(--line,#e6e6e2);border-radius:14px;padding:16px 18px;background:#fff}.yc-h2{font-size:17px;font-weight:700;margin:0 0 8px;padding-left:10px;border-left:3px solid #b3541e}@media(max-width:820px){.mkt-two{grid-template-columns:1fr}}</style>';
 }
 
-/** 市场卡片列表页（读 var/market/manifest.json 动态渲染，带截图封面） */
+/** 应用商店（卡片式，读市场 manifest 动态渲染） */
 function yc_market_store_html(): string
 {
     $mf = mkt_manifest_path();
@@ -81,25 +103,17 @@ function yc_market_store_html(): string
         if (isset($i['icon']) && (string)$i['icon'] !== '') { return (string)$i['icon']; }
         return $map[$i['id'] ?? ''] ?? (($i['type'] ?? '') === 'theme' ? '🎨' : '🧩');
     };
-    $cover = function (array $i): string {
-        $src = (string)($i['cover'] ?? '');
-        if ($src === '') { return ''; }
-        return '<div class="st-cover"><img src="' . e($src) . '" alt="' . e((string)($i['name'] ?? $i['id'])) . ' 截图" loading="lazy"></div>';
-    };
     $detail = function (array $i): string {
         $url = (string)($i['url'] ?? '');
-        if ($url !== '') { return $url; }
-        $map = ['octern' => '/warmpaper.html', 'links' => '/links-app.html'];
-        return $map[$i['id'] ?? ''] ?? (($i['type'] ?? '') === 'theme' ? '/market.html' : '/market.html');
+        if ($url === '') { $url = ($i['id'] ?? '') === 'octern' ? '/warmpaper.html' : (($i['id'] ?? '') === 'links' ? '/links' : '/market-guide.html'); }
+        return $url;
     };
     $cards = '';
     foreach ($list as $i) {
         $typeZh = ($i['type'] ?? '') === 'theme' ? '主题' : '插件';
         $cards .= '<a class="st-card" href="' . e($detail($i)) . '">'
-            . $cover($i)
-            . '<div class="st-body">'
-            . '<div class="st-top"><span class="st-ic-mini">' . $ic($i) . '</span>'
-            . '<span class="st-chip st-' . (($i['type'] ?? '') === 'theme' ? 't' : 'p') . '">' . $typeZh . '</span>'
+            . '<div class="st-ic">' . $ic($i) . '</div>'
+            . '<div class="st-body"><div class="st-top"><span class="st-chip st-' . (($i['type'] ?? '') === 'theme' ? 't' : 'p') . '">' . $typeZh . '</span>'
             . '<span class="st-ver">v' . e((string)($i['ver'] ?? '')) . '</span></div>'
             . '<b class="st-name">' . e((string)($i['name'] ?? $i['id'])) . '</b>'
             . '<div class="st-desc">' . e(mb_substr((string)($i['desc'] ?? ''), 0, 120)) . '</div>'
@@ -116,18 +130,18 @@ function yc_market_store_html(): string
         . '.st-tabs{display:flex;gap:6px;margin:16px 0 6px}.st-tab{padding:6px 16px;border-radius:999px;border:1px solid #d9dee3;color:#333;text-decoration:none;font-size:14px;background:#fff}.st-tab.on{background:#AC4429;border-color:#AC4429;color:#fff;font-weight:600}.st-tab:hover{border-color:#AC4429;color:#AC4429}'
         . '.st-search{margin:10px 0 4px;display:flex;gap:8px;max-width:420px}.st-search input{flex:1;border:1px solid #d9dee3;border-radius:999px;padding:7px 14px;font:inherit}.st-search .btn{border-radius:999px}'
         . '.st-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:14px;margin-top:16px}'
-        . '.st-card{display:flex;flex-direction:column;border:1px solid var(--line,#e6e6e2);background:#fff;border-radius:16px;overflow:hidden;text-decoration:none;color:inherit;transition:box-shadow .15s,transform .15s}.st-card:hover{box-shadow:0 10px 26px rgba(0,0,0,.08);transform:translateY(-2px)}'
-        . '.st-cover{aspect-ratio:16/9;background:#F7EDE0;overflow:hidden;display:block}.st-cover img{width:100%;height:100%;object-fit:cover;display:block}'
-        . '.st-body{padding:14px 16px 16px;min-width:0}.st-top{display:flex;align-items:center;gap:6px}.st-ic-mini{font-size:16px}.st-chip{font-size:11px;border-radius:999px;padding:1px 9px}.st-chip.p{background:#E7EFEA;color:#2e6b34}.st-chip.t{background:#F3E2D2;color:#8F3520}.st-ver{margin-left:auto;color:#9a9a90;font-size:11px}'
+        . '.st-card{display:flex;gap:12px;border:1px solid var(--line,#e6e6e2);background:#fff;border-radius:16px;padding:16px;text-decoration:none;color:inherit;transition:box-shadow .15s,transform .15s}.st-card:hover{box-shadow:0 10px 26px rgba(0,0,0,.08);transform:translateY(-2px)}'
+        . '.st-ic{width:52px;height:52px;border-radius:13px;flex:none;display:flex;align-items:center;justify-content:center;font-size:26px;background:#F7EDE0}'
+        . '.st-body{min-width:0}.st-top{display:flex;align-items:center;gap:6px}.st-chip{font-size:11px;border-radius:999px;padding:1px 9px}.st-chip.p{background:#E7EFEA;color:#2e6b34}.st-chip.t{background:#F3E2D2;color:#8F3520}.st-ver{margin-left:auto;color:#9a9a90;font-size:11px}'
         . '.st-name{display:block;font-size:15.5px;margin:6px 0 4px;font-family:var(--font-serif,"Noto Serif SC",serif);color:#1f2328}.st-desc{color:#6f767e;font-size:12.5px;line-height:1.7;min-height:2.4em}.st-meta{color:#9a9a90;font-size:12px;margin-top:6px}.st-go{color:#AC4429}'
         . '@media(max-width:600px){.st-grid{grid-template-columns:1fr}}'
         . '</style>'
-        . '<div class="st-hero"><h1>YeCha 市场</h1><p>主题与插件，卡片式挑应用；每张卡片都可以看到真实界面截图。数据来自本站市场清单，站长在后台「市场」安装启用。想上架？<a href="/market-app">申请上架 →</a></p></div>'
+        . '<div class="st-hero"><h1>YeCha 应用商店</h1><p>主题与插件，卡片式挑应用；数据来自本站市场清单，站长在后台「云市场」安装启用。想上架？<a href="/market-app">申请上架 →</a></p></div>'
         . '<div class="st-tabs">' . $tabs . '</div>'
         . '<form class="st-search" method="get" action="/store">' . ($type !== '' ? '<input type="hidden" name="type" value="' . e($type) . '">' : '') . '<input name="q" value="' . e($q) . '" placeholder="搜索应用…"><button class="btn" type="submit">搜</button></form>'
         . ($type !== '' || $q !== '' ? '<p style="color:#9a9a90;font-size:13px;">当前：' . ($type === 'plugin' ? '插件' : ($type === 'theme' ? '主题' : '')) . ($q !== '' ? ' · “' . e($q) . '”' : '') . '，共 ' . count($list) . ' 个。</p>' : '')
         . '<div class="st-grid">' . $cards . '</div>'
-        . '<p style="color:#9a9a90;font-size:12.5px;margin-top:18px;">安装：登录后台 → 市场 → 对应应用「安装/更新」（SHA-256 强校验 + 安全解包）。<a href="/market-app">上架规范</a> · <a href="/market.html">市场说明</a></p>';
+        . '<p style="color:#9a9a90;font-size:12.5px;margin-top:18px;">安装：登录后台 → 云市场 → 对应应用「安装/更新」（SHA-256 强校验 + 安全解包）。<a href="/market-app">上架规范</a> · <a href="/market-guide.html">市场说明</a></p>';
 }
 
 function yc_market_apply_handle(): string

@@ -874,3 +874,23 @@ html.dark .nav-dd-btn{color:#B9C9BC}
 html.dark .nav-dd-btn:hover{color:#EDF1E6;background:rgba(255,255,255,.06)}
 html.dark .nav-dd.has-active .nav-dd-btn{color:#EDF1E6;background:rgba(255,255,255,.10)}
 @media(max-width:1024px){.nav-dd-btn{font-size:14px;padding:6px 10px}}
+/* ===== 护眼：米绿纸（浅色默认；暗色不动）===== */
+:root:not(.dark) body { background:#EEF3E4; color:#2C3A30; }
+:root:not(.dark) .site-header { background:rgba(246,250,237,.94); }
+:root:not(.dark) .drawer { background:#F2F7E9; }
+:root:not(.dark) .lang-menu { background:#F8FBF1; }
+:root:not(.dark) .side-search button { background:#EFF4E4; color:var(--muted,#6f767e); }
+:root:not(.dark) .meta-chip { background:#F3F7EA; }
+:root:not(.dark) .post-item, :root:not(.dark) .side-box { background:transparent; }
+/* ===== 内容区专用背景：让“有内容的地方”自成卡片（浅色，暗色不动）===== */
+:root:not(.dark) main.main .article {
+  background:#F8FAF1;
+  border:1px solid #D9E3CC;
+  border-radius:16px;
+  padding:22px 28px 26px;
+  box-shadow:0 2px 12px rgba(40,60,30,.06);
+}
+:root:not(.dark) main.main .article .article-content img { border-radius:10px; }
+@media(max-width:600px){
+  :root:not(.dark) main.main .article { padding:16px 16px 20px; border-radius:12px; }
+}

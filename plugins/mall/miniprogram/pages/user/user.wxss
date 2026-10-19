@@ -1,0 +1,13 @@
+.uc { padding-bottom: 40rpx; }
+.uhead { background: #a21400; color: #fff; padding: 50rpx 30rpx; display: flex; align-items: center; }
+.avatar { width: 110rpx; height: 110rpx; border-radius: 50%; background: #fff; margin-right: 24rpx; }
+.uname { color: #fff; font-size: 32rpx; font-weight: 700; flex: 1; }
+.uid { color: #ffd; font-size: 24rpx; }
+.orders { display: flex; margin-top: -30rpx; position: relative; z-index: 2; }
+.ot { flex: 1; text-align: center; font-size: 26rpx; padding: 24rpx 0; color: #555; position: relative; }
+.ot .num { display: block; color: #a21400; font-weight: 700; font-size: 30rpx; margin-top: 6rpx; }
+.menu { margin-top: 16rpx; }
+.mi { display: flex; justify-content: space-between; padding: 28rpx 16rpx; border-bottom: 1rpx solid #f5f5f5; font-size: 28rpx; }
+.mi:last-child { border-bottom: none; }
+.ar { color: #ccc; }
+.tip { text-align: center; color: #bbb; font-size: 24rpx; margin-top: 40rpx; }

@@ -1,0 +1,46 @@
+/* 企业官网主题 · 商务稳重（B2B / 制造 / 通用企业）
+   气质：深藏青 + 白，唯一点缀暖赭橙（仅 CTA）；非对称 hero（左文右块）；
+        0.5px 细线卡片无阴影；小圆角 6px；单无衬线靠字重建层级。 */
+.sc-root{
+  --sc-primary:#1e3a5f;--sc-deep:#16283f;--sc-accent:#b26a1b;
+  --sc-bg:#ffffff;--sc-surface:#f5f7fa;--sc-line:#e3e7ec;--sc-text:#333;--sc-muted:#666;
+  --sc-card:#ffffff;--sc-card-line:#e3e7ec;--sc-img-bg:#f5f7fa;--sc-img-radius:4px;
+  --sc-radius:6px;--sc-maxw:1200px;
+  --sc-header-bg:#ffffff;--sc-nav-fg:#666666;
+  --sc-on-primary:#ffffff;
+  --sc-btn-bg:#b26a1b;--sc-btn-fg:#ffffff;--sc-btn-hover:#9c5a15;
+  --sc-ghost-line:#c9c9c9;--sc-ghost-fg:#1e3a5f;--sc-input-line:#c9c9c9;
+  --sc-hero-art:block;--sc-eyebrow-track:2px;
+  --sc-footer-fg:rgba(255,255,255,.75);--sc-footer-strong:#ffffff;--sc-footer-line:rgba(255,255,255,.15);--sc-footer-dim:rgba(255,255,255,.5);
+  --sc-flash-bg:#eaf5ef;--sc-flash-line:#bfe0cd;--sc-flash-fg:#0f6e56;
+  --sc-empty-fg:#999999;
+}
+
+/* Hero 装饰：同心圆环（精密、工业感） */
+.sc-hero-art::before{content:"";position:absolute;left:40px;top:44px;width:110px;height:110px;border:0.5px solid rgba(255,255,255,.35);border-radius:50%}
+.sc-hero-art::after{content:"";position:absolute;left:76px;top:80px;width:110px;height:110px;border:0.5px solid rgba(255,255,255,.55)}
+
+/* ============================================================================
+   版式：工业 Catalog
+   调研依据：装备制造官网以「产品 Tab + 设备参数 + 资质数据 + 车间实景」为核心，
+   信息密度高、圆角近乎直角、图片优先于文案。这里把默认的三列小卡换成带序号的
+   规格卡（No.01 / No.02），并让优势条变成左侧硬边的参数条。
+   ============================================================================ */
+.sc-hero-text{padding:76px 48px 68px 24px}
+.sc-hero-art{min-height:330px}
+.sc-stats{padding-top:30px}
+.sc-feats{grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.sc-feat{border-radius:0;border-top:0;border-left:3px solid var(--sc-primary);background:var(--sc-surface);padding:16px 16px 18px}
+.sc-feat b{font-size:14px;letter-spacing:.3px}
+.sc-cards{grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;counter-reset:prd}
+.sc-cards .sc-card{position:relative;border-radius:0;padding-top:30px;counter-increment:prd}
+.sc-cards .sc-card::before{content:"No." counter(prd,decimal-leading-zero);position:absolute;left:14px;top:10px;
+  font-size:11px;letter-spacing:1px;color:var(--sc-accent)}
+.sc-card-img{height:152px;border-radius:0}
+.sc-cards-3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.sc-card b{font-size:15px}
+.sc-cta-box{border-radius:0;background:var(--sc-surface);border-top:3px solid var(--sc-primary)}
+.sc-footer-in{align-items:flex-start}
+.sc-footer-col{flex:1;min-width:150px}
+@media (max-width:900px){.sc-feats,.sc-cards,.sc-cards-3{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:560px){.sc-feats,.sc-cards,.sc-cards-3{grid-template-columns:minmax(0,1fr)}}

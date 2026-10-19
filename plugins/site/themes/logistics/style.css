@@ -1,0 +1,61 @@
+/* 企业官网主题 · 物流动感（物流 / 运输 / 供应链）
+   气质：交通蓝 + 橙，区块标题带橙色竖条；hero 右侧为 45° 斜条纹（速度感）；
+        卡片小圆角、紧凑，信息密度略高。 */
+.sc-root{
+  --sc-primary:#1257a6;--sc-deep:#0b2f5c;--sc-accent:#f07a1a;
+  --sc-bg:#ffffff;--sc-surface:#f3f7fc;--sc-line:#dfe8f3;--sc-text:#24374d;--sc-muted:#64798f;
+  --sc-card:#ffffff;--sc-card-line:#e2eaf4;--sc-img-bg:linear-gradient(140deg,#e5eef9,#ffe9d4);--sc-img-radius:6px;
+  --sc-radius:6px;--sc-maxw:1180px;
+  --sc-hero-bg:linear-gradient(120deg,#0b2f5c,#1257a6 55%,#1b7bd0);
+  --sc-footer-bg:#0b2f5c;
+  --sc-header-bg:#ffffff;--sc-nav-fg:#5b7290;
+  --sc-on-primary:#ffffff;
+  --sc-btn-bg:#f07a1a;--sc-btn-fg:#ffffff;--sc-btn-hover:#d2660f;
+  --sc-ghost-line:#c6d6e8;--sc-ghost-fg:#1257a6;--sc-input-line:#c6d6e8;
+  --sc-eyebrow-track:2px;
+  --sc-footer-fg:rgba(255,255,255,.74);--sc-footer-strong:#ffffff;
+  --sc-flash-bg:#eef4fc;--sc-flash-line:#cadcf2;--sc-flash-fg:#1257a6;
+  --sc-empty-fg:#8fa3b8;
+}
+
+/* Hero：45° 斜条纹（速度感） */
+.sc-hero-art::before{content:"";position:absolute;inset:0;background-image:repeating-linear-gradient(45deg,rgba(255,255,255,.12) 0 10px,transparent 10px 26px)}
+.sc-hero-art::after{content:"";position:absolute;right:0;bottom:0;width:0;height:0;border-left:150px solid transparent;border-bottom:150px solid rgba(240,122,26,.55)}
+
+/* 区块标题：橙色竖条 + 横幅条左侧橙条 */
+.sc-sec h2{padding-left:10px;border-left:4px solid var(--sc-accent)}
+.sc-banner-list li{border-right:none;background:var(--sc-bg);border-left:1px solid var(--sc-line)}
+.sc-banner-list li:first-child{border-left:3px solid var(--sc-accent)}
+.sc-feat{border-left:3px solid var(--sc-primary);background:var(--sc-surface)}
+.sc-card b{color:var(--sc-deep)}
+.sc-table th{background:#f3f7fc}
+
+/* ============================================================================
+   版式：动感斜切 + 时效表（Speed Table）
+   调研依据：快递/供应链官网 = 顶部单号查询工具条 + 斜切 hero + 行业解决方案矩阵 +
+   覆盖数字 + 时效产品表。这里给 hero 做斜切分割并加查询条伪工具，
+   解决方案用带箭头的横向流程，案例改成「网点/线路」时间轴节点。
+   ============================================================================ */
+.sc-hero{position:relative;overflow:hidden}
+.sc-hero-text{padding:70px 36px 62px}
+.sc-hero h1{font-size:34px}
+.sc-hero-art{clip-path:polygon(18% 0,100% 0,100% 100%,0 100%)}
+.sc-hero-text::after{content:"单号追踪  ·  时效查询  ·  网点覆盖  ·  在线下单";display:inline-block;margin-top:22px;
+  padding:8px 16px;font-size:13px;letter-spacing:1px;color:var(--sc-primary);background:var(--sc-surface);
+  border-left:3px solid var(--sc-accent);border-radius:4px}
+.sc-stat-bar{grid-template-columns:repeat(4,minmax(0,1fr));gap:0;border:1px solid var(--sc-card-line);border-radius:8px;overflow:hidden}
+.sc-stat-bar li{border:0;border-right:1px solid var(--sc-card-line);border-radius:0;text-align:center;padding:16px 10px}
+.sc-stat-bar li:last-child{border-right:0}
+.sc-stat-bar li b{font-size:20px}
+.sc-steps{grid-template-columns:repeat(4,minmax(0,1fr));gap:0}
+.sc-steps li{border:0;border-radius:0;background:transparent;text-align:center;padding:0 10px;position:relative}
+.sc-steps li:not(:last-child)::after{content:"→";position:absolute;right:-4px;top:34px;color:var(--sc-accent);font-size:18px}
+.sc-steps li i{width:40px;height:40px;line-height:40px;margin:0 auto 8px;border-radius:50%;background:var(--sc-surface);border:1px solid var(--sc-line);font-size:13px}
+.sc-cards{grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.sc-card{border-radius:8px}
+.sc-card::after{content:"查看详情 →";display:block;margin-top:8px;font-size:12px;color:var(--sc-accent)}
+.sc-timeline{max-width:880px}
+.sc-timeline li i{width:11px;height:11px;background:var(--sc-accent)}
+.sc-cta-box{border-radius:8px;background:linear-gradient(120deg,#fff6ef,#ffeede)}
+@media (max-width:900px){.sc-steps,.sc-cards,.sc-stat-bar{grid-template-columns:repeat(2,minmax(0,1fr))}.sc-steps li:not(:last-child)::after{display:none}}
+@media (max-width:560px){.sc-cards,.sc-stat-bar,.sc-steps{grid-template-columns:minmax(0,1fr)}}

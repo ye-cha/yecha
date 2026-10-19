@@ -1,0 +1,66 @@
+/* 企业官网主题 · 能源环保（新能源 / 环保 / 双碳）
+   气质：森绿 + 天蓝，圆角柔和、呼吸感强；hero 右侧为绿蓝渐变 + 波纹同心圆；
+        优势块顶部青绿描边，整体清洁、有生命力。 */
+.sc-root{
+  --sc-primary:#16784f;--sc-deep:#0d3a2a;--sc-accent:#2a9dd6;
+  --sc-bg:#ffffff;--sc-surface:#f2faf6;--sc-line:#dcece3;--sc-text:#23443a;--sc-muted:#65857a;
+  --sc-card:#ffffff;--sc-card-line:#dfeee6;--sc-img-bg:linear-gradient(150deg,#e2f6ea,#d9f0fb);--sc-img-radius:12px;
+  --sc-radius:12px;--sc-maxw:1160px;
+  --sc-hero-bg:linear-gradient(140deg,#0f6b46,#16784f 45%,#2a9dd6);
+  --sc-footer-bg:#0d3a2a;
+  --sc-header-bg:#ffffff;--sc-nav-fg:#5b7d70;
+  --sc-on-primary:#ffffff;
+  --sc-btn-bg:#16784f;--sc-btn-fg:#ffffff;--sc-btn-hover:#106040;
+  --sc-ghost-line:#c3ddd0;--sc-ghost-fg:#16784f;--sc-input-line:#c3ddd0;
+  --sc-eyebrow-track:1px;
+  --sc-footer-fg:rgba(255,255,255,.74);--sc-footer-strong:#eafaf1;
+  --sc-flash-bg:#e9f8f0;--sc-flash-line:#bfe4d0;--sc-flash-fg:#106040;
+  --sc-empty-fg:#8aa79b;
+}
+
+/* Hero：绿蓝渐变 + 波纹同心圆（水波/循环） */
+.sc-hero-art::before{content:"";position:absolute;left:-40px;bottom:-60px;width:230px;height:230px;border-radius:50%;border:1px solid rgba(255,255,255,.28);box-shadow:0 0 0 28px rgba(255,255,255,.10),0 0 0 56px rgba(255,255,255,.06)}
+.sc-hero-art::after{content:"";position:absolute;right:46px;top:40px;width:70px;height:70px;border-radius:50% 0 50% 50%;background:rgba(255,255,255,.22);transform:rotate(45deg)}
+
+/* 区块标题：绿点标记 + 优势块顶部青绿描边 */
+.sc-sec h2::before{content:"";display:inline-block;width:9px;height:9px;margin-right:9px;border-radius:50%;background:var(--sc-accent);vertical-align:middle}
+.sc-feat{border-top:2px solid var(--sc-accent);background:var(--sc-surface)}
+.sc-cta-box{background:linear-gradient(120deg,#eefaf4,#e6f5fb)}
+.sc-card:hover{border-color:#b9e0cd}
+
+/* ============================================================================
+   版式：沉浸全屏 + 数据叙事（Energy Immersive）
+   调研依据：光伏/储能龙头 = 全屏视频 hero + 赛道 icon 矩阵 + 场景解决方案 +
+   项目案例（GWh / GW + 地点）+ 累计装机数据条 + 认证 logo 墙；近直角、强对比。
+   这里 hero 加「向下滚动」提示（静态），优势做 5 列赛道矩阵，
+   项目改作图叠文字的大卡，案例写成里程碑时间轴。
+   ============================================================================ */
+.sc-hero{align-items:stretch;position:relative}
+.sc-hero::after{content:"向下浏览 ↓";position:absolute;left:50%;bottom:14px;transform:translateX(-50%);
+  font-size:12px;letter-spacing:2px;color:rgba(255,255,255,.7)}
+.sc-hero-text{padding:104px 40px 74px}
+.sc-hero h1{font-size:36px}
+.sc-hero-art{min-height:360px}
+.sc-stat-bar{grid-template-columns:repeat(4,minmax(0,1fr));gap:0;background:var(--sc-surface);border-radius:0}
+.sc-stat-bar li{border:0;border-right:1px solid var(--sc-line);border-radius:0;background:transparent;text-align:center;padding:18px 10px}
+.sc-stat-bar li:last-child{border-right:0}
+.sc-stat-bar li b{font-size:21px;color:var(--sc-primary)}
+.sc-feats{grid-template-columns:repeat(5,minmax(0,1fr));gap:10px}
+.sc-feat{border-radius:0;text-align:center;padding:16px 8px;background:var(--sc-card)}
+.sc-feat b{font-size:14px}
+.sc-gallery{columns:3;column-gap:14px}
+.sc-shot{border-radius:0;position:relative;padding:0;overflow:hidden}
+.sc-shot .sc-card-img{margin-bottom:0;aspect-ratio:16/11}
+.sc-shot:nth-child(3n+2) .sc-card-img,.sc-shot:nth-child(3n) .sc-card-img{aspect-ratio:16/11}
+.sc-shot b,.sc-shot span{position:absolute;left:0;right:0;padding:10px 14px;color:#fff}
+.sc-shot b{bottom:16px;font-size:16px;text-shadow:0 1px 6px rgba(0,0,0,.5)}
+.sc-shot span{display:none}
+.sc-shots-shim{display:none}
+.sc-timeline{max-width:900px}
+.sc-cta-box{border-radius:0;background:var(--sc-surface)}
+@media (max-width:900px){.sc-feats{grid-template-columns:repeat(2,minmax(0,1fr))}.sc-gallery{columns:2}.sc-stat-bar{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:560px){.sc-gallery{columns:1}.sc-feats{grid-template-columns:minmax(0,1fr)}}
+
+/* 项目全景：浅色图上叠字需要压暗层保证可读 */
+.sc-shot{position:relative}
+.sc-shot .sc-card-img::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(6,40,28,0) 42%,rgba(6,40,28,.55) 100%)}

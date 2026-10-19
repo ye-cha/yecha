@@ -1,0 +1,282 @@
+/* ============================================================
+   ChaWiki · 茶百科主题（YeCha）
+   起点：themes/chawiki（保留其三栏文档/wiki 结构与工具条）
+   换皮：茶绿 / 茶褐 / 宣纸底 —— 令牌与正文排版**抄自旧站 cha.wiki**
+         （旧站令牌实测来源：/www/wwwroot/cha.wiki/assets/index-J1qtoGco-classesfix3.css
+          与每个词条 HTML 的 <style>：.prose-wiki / .portal-img / .lb-backdrop）
+   载入顺序：style.css（chawiki 基础）→ chawiki.css（本文件，最后载入 ⇒ 后写优先）
+   ============================================================ */
+
+/* ---------- 1. 令牌：★ 直接沿用旧站 :root 值，映射到主题变量名 ----------
+   ★ 选择器必须写成 `:root, :root:not(.dark), :root[data-pal="green"]`：
+     base style.css 第 782/815 行用 `:root, :root[data-pal="green"]{--bg:#FFFFFF}`（特异性 0,1,1）
+     压住了裸 `:root`（0,1,0）—— 见 docs/56 §6 坑 3「底色被更高特异性压住」。 */
+:root, :root:not(.dark), :root[data-pal="green"] {
+  /* 旧站原值：--paper:#f7f3ea --tea-green:#3f6b4a --tea-green-deep:#2f5236
+              --tea-brown:#6f4e37 --background:#f7f3ea --foreground:#3a3024
+              --card:#fffdf8 --card-foreground:#3a3024 --muted:#efe9db
+              --muted-foreground:#8a7c66 --accent:#e7eede --accent-foreground:#3a3024
+              --border:#e6ddc9 --secondary:#ece3d2 --destructive:#a23b2e */
+  --tea-green:#3f6b4a;
+  --tea-green-deep:#2f5236;
+  --tea-brown:#6f4e37;
+  --tea-gold:#b8860b;
+  --paper:#f7f3ea;
+
+  --wide-w: 1180px; --nav-h: 62px;
+  --radius-s: 8px; --radius-m: 12px; --radius-l: 16px; --radius-pill: 999px;
+  --font-serif: "Noto Serif SC","Source Han Serif SC","Songti SC","STSong","SimSun",serif;
+  --font-sans: -apple-system,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei","Noto Sans SC",sans-serif;
+  --font-mono: ui-monospace,"SFMono-Regular",Consolas,"Liberation Mono",Menlo,monospace;
+
+  --bg: var(--paper);            /* 宣纸底 */
+  --bg-soft:#efe9db;             /* = 旧 --muted */
+  --card:#fffdf8;                /* = 旧 --card */
+  --card-soft:#fbf7ee;
+  --line:#e6ddc9;                /* = 旧 --border */
+  --border:#e6ddc9;
+  --border-strong:#d8cbb0;
+  --fg:#3a3024;                  /* = 旧 --foreground */
+  --ink:#2e2618;
+  --text:#4a3f30;
+  --text-soft:#8a7c66;           /* = 旧 --muted-foreground */
+  --text-faint:#a79a84;
+  --accent: var(--tea-green);    /* #3f6b4a */
+  --accent-deep: var(--tea-green-deep);
+  --accent-strong:#26452d;
+  --accent-soft:#e7eede;         /* = 旧 --accent */
+  --accent-faint:#eef3e7;
+  --accent-glow: rgba(63,107,74,.15);
+  --selection: rgba(63,107,74,.20);
+  --codebg:#23301f; --code-fg:#dcecdf;
+  --shadow-sm:0 1px 3px rgba(58,48,36,.08);
+  --shadow-md:0 4px 12px rgba(58,48,36,.10), 0 2px 4px rgba(58,48,36,.06);
+  --shadow-lg:0 8px 24px rgba(58,48,36,.12), 0 4px 8px rgba(58,48,36,.08);
+  --header-bg: color-mix(in srgb, var(--card) 88%, transparent);
+}
+
+/* 茶褐副色系：保留 chawiki“配色切换”按钮，但两套都是茶系（青茶绿 / 焙火褐） */
+:root[data-pal="warm"] {
+  --bg:#f6efe3; --bg-soft:#efe4d2; --card:#fffaf1; --card-soft:#fbf3e6;
+  --line:#e7d9c2; --border:#e7d9c2; --border-strong:#d6c3a4;
+  --fg:#3b2f22; --ink:#2f251a; --text:#4c3f2d; --text-soft:#8b7a60; --text-faint:#a8997c;
+  --accent: var(--tea-brown); --accent-deep:#5a3f2c; --accent-strong:#4a3324;
+  --accent-soft:#f0e5d3; --accent-faint:#f5ecdc;
+  --accent-glow: rgba(111,78,55,.16); --selection: rgba(111,78,55,.20);
+  --codebg:#33261a; --code-fg:#f0e0c8;
+}
+
+/* 暗色：内核切 html.dark（不是 data-m，见 docs/56 §6.2） */
+:root.dark, :root.dark[data-pal="green"] {
+  --bg:#14170f; --bg-soft:#0f120b; --card:#1c2016; --card-soft:#20251a;
+  --line:#2f3626; --border:#333b28; --border-strong:#46503a;
+  --fg:#e9e4d6; --ink:#f4f0e4; --text:#d3ccb9; --text-soft:#a89e87; --text-faint:#7d7461;
+  --accent:#7fb187; --accent-deep:#6aa173; --accent-strong:#568a5f;
+  --accent-soft:#222a1d; --accent-faint:#27301f;
+  --accent-glow: rgba(127,177,135,.20); --selection: rgba(127,177,135,.30);
+  --codebg:#0e120b; --code-fg:#cfe6d2;
+  --shadow-sm:0 1px 2px rgba(0,0,0,.30);
+  --shadow-md:0 4px 18px rgba(0,0,0,.42);
+  --shadow-lg:0 14px 38px rgba(0,0,0,.55);
+  --header-bg: color-mix(in srgb, var(--bg) 86%, transparent);
+}
+:root.dark[data-pal="warm"] {
+  --bg:#1d1810; --bg-soft:#17130c; --card:#262016; --card-soft:#2b2418;
+  --line:#3c3324; --border:#413829; --border-strong:#574a35;
+  --fg:#eee5d3; --ink:#f7efdd; --text:#dcd1b8; --text-soft:#bcab8b; --text-faint:#8d7e61;
+  --accent:#c69a6f; --accent-deep:#b4885c; --accent-strong:#a1764a;
+  --accent-soft:#2f2718; --accent-faint:#362c1c;
+  --accent-glow: rgba(198,154,111,.20); --selection: rgba(198,154,111,.30);
+  --codebg:#16110a; --code-fg:#efdfc5;
+}
+
+/* ---------- 2. 基础版式（宣纸底 + 衬线标题） ---------- */
+body {
+  background-color: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+.site-header { border-bottom: 1px solid var(--border); }
+.docs-brand-name,
+.article-title,
+.hero-title,
+.docs-section-title,
+h1, h2, h3, h4 { font-family: var(--font-serif); }
+.article-title, .hero-title, .docs-section-title { color: var(--tea-brown); }
+:root.dark .article-title, :root.dark .hero-title, :root.dark .docs-section-title { color: var(--text); }
+
+/* ---------- 3. ★ 正文排版 .prose-wiki（逐条抄自旧站） ---------- */
+.prose-wiki { color: var(--fg); font-size: 15px; line-height: 1.9; }
+.prose-wiki h2 { font-family: var(--font-serif); color: var(--tea-brown); font-size: 1.35rem; font-weight: 600; margin: 1.6rem 0 .6rem; padding-bottom: .3rem; border-bottom: 1px solid var(--border); }
+.prose-wiki h3 { font-family: var(--font-serif); color: var(--tea-brown); margin: 1.25rem 0 .5rem; font-size: 1.15rem; font-weight: 600; }
+.prose-wiki h4 { font-family: var(--font-serif); color: var(--tea-brown); margin: 1.1rem 0 .45rem; font-size: 1.02rem; font-weight: 600; }
+.prose-wiki p { margin: .65rem 0; }
+.prose-wiki ul { margin: .6rem 0; padding-left: 1.4rem; list-style: outside; }
+.prose-wiki ol { margin: .6rem 0; padding-left: 1.5rem; }
+.prose-wiki li { margin: .25rem 0; }
+.prose-wiki blockquote { color: var(--text-soft); border-left: 4px solid #4a7c5980; margin: .75rem 0; padding-left: 1rem; font-style: italic; background: transparent; border-radius: 0; }
+.prose-wiki a, .infobox-value a { color: var(--tea-green); text-underline-offset: 2px; cursor: pointer; text-decoration: underline; }
+.prose-wiki a:hover, .infobox-value a:hover { color: var(--tea-green-deep); }
+.prose-wiki figure { margin: 1.25rem 0; }
+.prose-wiki figure img { border-radius: .75rem; width: 100%; max-width: 660px; height: auto; margin: 0 auto; display: block; box-shadow: 0 1px 6px #00000014; }
+.prose-wiki figure figcaption { text-align: center; color: var(--text-soft); margin-top: .45rem; font-size: .72rem; line-height: 1.6; }
+.prose-wiki img { border-radius: .5rem; margin: .5rem 0; }
+.prose-wiki table { width: 100%; border-collapse: collapse; margin: .9rem 0; font-size: .93em; }
+.prose-wiki th, .prose-wiki td { border: 1px solid var(--border); padding: .5rem .7rem; text-align: left; }
+.prose-wiki thead th { background: var(--accent-soft); color: var(--tea-green-deep); font-weight: 600; }
+.prose-wiki tbody tr:nth-child(even) { background: var(--card-soft); }
+:root.dark .prose-wiki th, :root.dark .prose-wiki td { border-color: var(--border); }
+:root.dark .prose-wiki thead th { background: var(--accent-soft); color: var(--text); }
+:root.dark .prose-wiki h2, :root.dark .prose-wiki h3, :root.dark .prose-wiki h4 { color: var(--text); }
+
+/* ---------- 4. ★ 浮动图 .portal-img（原样抄自旧站 <style>） ---------- */
+.prose-wiki .portal-img {
+  display: block; width: 320px; height: 200px; object-fit: cover;
+  border-radius: .75rem; box-shadow: 0 1px 4px rgba(0,0,0,.08);
+  margin: .25rem 1rem .75rem 0; cursor: zoom-in;
+  transition: transform .15s ease; background: #f0ece2;
+}
+.prose-wiki .portal-img.float-left { float: left; }
+.prose-wiki .portal-img.float-right { float: right; margin: .25rem 0 .75rem 1rem; }
+.prose-wiki .portal-img:hover { transform: scale(1.015); }
+@media (max-width:640px) {
+  .prose-wiki .portal-img { float: none !important; width: 100%; height: auto; object-fit: contain; margin: .5rem 0; }
+}
+
+/* ---------- 5. ★ 灯箱 .lb-backdrop（原样抄自旧站 <style>） ---------- */
+.lb-backdrop {
+  position: fixed; inset: 0; background: rgba(0,0,0,.85);
+  display: none; align-items: center; justify-content: center;
+  z-index: 9999; cursor: zoom-out;
+}
+.lb-backdrop.open { display: flex; }
+.lb-backdrop img { max-width: 96vw; max-height: 94vh; border-radius: .5rem; box-shadow: 0 4px 20px rgba(0,0,0,.5); }
+
+/* ---------- 6. 面包屑 .breadcrumb（旧站值） ---------- */
+.breadcrumb { display: flex; flex-wrap: wrap; align-items: center; gap: .35rem; font-size: 13px; line-height: 1.4; color: var(--text-soft); margin: 0 0 14px; }
+.breadcrumb a { display: inline-flex; align-items: center; padding: .2rem .65rem; border-radius: 9999px; background: var(--accent-soft); color: var(--tea-green-deep); transition: background .15s ease, color .15s ease; text-decoration: none; font-weight: 400; }
+.breadcrumb a:hover { background: var(--tea-green); color: var(--paper); }
+.breadcrumb .sep { color: var(--text-soft); opacity: .45; padding: 0 .1rem; user-select: none; }
+.breadcrumb .cur { padding: .2rem .8rem; border-radius: 9999px; background: var(--tea-green-deep); color: var(--paper); font-weight: 500; white-space: nowrap; max-width: 16rem; overflow: hidden; text-overflow: ellipsis; }
+:root.dark .breadcrumb .cur { background: var(--accent-deep); color: var(--bg); }
+:root.dark .breadcrumb a { background: var(--accent-soft); color: var(--text); }
+
+/* ---------- 7. 词条信息框 .infobox（旧站新增项，照令牌重建） ---------- */
+.infobox { border: 1px solid var(--border); border-radius: var(--radius-m); background: var(--card); overflow: hidden; margin: 0 0 18px; }
+.infobox-head { background: var(--accent-soft); color: var(--tea-green-deep); font-family: var(--font-serif); font-weight: 600; font-size: 14.5px; padding: 9px 14px; border-bottom: 1px solid var(--border); }
+.infobox-row { display: grid; grid-template-columns: 108px minmax(0,1fr); gap: 10px; padding: 7px 14px; border-bottom: 1px dashed var(--border); font-size: 14px; }
+.infobox-row:last-child { border-bottom: 0; }
+.infobox-label { color: var(--text-soft); }
+.infobox-value { color: var(--fg); word-break: break-word; }
+:root.dark .infobox-head { color: var(--text); }
+
+/* 老吕个人视角署名块 */
+.laolv-note { border-left: 4px solid var(--tea-gold); background: var(--card-soft); border-radius: 0 var(--radius-m) var(--radius-m) 0; padding: 12px 16px; margin: 0 0 18px; }
+.laolv-note .lv-cap { font-family: var(--font-serif); color: var(--tea-brown); font-weight: 600; font-size: 13.5px; margin-bottom: 4px; }
+.laolv-note p { margin: 0; color: var(--text); font-size: 14.5px; line-height: 1.85; }
+
+/* 参考来源 */
+.refs-block { border-top: 1px dashed var(--border); margin-top: 22px; padding-top: 12px; }
+.refs-block h3 { font-family: var(--font-serif); color: var(--tea-brown); font-size: 15px; margin: 0 0 6px; }
+.refs-block ol { margin: 0; padding-left: 1.4rem; color: var(--text-soft); font-size: 13.5px; line-height: 1.9; }
+
+/* 分类/标签条 */
+.term-bar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 0 0 16px; }
+.term-bar .tb-cap { font-size: 12.5px; color: var(--text-soft); }
+.term-chip { display: inline-flex; align-items: center; gap: 4px; padding: 3px 11px; border-radius: 999px; background: var(--accent-soft); color: var(--tea-green-deep); font-size: 12.5px; text-decoration: none; border: 1px solid transparent; }
+.term-chip:hover { background: var(--tea-green); color: var(--paper); }
+.term-chip .n { opacity: .65; font-size: 11.5px; }
+:root.dark .term-chip { color: var(--text); }
+
+/* 空正文占位（D 层 117 条） */
+.empty-body { border: 1px dashed var(--border); border-radius: var(--radius-m); background: var(--card-soft); color: var(--text-soft); padding: 22px 18px; text-align: center; font-size: 14.5px; }
+
+/* ---------- 8. 首页（landing）：词条库门户 ---------- */
+.chawiki-hero { background: linear-gradient(180deg, var(--accent-soft) 0%, var(--bg) 100%); border-bottom: 1px solid var(--border); }
+/* base 里 .is-home .home 被写成 #fff，此处按旧站宣纸底覆盖 */
+.is-home .home, .layout.is-home .home { background: var(--bg); }
+:root.dark .is-home .home, :root.dark .layout.is-home .home { background: var(--bg); }
+.chawiki-hero .hero-container { max-width: var(--wide-w); margin: 0 auto; padding: 46px 22px 34px; }
+.hero-title { font-size: clamp(28px, 4.4vw, 46px); line-height: 1.22; margin: 0 0 12px; }
+.hero-description { color: var(--text-soft); font-size: 15.5px; line-height: 1.95; max-width: 780px; margin: 0 0 18px; }
+.hero-stats { display: flex; flex-wrap: wrap; gap: 22px; margin: 0 0 18px; }
+.hero-stat { display: flex; flex-direction: column; }
+.hero-stat b { font-family: var(--font-serif); font-size: 26px; color: var(--tea-green-deep); line-height: 1.2; }
+.hero-stat span { font-size: 12.5px; color: var(--text-soft); }
+:root.dark .hero-stat b { color: var(--accent); }
+.hero-search { display: flex; gap: 8px; max-width: 560px; }
+.hero-search input { flex: 1 1 auto; min-width: 0; padding: 10px 14px; border: 1px solid var(--border); border-radius: var(--radius-pill); background: var(--card); color: var(--fg); font-size: 14.5px; }
+.hero-search button { flex: 0 0 auto; padding: 10px 20px; border: 0; border-radius: var(--radius-pill); background: var(--tea-green); color: var(--paper); font-size: 14.5px; cursor: pointer; }
+.hero-search button:hover { background: var(--tea-green-deep); }
+
+.cat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 12px; margin: 0 0 8px; }
+.cat-card { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; padding: 13px 15px; border: 1px solid var(--border); border-radius: var(--radius-m); background: var(--card); text-decoration: none; color: var(--fg); }
+.cat-card:hover { border-color: var(--accent); box-shadow: var(--shadow-sm); }
+.cat-card .cc-name { font-family: var(--font-serif); font-size: 15.5px; }
+.cat-card .cc-n { font-size: 12.5px; color: var(--text-soft); }
+.cat-card .cc-desc { display: block; margin-top: 3px; font-size: 12.5px; color: var(--text-soft); line-height: 1.7; }
+
+.entry-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(268px, 1fr)); gap: 14px; }
+.entry-card { display: flex; flex-direction: column; border: 1px solid var(--border); border-radius: var(--radius-m); background: var(--card); overflow: hidden; text-decoration: none; color: var(--fg); }
+.entry-card:hover { border-color: var(--accent); box-shadow: var(--shadow-md); }
+.entry-card .ec-thumb { width: 100%; aspect-ratio: 16/10; object-fit: cover; background: #f0ece2; display: block; }
+.entry-card .ec-body { padding: 12px 14px 14px; }
+.entry-card .ec-cat { font-size: 12px; color: var(--tea-green-deep); }
+.entry-card .ec-title { font-family: var(--font-serif); font-size: 16px; margin: 4px 0 6px; line-height: 1.45; }
+.entry-card .ec-ex { font-size: 13px; color: var(--text-soft); line-height: 1.8; margin: 0; }
+.chawiki-section { max-width: var(--wide-w); margin: 0 auto; padding: 30px 22px; }
+.chawiki-section + .chawiki-section { padding-top: 4px; }
+.chawiki-section > h2 { font-family: var(--font-serif); font-size: 21px; color: var(--tea-brown); margin: 0 0 14px; }
+:root.dark .chawiki-section > h2 { color: var(--text); }
+.sec-more { display: inline-block; margin-top: 14px; color: var(--accent); font-size: 14px; text-decoration: none; }
+.sec-more:hover { text-decoration: underline; }
+
+/* ---------- 9. 响应式与横向溢出守卫（390/768/1280 三档必须 0 溢出） ---------- */
+html, body { max-width: 100%; overflow-x: clip; }
+@media (max-width: 980px) {
+  .chawiki-hero .hero-container { padding: 30px 16px 24px; }
+  .chawiki-section { padding: 22px 16px; }
+  .hero-stats { gap: 16px; }
+}
+@media (max-width: 640px) {
+  .hero-search { flex-direction: column; }
+  .hero-search button { width: 100%; }
+  .cat-grid, .entry-grid { grid-template-columns: 1fr; }
+  .infobox-row { grid-template-columns: 92px minmax(0,1fr); }
+}
+
+/* ---------- 10. 窄屏（≤900px）：给右下固定工具条让出"专属走廊"，消除遮挡 ---------- */
+/*
+ * 缺陷（改前实测，真 Chromium 390/768/1280）：
+ *   .ux-toolbar 是 position:fixed（style.css §14；≤900px 时 right:10px、按钮 38px）
+ *   ⇒ 工具条横向带 = [视口宽-48px, 视口宽-10px]；
+ *   而窄屏正文列右边界 = 视口宽-28px（.layout 右内边距 12px + .chawiki-section 右内边距 16px）
+ *   ⇒ 内容比工具条左边界多伸进 20px，卡片 / 卡片计数 .cc-n 滚进工具条纵向带时被压住。
+ *   （1280 档因版心 --wide-w:1180px 居中，正文列右边界 1208 < 工具条左边界 1220，天然躲开 ⇒ 本修复只作用于 ≤900px。）
+ * 修法（最小改动：只加窄屏规则；工具条自身的尺寸/位置/层级/交互一律不动；不改 >900px 桌面；
+ *       不改共享主题 style.css、不改内核）：
+ *   把窄屏内容列与页脚的右边界收到 ≤ 工具条左边界（视口宽-48px）⇒ 交叠面积恒为 0，与滚动位置无关。
+ */
+@media (max-width: 900px) {
+  .layout,
+  .layout.has-left,
+  .layout.has-left.has-right,
+  .layout.toc-rail,
+  .layout.no-side,
+  .layout.is-home { padding-right: 48px; }
+  .site-footer { padding-right: 48px; }
+  /* 首页 hero 只是顶部装饰色带（其纵向位置永远进不了"底部"工具条带，见报告几何论证），
+     用负右外边距抵消上面的内容内缩，保持它与改造前逐像素一致的通栏观感 */
+  .chawiki-hero { margin-right: -36px; }
+}
+
+/* ≤640：.portal-img 被 base 的 `float:none !important` 关掉浮动，但
+   `.prose-wiki .portal-img.float-right { margin: .25rem 0 .75rem 1rem }` 特异性更高，
+   其 margin-left:1rem 仍在生效 ⇒ 图片 `width:100%` + 左外边距 16px 会溢出正文列 16px
+   （390 实测：图片右边界 354 > 正文列 338），正好落进工具条带。
+   只在"浮动已被关掉"的这一档把左右外边距归零，图片回到正文列内。 */
+@media (max-width: 640px) {
+  .prose-wiki .portal-img.float-left,
+  .prose-wiki .portal-img.float-right { margin-left: 0; margin-right: 0; }
+}

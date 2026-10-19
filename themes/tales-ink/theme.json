@@ -1,0 +1,24 @@
+{
+  "name": "Tales Ink（Tales 墨）",
+  "version": "1.0.0",
+  "requires_core": "1.0.0",
+  "author": "YeCha",
+  "description": "CNTales 故事图录主题 · 黑白版：墨·纸·灰 + 单点松绿；深色大带 Hero、墨/灰交替字牌、墨带订阅；结构与 Tales Hue 完全一致，仅配色与 Hero 呈现不同；明暗双色、中英双语。",
+  "settings": [
+    {
+      "key": "accent",
+      "type": "color",
+      "label": "强调色（覆盖默认）",
+      "help": "留空用主题默认：Hue=朱砂 #c8402f / Ink=松绿 #0f6b4d",
+      "def": ""
+    },
+    {
+      "key": "per_page",
+      "type": "number",
+      "label": "每页故事数",
+      "def": "12",
+      "min": 3,
+      "max": 48
+    }
+  ]
+}

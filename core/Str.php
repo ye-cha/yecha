@@ -41,6 +41,29 @@ final class Str
         return mb_substr($text, 0, $len) . '…';
     }
 
+    /** 把 Markdown/HTML 转成纯文本（用于摘要、搜索结果展示）
+     *  （内核合流 2026-09-26：演示主题广场的 26 套主题里有 19 套在列表/分类/标签/检索页调用它，
+     *    缺此方法会让这些页面直接 Fatal —— 故按演示站同名实现补入内核） */
+    public static function plain(string $s): string
+    {
+        $s = strip_tags($s);
+        // Markdown 标题：# / ## / ###
+        $s = preg_replace('/^#{1,6}\s+/mu', '', $s) ?? $s;
+        $s = preg_replace('/\s#{1,6}\s+/u', ' ', $s) ?? $s;
+        // 图片与链接：[text](url)、![alt](url)
+        $s = preg_replace('/!?\[([^\]]*)\]\([^)]*\)/u', '$1', $s) ?? $s;
+        // 自动链接 <url>
+        $s = preg_replace('/<[^>]+>/u', '', $s) ?? $s;
+        // 列表符、引用、水平线
+        $s = preg_replace('/^[-*+>]\s+/mu', '', $s) ?? $s;
+        $s = preg_replace('/^\d+\.\s+/mu', '', $s) ?? $s;
+        $s = preg_replace('/^[-*_]{3,}\s*$/mu', '', $s) ?? $s;
+        // 强调符 * _ ~ `（保留中文语境下的内容）
+        $s = preg_replace('/(?<!\w)[*_~`]{1,2}(?!\s)/u', '', $s) ?? $s;
+        $s = preg_replace('/(?<!\s)[*_~`]{1,2}(?!\w)/u', '', $s) ?? $s;
+        return trim(preg_replace('/\s+/u', ' ', $s) ?? '');
+    }
+
     /** 拆分检索词 */
     public static function terms(string $q): array
     {

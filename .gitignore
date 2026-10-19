@@ -1,11 +1,48 @@
-# 站点私有/运行文件不入库
+# ===== YeCha site repo .gitignore (2026-09-18, DSH batch scheme+poly) =====
+# *** secrets: library credentials / auth files — never commit ***
 /config.inc.php
 /config.inc.php.bak*
-/uploads/*
-!/uploads/.gitkeep
-/var/*
-!/var/.gitkeep
+/config.local.php
+/var/gupiao/dsa.htpasswd
+*.htpasswd
+*.pem
+*.key
+
+# runtime state / caches / logs / spools (regenerated, volatile)
+/var/
+/logs/
+/tmp/
+/runtime/
 *.log
-ssh.txt
-sshx.py
-.nogit/
+*.cache
+
+# uploads & imported media
+/uploads/
+/media/
+
+# vendored / downloaded big data & release artifacts
+/data/
+/download/
+/updates/
+
+# generated sitemaps (tens of MB, rebuilt by cron)
+/sitemap*.xml
+/sitemap_index.xml
+
+# local backups of code (kept on disk, out of history)
+*.bak
+*.bak-*
+*.bak_*
+*.bak.*
+*.before-*
+*.pre-*
+*.pre-c1-*
+*.orig
+*.rej
+*.spgtmp.*
+
+# editor / OS noise
+.DS_Store
+Thumbs.db
+*.swp
+*~

@@ -6,7 +6,7 @@ declare(strict_types=1);
 final class Mail
 {
     /** @return bool|string true 或错误信息 */
-    public static function send(string $host, int $port, bool $ssl, string $user, string $pass, string $from, string $to, string $subject, string $body): bool|string
+    public static function send(string $host, int $port, bool $ssl, string $user, string $pass, string $from, string $to, string $subject, string $body, string $fromName = ''): bool|string
     {
         $remote = ($ssl ? 'ssl://' : 'tcp://') . $host . ':' . $port;
         $fp = @stream_socket_client($remote, $errno, $errstr, 10);
@@ -28,7 +28,7 @@ final class Mail
         if ($c('DATA') === null) { fclose($fp); return 'DATA 失败'; }
         $r();
         fputs($fp, "Subject: " . str_replace(["\r", "\n"], '', $subject) . "\r\n");
-        fputs($fp, "From: " . $from . "\r\nTo: " . $to . "\r\nMIME-Version: 1.0\r\nContent-Type: text/plain; charset=UTF-8\r\n\r\n");
+        fputs($fp, "From: " . ($fromName !== '' ? mb_encode_mimeheader($fromName, 'UTF-8', 'B') . " <" . $from . ">" : $from) . "\r\nTo: " . $to . "\r\nMIME-Version: 1.0\r\nContent-Type: text/plain; charset=UTF-8\r\n\r\n");
         fputs($fp, mb_convert_encoding($body, 'UTF-8', 'UTF-8') . "\r\n.\r\n");
         $r();
         $ok = fputs($fp, "QUIT\r\n") !== false;

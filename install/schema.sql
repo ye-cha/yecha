@@ -65,8 +65,6 @@ CREATE TABLE IF NOT EXISTS {PREFIX}metas (
   type        VARCHAR(16)  NOT NULL COMMENT 'category | tag',
   name        VARCHAR(100) NOT NULL,
   name_en     VARCHAR(100) NOT NULL DEFAULT '' COMMENT '英文名（空=前台回落中文名）',
-  names_i18n  TEXT NULL COMMENT '各语言名称 JSON（缺失回落默认名）',
-  slug_i18n   LONGTEXT NULL COMMENT '各语言 slug JSON（缺失回落默认 slug）',
   slug        VARCHAR(100) NOT NULL DEFAULT '',
   parent      BIGINT UNSIGNED NOT NULL DEFAULT 0,
   description VARCHAR(500) NOT NULL DEFAULT '',
@@ -176,7 +174,7 @@ CREATE TABLE IF NOT EXISTS {PREFIX}fields (
 
 CREATE TABLE IF NOT EXISTS {PREFIX}import_log (
   id          BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-  source      VARCHAR(16)  NOT NULL COMMENT 'wordpress | typecho',
+  source      VARCHAR(16)  NOT NULL COMMENT '导入来源标识',
   source_kind VARCHAR(16)  NOT NULL COMMENT 'xml | sql',
   old_slug    VARCHAR(255) NOT NULL DEFAULT '',
   content_id  BIGINT UNSIGNED NULL,
@@ -187,30 +185,6 @@ CREATE TABLE IF NOT EXISTS {PREFIX}import_log (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 多语插件（P-5）：翻译组内非默认语言的真实内容版本
-CREATE TABLE IF NOT EXISTS {PREFIX}poly_contents (
-  id           BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-  group_id     BIGINT UNSIGNED NOT NULL COMMENT '翻译组=ye_contents.id（默认语言为基准）',
-  lang         VARCHAR(8)   NOT NULL COMMENT '如 en',
-  title        VARCHAR(200) NOT NULL DEFAULT '',
-  slug         VARCHAR(200) NOT NULL DEFAULT '' COMMENT '该语言前缀下唯一',
-  excerpt      TEXT NULL,
-  cat_ids      TEXT NULL COMMENT '英文版独立分类 meta id JSON',
-  tag_ids      TEXT NULL COMMENT '英文版独立标签 meta id JSON',
-  keywords     VARCHAR(255) NOT NULL DEFAULT '',
-  description  VARCHAR(300) NOT NULL DEFAULT '' COMMENT 'meta description（该语言独立）',
-  content      LONGTEXT NULL,
-  status       VARCHAR(16)  NOT NULL DEFAULT 'draft' COMMENT 'draft | publish',
-  ai_generated TINYINT      NOT NULL DEFAULT 0,
-  manual_override TINYINT   NOT NULL DEFAULT 0 COMMENT '人工手动修正（AI 全量重译跳过该篇）',
-  ai_revision  INT          NOT NULL DEFAULT 0 COMMENT 'AI 翻译修订号',
-  stale        TINYINT      NOT NULL DEFAULT 0 COMMENT '基准原文更新后=1（需重译），重译/人工保存后=0',
-  last_ai_at   DATETIME     NULL COMMENT '最近一次 AI 生成时间',
-  source_lang  VARCHAR(8)   NULL,
-  created_at   DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  updated_at   DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  UNIQUE KEY uk_poly_lang_slug (lang, slug),
-  KEY idx_poly_group (group_id, lang)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 记事本插件（P-3）：私人快速笔记
 CREATE TABLE IF NOT EXISTS {PREFIX}notes (

@@ -198,7 +198,7 @@ if ($flavors) {
 /* 栏目卡：占满整行（auto-fit） */
 .fgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
 .fc{position:relative;display:flex;flex-direction:column;gap:3px;text-decoration:none;
-  background:#FFFFFF;border:1px solid var(--hairline,#EAECE2);border-radius:14px;padding:16px 16px 13px;
+  background:#F7FAF0;border:1px solid var(--hairline,#DCE5D2);border-radius:14px;padding:16px 16px 13px;
   transition:all .2s;box-shadow:var(--shadow-sm);overflow:hidden}
 .fc::before{content:"";position:absolute;left:0;right:0;bottom:0;height:3px;width:0;
   background:linear-gradient(90deg,var(--accent,#2E5C43),#7FA889);transition:width .28s}

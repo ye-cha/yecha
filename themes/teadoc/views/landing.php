@@ -10,7 +10,7 @@ $xo = fn(string $k, string $d) => trim((string)theme_opt($k, (string)get_option(
 $heroBadge = $xo('hero_badge', 'YeCha 博客系统');
 $heroTitle = $xo('hero_title', 'YeCha 夜叉');
 $heroSub   = $xo('hero_subtitle', '');
-if ($heroSub === '') { $heroSub = $sub !== '' ? $sub : 'Typecho 式极简博客系统：纯 PHP + MySQL，多语言 / 插件市场 / 评论先审后发，全页缓存毫秒响应。'; }
+if ($heroSub === '') { $heroSub = $sub !== '' ? $sub : '极简博客系统：纯 PHP + MySQL，多语言 / 插件市场 / 评论先审后发，全页缓存毫秒响应。'; }
 $btn1 = $xo('hero_btn1_text', '下载 YeCha');
 $btn1u = $xo('hero_btn1_url', 'https://yecha.org/download.html');
 $btn2 = $xo('hero_btn2_text', '应用市场');
@@ -69,6 +69,10 @@ if ($ids) {
     );
     foreach ($tagRows as $tr) { $tagsBySlug[(string)$tr['cs']][] = (string)$tr['tn']; }
 }
+/* 首页右列文章：默认只列前 10 篇，?all=1 展开全部；左树不受影响 */
+$showAll = (($_GET['all'] ?? '') === '1');
+$homeLimit = $showAll ? PHP_INT_MAX : 10;
+$flatTotal = count($flat);
 ?>
 <div class="home">
   <section class="hero-section">
@@ -141,7 +145,7 @@ if ($ids) {
         </aside>
         <div class="docs-content">
           <div class="doc-list">
-            <?php foreach ($flat as $i => $it): $tg = $tagsBySlug[$it['slug']] ?? []; ?>
+            <?php $shown = 0; foreach ($flat as $i => $it): if ($shown >= $homeLimit) { break; } $shown++; $tg = $tagsBySlug[$it['slug']] ?? []; ?>
             <a class="doc-list-item" href="/<?= e($it['slug']) ?>.html">
               <span class="doc-list-index"><?= str_pad((string)($i + 1), 2, '0', STR_PAD_LEFT) ?></span>
               <span class="doc-list-main">
@@ -152,6 +156,9 @@ if ($ids) {
             </a>
             <?php endforeach; ?>
           </div>
+          <?php if (!$showAll && $flatTotal > $homeLimit): ?>
+          <a class="doc-list-more" href="/?all=1" style="display:inline-flex;align-items:center;gap:6px;margin-top:14px;color:var(--accent,#2F7D46);font-weight:600;text-decoration:none;">更多文章（共 <?= $flatTotal ?> 篇）→</a>
+          <?php endif; ?>
         </div>
       </div>
     </div>

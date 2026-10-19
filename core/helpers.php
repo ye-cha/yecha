@@ -90,6 +90,10 @@ function content_publish_due(): void
     static $done = false;
     if ($done) { return; }
     $done = true;
+    // 大数据量节流：30 秒内只执行一次（延迟发布最多迟到 30 秒）
+    $last = Cache::get('misc', 'pd_last');
+    if ($last !== false && ((int)$last + 30) > time()) { return; }
+    Cache::set('misc', 'pd_last', (string)time(), 60);
     $st = Db::run('UPDATE ' . Db::t('contents')
         . " SET status='publish' WHERE status='scheduled' AND published_at IS NOT NULL"
         . " AND published_at <= NOW() AND deleted_at IS NULL");

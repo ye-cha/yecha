@@ -90,7 +90,7 @@ function metas_editor_html(string $type, int $id = 0): string
         . ($id > 0
             ? '<form method="post" action="/admin/?s=metas" style="margin-top:10px;display:inline;" onsubmit="return confirm(\'删除该' . $typeName . '？将同时移除关联。\')">' . Csrf::field()
                 . '<input type="hidden" name="do" value="meta-delete"><input type="hidden" name="id" value="' . $id . '">'
-                . '<button class="btn ghost" style="color:#9c3f1b;border-color:#e3c5b6;" type="submit">删除</button></form>'
+                . '<button class="btn ghost danger" type="submit">删除</button></form>'
             : '')
         . '<style>.pf{display:block;font-size:12.5px;color:#6f767e;margin:6px 0 2px}.pf+input{width:100%;box-sizing:border-box;border:1px solid #e6e6e2;border-radius:6px;padding:6px 9px;font:inherit}</style>';
 }

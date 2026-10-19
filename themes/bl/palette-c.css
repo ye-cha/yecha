@@ -1,0 +1,288 @@
+/* ══════════════════════════════════════════════════════════════════════════
+   方案 C —— 冷色系 · 蓝（把 wall.php 的蓝提为全站主色）
+   主色换成 wall.php 里那支蓝 #2f5bd7，并顺手把首页那条「遗留的蓝焦点光晕」变成名正言顺的主色。
+   ──────────────────────────────────────────────────────────────────────────
+   ★ 只改颜色：本文件 **0 个版式属性**（无 display/grid/margin/padding/width/
+     height/font/letter-spacing/border-width/transform/gap/position）
+   ★ 边框一律用 box-shadow: inset 画 ⇒ 盒模型零影响
+   ★ 令牌走「同名变量重新赋值」⇒ style.css / home-calm.php **0 改动**
+   ★ 回滚 = 删本文件（+ 删 layout.php 里那一行 <link>）
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* ───────── ① 令牌层：同名变量重新赋值 ─────────
+   选择器写成 html:root / html.dark:root 是为了**不依赖加载顺序**也能压过
+   style.css 里的 :root / html.dark（线上 style.css 的 html.dark 定义在文件中部，
+   而首页的 <style> 又在 <body> 里 —— 单靠"放在最后"并不可靠）。 */
+html:root{
+  --bg:#f6f9ff;
+  --soft:#ecf1fb;
+  --line:#d9e1f0;
+  --fg:#141a26;
+  --muted:#5b6779;
+  --accent:#2f5bd7;
+  --accent-soft:#e7eefe;
+  --codebg:#f1f5fc;
+}
+
+html.dark:root{
+  --bg:#0f1319;
+  --soft:#181c21;
+  --line:#2b3341;
+  --fg:#e6e9ee;
+  --muted:#98a2b3;
+  --accent:#7d9cf2;
+  --accent-soft:#1c2540;
+  --codebg:#1b2028;
+}
+
+
+/* ───────── ② 面积层 A：画布上色（线上浅色**没有** --bg，只有 html.dark 定义了；这里补上并让 body 用它） ───────── */
+html body{background:var(--bg)}
+
+/* ───────── ② 面积层 B：第一屏一块「强调色淡底面板 + 底部 3px 强调色带」
+   ★ 诚实说明：这块面板的宽度 = .hc-hero 本身的宽度（960px，即 1120/1080 容器里的内容列宽），
+     **不是通栏** —— 要做成通栏只能加负 margin / 改容器，那就是改版式，越界。
+   ★ 面板四边是硬边（radial 的半径大于盒宽，所以整盒都被铺满）。它和内容列左对齐，
+     读起来是"一块 hero 卡"，不是画歪了的面板。 ───────── */
+html body .hc-hero{background:radial-gradient(132% 190% at 50% -10%, var(--accent-soft) 0%, rgba(255,255,255,0) 68%);box-shadow:inset 0 -3px 0 0 var(--accent)}
+
+
+
+/* ───────── ② 面积层 C：图标底 —— 从「一片冷灰 #f4f6fa」换成 1 支强调色的淡底
+   （★ 仍是**统一 1 色**，不是被站主否掉的「每格一个彩底」） ───────── */
+html body .hc-cat .ic,
+html body .hc-hot .ic{background:var(--accent-soft);color:var(--accent)}
+html body .hc-cat:hover .ic,
+html body .hc-hot:hover .ic{background:var(--accent);color:#fff}
+
+/* ───────── ② 面积层 D：数字与「查看全部」由强调色承载 ───────── */
+html body .hc-cat .ct{color:var(--accent)}
+html body .hc-sechead .more{color:var(--accent)}
+html body .hc-sechead h2{color:var(--fg)}
+html body .hc-post .cat{color:var(--accent)}
+
+/* ───────── ② 面积层 E：导航当前项 + 次要按钮 —— 让「可点」一眼看得出来
+   ★ 当前项用 --accent-soft 底 + --fg 字 + --accent 下划线：底变有色了，
+     但**字不用强调色** —— 实测强调色压在 accent-soft 上只有 4.2–4.4:1，够不到 AA 4.5。 ───────── */
+html body .nav a.active{background:var(--accent-soft);color:var(--fg);border-bottom-color:var(--accent)}
+html body .nav a:hover{background:var(--accent-soft);color:var(--fg)}
+html body .hc-navlinks a:hover{background:var(--accent-soft);border-color:var(--accent);color:var(--fg)}
+html body .hc-search:focus-within{border-color:var(--accent);box-shadow:0 0 0 4px color-mix(in srgb, var(--accent) 14%, transparent)}
+
+/* ───────── ② 面积层 F：状态徽章的颜色强化已移到 ③-i（它是对比度修复，不是配色选择） ───────── */
+
+/* ───────── ② 面积层 G：CTA 区 —— 主按钮改成实心强调色（一屏只此一处「实心色块」） ───────── */
+html body .hc-cta{background:linear-gradient(120deg,#14171a 0%,#1b2330 48%,#213040 100%)}
+html.dark body .hc-cta{background:linear-gradient(120deg,#101720 0%,#16202e 52%,#1b2739 100%)}
+html body .hc-btn.pri{background:var(--accent);border-color:var(--accent);color:#fff}
+html body .hc-btn.pri:hover{background:var(--accent);color:#fff;opacity:.92}
+/* 深色下主按钮的字要用**深色**：深色方案的强调色是亮色（#d9853f 等），压白字只有 2.5–2.9:1 */
+html.dark body .hc-btn.pri{color:var(--bg)}
+html body .hc-cta h3{color:#fff}
+html body .hc-cta p{color:rgba(255,255,255,.72)}
+
+/* ───────── ② 面积层 H：内容卡/搜索框的边与底接到令牌（线上这几处是写死 #fff）
+   ★ 这里**故意不写 .hc-search** —— 第一屏那块深色 hero（方案 D）自己给搜索框定了深色底，
+     如果这里再写一条 .hc-search，它会因为排在后面而同特异性覆盖掉 D 的设定，
+     结果就是"白色搜索框里写着白字"（实测对比度 1.0）。这个坑踩过，留注释。 ───────── */
+html body .hc-cat,
+html body .hc-hot,
+html body .hc-navbox,
+html body .hc-post{background:var(--bg);border-color:var(--line)}
+html.dark body .hc-cat,
+html.dark body .hc-hot,
+html.dark body .hc-navbox,
+html.dark body .hc-post{background:var(--soft);border-color:var(--line)}
+
+/* ═══════════════ ③ 缺陷修复层（与配色选择无关，四套共用；站主裁决 ③） ═══════════════ */
+
+/* ③-a 深色不完整：/links-health 这类插件页自带 <style>，里面 10 个面写死 #fff
+       且**全页 0 条 html.dark 覆盖** ⇒ 实测深色下 h2 对比度只有 1.14（几乎看不见）。
+       这里把那 10 个面接到令牌上。 */
+html.dark body .yc-mast{background:linear-gradient(180deg,var(--soft) 0%,var(--bg) 100%)}
+html.dark body .yc-stat,
+html.dark body .yc-toolbar,
+html.dark body .yc-pill,
+html.dark body .yc-row,
+html.dark body .yc-feat,
+html.dark body .yc-card{background:var(--soft);color:var(--fg)}
+html.dark body .yc-toolbar select{background:var(--bg);color:var(--fg)}
+html.dark body .yc-tab{color:var(--muted)}
+html.dark body .yc-tab.on{color:#fff}
+html.dark body .yc-mast,
+html.dark body .yc-h2{color:var(--fg)}
+html.dark body .yc-stat b,
+html.dark body .yc-stat strong{color:var(--fg)}
+html.dark body .yc-note,
+html.dark body .yc-sub{color:var(--muted)}
+
+/* ③-b 深色不完整（主题自身）：这些面在 style.css / home-calm.php 里写死浅色底或浅色字 */
+html.dark body .hd-search{background:var(--soft);color:var(--fg)}
+html.dark body .hd-search input{color:var(--fg)}
+html.dark body .hd-search .k{background:var(--bg);color:var(--muted)}
+html.dark body .lang-menu{background:var(--soft)}
+html.dark body .drawer{background:var(--bg)}
+html.dark body .meta-chip,
+html.dark body .meta-chip .mi-count{background:var(--soft);color:var(--muted)}
+html.dark body .h-search,
+html.dark body .c-input,
+html.dark body .side-search button,
+html.dark body .uc-card,
+html.dark body .hd-msearch{background:var(--soft);color:var(--fg)}
+html.dark body .search-page-form input{background:var(--soft);color:var(--fg)}
+html body .side-bio{color:var(--muted)}
+html.dark body .side-bio{color:var(--muted)}
+
+/* ③-c tip-fig 的 3 个无定义令牌（影响 40 篇示意图）
+       线上 tip-fig.css 写的是 border:1px solid hsl(var(--border)) / background:hsl(var(--card)) /
+       figcaption{color:hsl(var(--muted-foreground));background:hsl(var(--muted) / .35)}
+       —— --border / --card / --muted-foreground **从未定义**（是老站 tailwind 的 HSL 三元组），
+          而 --muted 在本主题里是 **hex**，套进 hsl() 同样非法
+       ⇒ 实测 .tip-fig 的 border-top-width = 0px、background = transparent、figcaption 同样没有边与底
+          也就是说：示意图**完全没有边框和底色**。
+       修法：用 inset box-shadow 画边 + 显式底色 —— 视觉等价，且**盒模型零影响**
+       （若改成真的 border:1px，在 box-sizing:border-box 下会挤掉 2px 内宽 ⇒ 那是版式改动）。 */
+html body .tip-fig{background:var(--soft);box-shadow:inset 0 0 0 1px var(--line)}
+html body .tip-fig figcaption{color:var(--muted);background:var(--codebg);box-shadow:inset 0 1px 0 0 var(--line)}
+
+/* ③-d 对比度：浅色下搜索占位符实测 2.65:1、暗色下状态徽章 4.21:1 —— 都不达标 */
+html body .hc-search .ph{color:var(--muted)}
+html body .hc-search .ph::placeholder{color:var(--muted)}
+html body .hc-hotnote{color:var(--muted)}
+
+/* ③-f 漏网的**内联样式**与**没有深色实现的暗色文字**
+       ★ 这里必须用 !important：行内 style 的特异性最高，普通规则压不过它。
+         !important 不改版式（仍是 color/background），只是拿到优先级。
+       · /links-health 上有 6 个 div，行内写着 border:1px solid var(--line,#e6e6e2) + background:#fff
+         （实测：深色下这 6 个 div 仍然是 rgb(255,255,255)，每个约 19,492 px²）
+       · 同一页两处 ul 的行内样式写着 color:#333（判定规则 / 采集口径）—— 深色下 #333 落在深底上，
+         实测对比度 1.32，等于看不见
+       · style.css 里 .c-text 的两条 color:#2c3035 / #33363c **都没有 html.dark 覆盖**
+         ⇒ 深色下评论/读者正文是深色字压深底 */
+html.dark body div[style*="background:#fff"]{background:var(--soft) !important}
+html.dark body ul[style*="color:#333"],
+html.dark body ol[style*="color:#333"]{color:var(--fg) !important}
+html.dark body ul[style*="color:#333"] b,
+html.dark body ol[style*="color:#333"] b{color:var(--fg)}
+html.dark body .c-text{color:var(--fg)}
+html.dark body .c-item .mini{color:var(--muted)}
+html.dark body .c-item .c-replies{color:var(--muted)}
+html.dark body .side-bio{color:var(--muted)}
+
+/* ③-g 图表轨道色：/links-health 的柱状图里空轨道写死 #e6e6e2，
+       深色下会变成一根根发亮的白棒（语义色 #3b7ddd/#c8433c/#e0a415 保留不动） */
+html.dark body div[style*="background:#e6e6e2"]{background:var(--line) !important}
+
+/* ③-h /links-health 把颜色**全部写在行内** —— 实测这份 HTML 的行内色统计：
+       145 处 border-top:1px solid #f0efe9 · 88 处 color:#9a9a90 · 49 处 color:#6f767e ·
+       16 处 color:#c8433c · 15 处 #e0a415 · 20 处 #3b7ddd · 12 处 #e6e6e2 · 6 处 background:#fff
+       行内样式的特异性最高，普通规则压不过 ⇒ 只能 !important。
+       ★ 浅色下 #9a9a90 压白底只有 2.85:1（88 处小字）—— 这本身就是"太灰"的典型，
+         所以这两条**浅色深色都改**，不只是补深色。
+       · 根治应改插件模板，把这些 hex 换成 var(--muted)/var(--line)/var(--fg)；
+         覆盖层里这么做，是为了让站主"现在就能看到修好的样子"。 */
+html body [style*="#9a9a90"]{color:var(--muted) !important}
+html body [style*="#6f767e"]{color:var(--muted) !important}
+/* 上面两条属性选择器只匹配**行内**样式；这几处灰字是插件 <style> 里的 class 定的，
+   所以还要按 class 再压一遍（实测 .yc-foot 12.5px 灰字压白底只有 2.7:1） */
+html body .yc-foot,html body .yc-foot a,html body .yc-h2 small,html body .yc-navcap,
+html body .yc-feed .m,html body .yc-brand small,html body .yc-hero .sub,
+html body .yc-stat span,html body .yc-desc,html body .yc-meta{color:var(--muted)}
+/* 「偏慢」的琥珀 #e0a415 压白底只有 2.21:1 —— 浅色下压深、深色下提亮 */
+html body [style*="#e0a415"]{color:#8a6400 !important}
+html.dark body [style*="#e0a415"]{color:#f0c44a !important}
+html body [style*="#c8433c"]{color:#a8352e !important}
+html.dark body [style*="#c8433c"]{color:#f0897f !important}
+html body [style*="#3b7ddd"]{color:#2560b8 !important}
+html.dark body [style*="#3b7ddd"]{color:#8ab4ff !important}
+html.dark body [style*="#f0efe9"]{border-top-color:var(--line) !important;border-bottom-color:var(--line) !important;border-left-color:var(--line) !important;border-right-color:var(--line) !important}
+/* 主题自身：深色下 .btn 是强调色底，字却跟着 --fg（亮色）⇒ 实测 2.26:1 */
+html.dark body .btn{color:var(--bg)}
+html.dark body .btn.ghost{color:var(--bg)}
+
+/* ③-i 状态徽章与「当前筛选」对比度：色相不动（四态是**语义色**，不该跟着品牌色走），
+       只把边与字色做够对比。
+       ★ 实测基线两处：浅色下 .hc-chip.warn 里的灰字压琥珀底只有 **4.21:1**；
+         /tool 的 .cat-chip.on（「全部」这枚当前筛选）是**强调色字压 accent-soft 底**，
+         线上 #b3541e 压 #f6ece4 只有 **4.29:1** —— 两个都不达标。
+       ★ 这两条**属于对比度修复**（所以放在 ③，让 F0 也能拿到），不属于配色选择。
+         .cat-chip.on 的修法与 .nav a.active 一致：**底保留有色（accent-soft）+ 边保留强调色**，
+         但**字改用 --fg** —— 强调色的存在感靠底和边承载，小字不再靠它承载可读性。 */
+html body .hc-chip{background:#e7f5ee;color:#0c4f2f;border-color:#bfe3d1}
+html body .hc-chip.warn{background:#fdf1dc;color:#6b4906;border-color:#eed9ab}
+html.dark body .hc-chip{background:#12301f;color:#8fe0b4;border-color:#1f5136}
+html.dark body .hc-chip.warn{background:#33280f;color:#f2c96b;border-color:#5a4519}
+html body .cat-chip.on{color:var(--fg)}
+html body .cat-chip.on b{color:var(--fg)}
+html.dark body .cat-chip.on{color:#f0a176}
+html.dark body .cat-chip.on b{color:#f0a176}
+
+/* ③-e prefers-reduced-motion：线上 **0 条**（实测 document.styleSheets 里 0 命中）。
+       ★ 本节是唯一含非颜色声明的段落，且只声明 transition/animation/scroll-behavior —
+         它们不改变静态几何（11 项排版闸在开/关本节时读到的 rect 完全一致）。 */
+@media (prefers-reduced-motion: reduce){
+  html body *,html body *::before,html body *::after{
+    transition-duration:.001ms;
+    animation-duration:.001ms;
+    animation-iteration-count:1;
+    scroll-behavior:auto;
+  }
+}
+
+/* ───────── ④ 方案专属补正（必须排在 ③ 之后，否则会被 ③ 的通用规则压掉）
+   ★ 踩过的坑（实测抓出来的）：③ 里的 html body .hc-search .ph{color:var(--muted)} 是**通用修复**，
+     但方案 D 的第一屏是**深色的**，深灰占位符落在深底上只有 **3.06:1**；同理 D 的站头是深色，
+     .btn-login 用强调色当字只有 **3.79:1**。⇒ D 必须在最后再声明一次"这是深底，字要浅"。
+     这是"通用层"与"专属层"的顺序问题，不是配色问题。 ───────── */
+
+
+/* ===== [liulanqi-headfoot-20260924] 头尾重做组件样式（见 CRITERIA.md）===== */
+/* ══════════════════════════════════════════════════════════════════════════
+   方案 C · 头尾重做 —— 组件样式（导航计数 + 分组页脚）
+   ──────────────────────────────────────────────────────────────────────────
+   ★ 为什么放在本文件（而不是 style.css）：
+     本文件随 palette-c.css 一起在**每一页**加载，且主题静态资源是
+     `cache-control: public, max-age=2592000, immutable`（30 天）+ CF 边缘缓存
+     ⇒ 新增组件样式放这里，改一次带一个 ?v= 即全站生效，回滚也只删本段。
+   ★ 纪律：**不改既有的 .nav / .site-footer 原有声明**，只做「新增类」+「补充布局」。
+     .nav a 的 padding / 圆角 / 颜色仍由 style.css 决定；本段只加计数徽章与页脚分组。
+   ★ 只动颜色与可换行的排版；不新增栅格结构（页脚是**新组件**，不是既有栅格）。
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* ───────── ① 站头：主导航项里的**真实计数**徽章 ───────── */
+.nav a .n{display:inline-block;margin-left:5px;padding:0 6px;border-radius:999px;
+  font-size:10.5px;font-weight:700;line-height:15px;vertical-align:1px;
+  background:var(--soft);color:var(--muted);font-variant-numeric:tabular-nums}
+.nav a:hover .n{background:var(--accent-soft);color:var(--fg)}
+.nav a.active .n{background:var(--accent);color:#fff}
+html.dark .nav a .n{background:#232b36;color:var(--muted)}
+html.dark .nav a:hover .n{background:var(--accent-soft);color:var(--fg)}
+html.dark .nav a.active .n{background:var(--accent);color:var(--bg)}
+
+/* ───────── ② 页脚：按真实栏目分组（新组件）───────── */
+.site-footer-groups{display:grid;grid-template-columns:1.6fr 1fr 1fr 1.1fr 1fr;gap:22px}
+.sf-brand{display:flex;align-items:flex-start;gap:10px}
+.sf-brand img{width:30px;height:30px;display:block;margin-top:2px;flex:none;object-fit:contain}
+.sf-brand b{display:block;font-size:14.5px;font-weight:800;color:var(--fg);line-height:1.4}
+.sf-brand p{margin:6px 0 0;font-size:12.5px;line-height:1.85;max-width:30ch}
+.sf-col h4{margin:0 0 9px;font-size:12px;font-weight:800;color:var(--fg);letter-spacing:.04em}
+.sf-col ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:5px}
+.sf-col a{color:var(--muted);text-decoration:none;font-size:12.5px}
+.sf-col a:hover{color:var(--accent)}
+.sf-col a b{font-weight:700;font-size:11.5px;margin-left:4px;color:var(--muted)}
+.sf-col a:hover b{color:var(--accent)}
+.site-footer-meta{margin-top:24px;padding-top:16px;border-top:1px solid var(--line);
+  display:flex;flex-wrap:wrap;gap:8px 20px;align-items:center;font-size:12px}
+.site-footer-meta .sf-end{margin-left:auto;display:flex;gap:16px;flex-wrap:wrap}
+.site-footer-meta a{color:var(--muted);text-decoration:none}
+.site-footer-meta a:hover{color:var(--accent)}
+
+/* 窄屏：分组折成两列，再窄折成一列（与既有 .site-footer 的窄屏规则一致）*/
+@media(max-width:900px){
+  .site-footer-groups{grid-template-columns:1fr 1fr;gap:18px}
+  .sf-brand{grid-column:1 / -1}
+}
+@media(max-width:600px){
+  .site-footer-groups{grid-template-columns:1fr}
+  .site-footer-meta .sf-end{margin-left:0}
+}

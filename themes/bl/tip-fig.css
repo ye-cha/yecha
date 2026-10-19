@@ -1,0 +1,14 @@
+/* liulanqi tips 正文示意图样式（从旧站 assets/index-DeRBzo6A.css 摘出，仅这些规则） */
+/* ★ [品牌换肤批 2026-09-24] 原为 hsl(var(--border))/hsl(var(--card))/hsl(var(--muted-foreground))/hsl(var(--muted) / .35)，
+   但那 3 个变量在整棵主题树里**无人定义** ⇒ hsl() 求值失败 ⇒ 边框与底色被静默丢弃。
+   现改为直接吃颜色变量（var 值本身是完整颜色，不是 HSL 通道三元组）。回滚 = 还原本文件 .bak_bl_* */
+.tip-fig{margin:1.1rem 0 1.3rem;border:1px solid hsl(var(--border));border-radius:.75rem;background:hsl(var(--card));overflow:hidden}
+.tip-fig svg{display:block;width:100%;height:auto}
+.tip-fig figcaption{padding:.45rem .9rem;border-top:1px solid hsl(var(--border));font-size:.82rem;color:hsl(var(--muted-foreground));background:hsl(var(--muted));line-height:1.6}
+.tip-fig .fstep{fill:#fff;stroke:#f97316;stroke-width:2;font:700 13px/1 -apple-system,sans-serif}
+.tip-fig .fbox{fill:#fff7ed;stroke:#f97316;stroke-width:2;stroke-dasharray:5 4}
+.tip-fig .fhl{fill:#dbeafe;stroke:#2563eb;stroke-width:2}
+.tip-fig .fwin{fill:#fff;stroke:#cbd5e1;stroke-width:1.5}
+.tip-fig .fbar{fill:#f1f5f9}
+.tip-fig .ftxt{font:13px/1.4 -apple-system,PingFang SC,Microsoft YaHei,sans-serif;fill:#334155}
+.f-bold{font-weight:600}

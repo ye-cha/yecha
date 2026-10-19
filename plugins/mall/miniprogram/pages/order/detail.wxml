@@ -1,0 +1,32 @@
+<view class="od" wx:if="{{o.order_no}}">
+  <view class="card">
+    <view class="ost">{{o.status_text}}</view>
+    <view class="addr" wx:if="{{o.address.name}}">{{o.address.name}} {{o.address.mobile}}
+      {{o.address.province}}{{o.address.city}}{{o.address.county}}{{o.address.address_detail}}</view>
+  </view>
+
+  <view class="card">
+    <view class="ogi" wx:for="{{o.goods}}" wx:key="title">
+      <image class="goimg" src="{{item.cover}}" mode="aspectFill"></image>
+      <view class="gob">
+        <view class="got">{{item.title}}</view>
+        <view class="gos">{{item.spec_text}} ×{{item.num}}</view>
+        <view class="price"><text class="y">¥</text>{{item.price}}</view>
+      </view>
+    </view>
+    <view class="sum">
+      <view>商品小计：¥{{o.total_goods_price}}</view>
+      <view>运费：¥{{o.freight_price}}</view>
+      <view wx:if="{{o.discount_price > 0}}">优惠：−¥{{o.discount_price}}</view>
+      <view class="price">实付：¥{{o.pay_price}}</view>
+    </view>
+    <view class="remark" wx:if="{{o.remark}}">备注：{{o.remark}}</view>
+  </view>
+
+  <view class="bar">
+    <view wx:if="{{o.status === 0}}" class="bar-btn cancel" bindtap="cancel">取消订单</view>
+    <view wx:if="{{o.status === 0}}" class="bar-btn pay" bindtap="pay">立即支付</view>
+    <view wx:if="{{o.status === 2}}" class="bar-btn pay" bindtap="confirm">确认收货</view>
+  </view>
+</view>
+<view class="empty" wx:else>加载中…</view>

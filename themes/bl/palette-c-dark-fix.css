@@ -1,0 +1,30 @@
+/* ══════════════════════════════════════════════════════════════════════════
+   方案 C —— 冷蓝 · 深色立面补齐（C_cool.css 的**必要后缀**）
+   ──────────────────────────────────────────────────────────────────────────
+   ★ 为什么需要这个文件（不是"又加了一层"，是修一个真实的特异性缺陷）
+
+   C_cool.css 里的规则写成 `html body .hc-cat`（特异性 0,2,2），
+   而站点自带 style.css / home-calm.php 的深色立面写成 `html.dark .hc-cat`
+   （特异性 0,2,1）或 `.hc-cat`（0,1,0）。
+   ⇒ 在**浅色**下覆盖层赢（可见、实测有效）；在**深色**下覆盖层也赢，
+     于是**站点自己的深色立面被顶掉了** —— 实测后果（真浏览器计算值，非 grep）：
+
+       · .hc-cat  计算 bg = rgb(246,249,255)（浅色画布色！）而深色应为 rgb(24,28,33)
+         —— 深色首页上 11 张分类卡变成浅色板子
+       · .hc-btn.pri 计算 color = rgb(255,255,255) 压在亮蓝 #7d9cf2 上 ⇒ 对比度 2.5（不达标）
+       · .hc-chip 计算 bg/color = 琥珀（rgb(51,40,15)/rgb(242,201,107)），
+         而它语义是"活的" ⇒ 应为绿（rgb(18,48,31)/rgb(143,224,180)，实测 8.4:1）
+
+   修法：**只把这 7 个选择器的特异性抬一档**（`html.dark` → `html.dark:root`，+1 类），
+   让站点原本就写好的深色立面重新赢回来。**一个版式属性都没有**（与 C_cool.css 同一纪律）。
+
+   ★ 回滚：删掉本文件 + 删掉 layout.php 里那一行 <link>。（C_cool.css 可单独保留）
+   ══════════════════════════════════════════════════════════════════════════ */
+
+html.dark:root body .hc-cat,
+html.dark:root body .hc-hot,
+html.dark:root body .hc-navbox,
+html.dark:root body .hc-post{background:var(--soft);border-color:var(--line)}
+
+html.dark:root body .hc-btn.pri{color:var(--bg)}
+html.dark:root body .hc-chip.warn{background:#33280f;color:#f2c96b;border-color:#5a4519}

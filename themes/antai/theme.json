@@ -1,0 +1,15 @@
+{
+  "name": "案台 Antai",
+  "version": "1.0.0",
+  "requires_core": "1.0.0",
+  "author": "YeCha",
+  "description": "案台 Antai —— 清爽卡片式博客：浅色通透底、柔和靛蓝强调、舒适圆角卡片、系统无衬线字体、顶部大搜索 + 文章列表 + 可选侧栏。",
+  "home": "landing",
+  "settings": [
+    {"key": "width", "type": "number", "label": "版心宽度", "def": "1180", "min": 960, "max": 1440},
+    {"key": "accent", "type": "color", "label": "强调色", "def": "#5b5fc7"},
+    {"key": "per_page", "type": "number", "label": "每页条数", "def": "10", "min": 3, "max": 50},
+    {"key": "latest_n", "type": "number", "label": "首页最新条数", "def": "6", "min": 3, "max": 12},
+    {"key": "show_sidebar", "type": "checkbox", "label": "显示侧栏", "def": "1"}
+  ]
+}

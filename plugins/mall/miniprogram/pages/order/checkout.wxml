@@ -1,0 +1,31 @@
+<view class="co">
+  <view class="card addr" bindtap="chooseAddr">
+    <block wx:if="{{addr}}">
+      <view class="an">{{addr.name}} {{addr.mobile}}</view>
+      <view class="aaddr">{{addr.province}}{{addr.city}}{{addr.county}}{{addr.address_detail}}</view>
+    </block>
+    <block wx:else>
+      <view class="an brick">+ 选择收货地址</view>
+    </block>
+  </view>
+
+  <view class="card">
+    <view class="ogi" wx:for="{{items}}" wx:key="title">
+      <image class="goimg" src="{{item.cover}}" mode="aspectFill"></image>
+      <view class="gob">
+        <view class="got">{{item.title}}</view>
+        <view class="gos">{{item.spec_text}} ×{{item.num}}</view>
+        <view class="price"><text class="y">¥</text>{{item.price}}</view>
+      </view>
+    </view>
+  </view>
+
+  <view class="card">
+    <textarea class="remark" placeholder="订单备注（选填）" value="{{remark}}" bindinput="onRemark"></textarea>
+  </view>
+
+  <view class="cbar">
+    <view class="ct">合计：<text class="price"><text class="y">¥</text>{{total}}</text></view>
+    <view class="btn-primary" bindtap="submit">提交订单</view>
+  </view>
+</view>

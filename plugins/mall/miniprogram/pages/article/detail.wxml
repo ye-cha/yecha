@@ -1,0 +1,21 @@
+<view class="ad" wx:if="{{a.id}}">
+  <view class="card">
+    <view class="at">{{a.title}}</view>
+    <view class="meta">{{a.author}} · {{a.published_at}} · {{a.comment_count}} 评论</view>
+    <rich-text class="content" nodes="{{a.content}}"></rich-text>
+  </view>
+
+  <view class="title-2">评论（{{comments.length}}）</view>
+  <view class="card cm" wx:for="{{comments}}" wx:key="id">
+    <view class="ca">{{item.author}}</view>
+    <view class="cb">{{item.body}}</view>
+    <view class="ct">{{item.created_at}}</view>
+  </view>
+  <view class="empty" wx:if="{{comments.length === 0}}">暂无评论，来抢沙发</view>
+
+  <view class="cbar">
+    <input class="cin" placeholder="说点什么…" value="{{input}}" bindinput="onInput" confirm-type="send" bindconfirm="submit"/>
+    <view class="btn-primary" bindtap="submit">发表</view>
+  </view>
+</view>
+<view class="empty" wx:else>加载中…</view>
