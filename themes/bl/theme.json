@@ -1,6 +1,9 @@
 {
-  "name": "yecha",
+  "name": "bl",
+  "slug": "bl",
   "version": "1.0.0",
   "requires_core": "1.0.0",
-  "description": "YeCha default minimal theme"
+  "author": "YeCha",
+  "license": "MIT",
+  "description": "浏览工坊 bl 主题：Tailwind 设计系统 + 桥接层，YeCha 新版默认主题的移植源。"
 }
