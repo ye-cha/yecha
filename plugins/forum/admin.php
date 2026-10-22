@@ -5,7 +5,7 @@ require_once __DIR__ . '/lib.php';
 
 function yc_forum_admin(): string
 {
-    if (!\Auth::isAdmin()) { return '<div class="card"><h3>论坛</h3><div class="stub">需要管理员权限。</div></div>'; }
+    if (!\Auth::isAdmin()) { return '<div class="card"><h3>社区</h3><div class="stub">需要管理员权限。</div></div>'; }
     $msg = yf_admin_handle(); // 处理后返回提示或 ''
     $css = '<style>'
         . '.yfa-card{border:1px solid #e5e0d5;background:#fff;border-radius:12px;padding:14px 16px;margin:10px 0}'
@@ -52,6 +52,38 @@ function yc_forum_admin(): string
         . '<div class="f"><span>&nbsp;</span><button class="btn primary">创建</button></div>'
         . '</div></form>';
 
+    /* ★ yf-att-admin-20261020：附件统计 + 清理入口
+       附件是「无主文件」——数据库只记 markdown 里的路径，删帖不删图。
+       这里给一个手动回收入口：只删「正文里没人引用 + 超过 N 天」的。 */
+    $AT = Db::t('forum_att');
+    $attN = 0; $attSz = 0; $attRecent = [];
+    try {
+        $attN  = (int)Db::one("SELECT COUNT(*) FROM `{$AT}`");
+        $attSz = (int)Db::one("SELECT COALESCE(SUM(size),0) FROM `{$AT}`");
+        $attRecent = Db::rows("SELECT path,size,width,height,created_at FROM `{$AT}` ORDER BY id DESC LIMIT 8");
+    } catch (\Throwable $e) { /* 表还没建（首次访问）时静默 */ }
+
+    $attThumb = '';
+    foreach ($attRecent as $ar) {
+        $attThumb .= '<a href="' . e((string)$ar['path']) . '" target="_blank" style="display:inline-block;margin:0 6px 6px 0">'
+            . '<img src="' . e((string)$ar['path']) . '" alt="" style="height:56px;width:auto;border-radius:6px;border:1px solid #e5e0d5;display:block">'
+            . '<span style="display:block;font-size:10.5px;color:#9a9a90">' . (int)round(((int)$ar['size']) / 1024) . 'KB</span></a>';
+    }
+    $attForm = '<form method="post" action="/admin/forum" class="yfa-card" onsubmit="return confirm(\'确认清理？只删正文里没人引用的附件，文件会从磁盘删除。\')">'
+        . '<h3>附件</h3>' . \Csrf::field()
+        . '<input type="hidden" name="act" value="att_gc">'
+        . '<p class="dim" style="margin:0 0 8px">共 <b>' . $attN . '</b> 个 · 占用 <b>'
+        . ($attSz >= 1048576 ? round($attSz / 1048576, 1) . ' MB' : round($attSz / 1024) . ' KB') . '</b>'
+        . ' · 存放于 <code>/uploads/forum/img/YYYY/MM/</code>（统一 WebP）</p>'
+        . ($attThumb !== '' ? '<div style="margin:0 0 10px">' . $attThumb . '</div>' : '')
+        . '<div class="row"><div class="f"><span>只清理 N 天前的（0 = 全部）</span>'
+        . '<input type="text" name="days" value="7" style="width:60px"></div>'
+        . '<div class="f"><span>&nbsp;</span><button class="btn">清理孤儿附件</button></div></div>'
+        . '<p class="dim" style="margin:8px 0 0;font-size:12px">只删「帖子/回帖正文里都找不到引用」的；'
+        . '软删除的帖子仍算引用（可恢复），不会被误删。</p></form>';
+
+    $addForm = $addForm . $attForm;
+
     // 最近帖子
     $T = Db::t('forum_threads');
     $threads = Db::rows("SELECT t.*, b.name bname FROM {$T} t LEFT JOIN " . Db::t('forum_boards') . " b ON b.id=t.board_id WHERE t.status<>'deleted' ORDER BY t.id DESC LIMIT 25");
@@ -66,7 +98,7 @@ function yc_forum_admin(): string
         $act2 = '<form class="inline" method="post" action="/admin/forum" onsubmit="return confirm(\'删除该帖及其回帖？\')">' . \Csrf::field() . '<input type="hidden" name="act" value="thread_mod"><input type="hidden" name="id" value="' . (int)$th['id'] . '"><input type="hidden" name="what" value="del"><button class="btn" style="color:#b33">删除</button></form>';
         $tr .= '<tr><td>' . e(mb_substr((string)$th['title'], 0, 46)) . '<div class="dim">' . e((string)($th['bname'] ?? '')) . ' · ' . e(yf_uname($u)) . ' · ' . (int)$th['replies'] . ' 回 · ' . e(yf_dt((string)$th['created_at'])) . '</div></td>'
             . '<td>' . $badge . '</td>'
-            . '<td><a class="btn" href="/forum?t=' . (int)$th['id'] . '" target="_blank">查看</a> ' . $act1 . ' ' . $act2 . '</td></tr>';
+            . '<td><a class="btn" href="' . e(yf_url(['t' => (int)$th['id']])) . '" target="_blank">查看</a> ' . $act1 . ' ' . $act2 . '</td></tr>';
     }
     // 最近回帖
     $R = Db::t('forum_replies');
@@ -92,8 +124,8 @@ function yc_forum_admin(): string
     $replyTbl = '<div class="yfa-card yfa"><h3>最近回帖</h3>'
         . '<table><thead><tr><th>所在帖</th><th>内容</th><th>状态</th><th>操作</th></tr></thead><tbody>' . ($rr !== '' ? $rr : '<tr><td colspan="4" class="dim">暂无回帖</td></tr>') . '</tbody></table></div>';
 
-    return '<div class="card"><h3>论坛 Forum 管理</h3>'
-        . '<p class="dim" style="margin:2px 0 0">前台入口：<a href="/forum" target="_blank">/forum</a> · 发帖回帖走前台（会员/游客规则同站内）。</p>'
+    return '<div class="card"><h3>社区 Community 管理</h3>'
+        . '<p class="dim" style="margin:2px 0 0">前台入口：<a href="' . e(yf_url()) . '" target="_blank">/forum</a> · 发帖回帖走前台（会员/游客规则同站内）。</p>'
         . $msgHtml . '</div>' . $css . $addForm . $boardTbl . $threadTbl . $replyTbl;
 }
 
@@ -105,6 +137,12 @@ function yf_admin_handle(): string
     $B = Db::t('forum_boards');
     $T = Db::t('forum_threads');
     $R = Db::t('forum_replies');
+    /* ★ yf-att-admin-20261020：清理孤儿附件（正文里已经没人引用的） */
+    if ($act === 'att_gc') {
+        $r = function_exists('yf_att_gc') ? yf_att_gc((int)($_POST['days'] ?? 7)) : ['deleted' => 0, 'kept' => 0];
+        return '清理完成：删除 ' . $r['deleted'] . ' 个孤儿附件，保留 ' . $r['kept'] . ' 个仍被引用的。';
+    }
+
     if ($act === 'board_save') {
         $id = (int)($_POST['id'] ?? 0);
         $slug = strtolower(trim((string)($_POST['slug'] ?? '')));

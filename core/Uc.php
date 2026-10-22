@@ -353,8 +353,16 @@ final class Uc
             $html .= '<div class="post-list">';
             foreach ($rows as $n) {
                 $unread = (int)$n['is_read'] === 0 ? '<span class="dot" style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--accent);margin-right:6px;"></span>' : '';
-                $link = $n['slug'] ? '<a href="' . $lp . '/' . e((string)$n['slug']) . '.html#comments">' . e(__('uc.notif_view')) . '</a>' : '';
-                $html .= '<div class="note-item">' . $unread . '<b>' . e(__('uc.notif_mention')) . '</b> · ' . e(substr((string)$n['created_at'], 0, 16)) . '<br>'
+                /* t50：论坛回复/引用复用同一张通知表，按 type 显示标签，按 link 直达楼层 */
+                $type = (string)($n['type'] ?? 'mention');
+                $labels = ['mention' => __('uc.notif_mention'), 'forum_reply' => '论坛回复', 'forum_quote' => '论坛引用'];
+                $label = $labels[$type] ?? __('uc.notif_mention');
+                if (!empty($n['link'])) {
+                    $link = '<a href="' . e((string)$n['link']) . '">' . e(__('uc.notif_view')) . '</a>';
+                } else {
+                    $link = $n['slug'] ? '<a href="' . $lp . '/' . e((string)$n['slug']) . '.html#comments">' . e(__('uc.notif_view')) . '</a>' : '';
+                }
+                $html .= '<div class="note-item">' . $unread . '<b>' . e($label) . '</b> · ' . e(substr((string)$n['created_at'], 0, 16)) . '<br>'
                     . e(mb_substr((string)$n['body'], 0, 160)) . ' ' . $link . '</div>';
             }
             $html .= '</div>';

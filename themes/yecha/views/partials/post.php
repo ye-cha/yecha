@@ -5,7 +5,7 @@ $cid = (int)$p['id'];
 $logged = Auth::check();
 $csrf = Csrf::token();
 $lp2 = (Poly::on() && Lang::short() !== Poly::defaultLang()) ? ui_lp() : '';
-$back = $lp2 . '/' . e((string)$p['slug']) . '.html';
+$back = $lp2 . '/' . (string)$p['slug'] . '.html';
 ?>
 <article class="article" data-cid="<?= $cid ?>">
   <?php if (!empty($p['cats'])): ?>
@@ -79,7 +79,7 @@ $back = $lp2 . '/' . e((string)$p['slug']) . '.html';
     <?php if ($logged): ?>
       <form class="inline" method="post" action="/user/favorite">
         <input type="hidden" name="content_id" value="<?= $cid ?>">
-        <input type="hidden" name="redirect" value="<?= $back ?>">
+        <input type="hidden" name="redirect" value="<?= e($back) ?>">
         <?= Csrf::field() ?>
         <button class="btn btn-sm fav-btn <?= $fav ? 'on' : '' ?>" type="submit"><?= $fav ? e(__('post.fav_on')) : e(__('post.fav_off')) ?></button>
       </form>
@@ -87,7 +87,8 @@ $back = $lp2 . '/' . e((string)$p['slug']) . '.html';
           $hintMd = sprintf(__('post.mark_hint'), (int)$my_marks);
           $myLp = ui_lp();
           if ($myLp !== '') { $hintMd = str_replace('href="/user/', 'href="' . $myLp . '/user/', $hintMd); }
-          echo $hintMd;
+          // 语言包文案含一个站内 <a>；只放行 <a>，其余标签一律剥掉（防译文变注入面）
+          echo strip_tags($hintMd, '<a>');
       ?></span>
       <span class="hint"><?= e(__('post.seg_hint')) ?></span>
     <?php else: ?>

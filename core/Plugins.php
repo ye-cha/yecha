@@ -179,11 +179,26 @@ final class Plugins
         return (string)get_option('plugin.' . $id . '.removed', '0') === '1';
     }
 
+    /**
+     * 表是否存在。t50：首个请求用一次 SHOW TABLES 建快照，替代“每张声明表一次 SHOW TABLES LIKE”
+     * （本机 22 个插件约 27 次/请求；插件表通常已存在，快照即可命中）。
+     * 快照只缓存“存在”，不缓存“不存在”：同请求里刚迁移出来的表会回落实时查询。
+     */
+    private static ?array $tableSet = null;
+
     public static function tableExists(string $table): bool
     {
         $t = Db::t($table);
-        $row = Db::rows("SHOW TABLES LIKE '{$t}'");
-        return (bool)$row;
+        if (self::$tableSet === null) {
+            $set = [];
+            foreach (Db::rows('SHOW TABLES') as $row) {
+                $v = reset($row);
+                if (is_string($v) && $v !== '') { $set[strtolower($v)] = true; }
+            }
+            self::$tableSet = $set;
+        }
+        if (isset(self::$tableSet[strtolower($t)])) { return true; }
+        return (bool)Db::rows("SHOW TABLES LIKE '{$t}'");
     }
 
     /* ---------- 第三方插件能力：后台菜单 / 侧栏块 / 独立页 / 后台管理页 ---------- */

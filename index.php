@@ -33,6 +33,72 @@ function ye_request_path(): string
 }
 
 $path    = ye_request_path();
+/* ══ yf-seo-20261020 BEGIN（社区平铺伪静态；回滚 = 删本段）═══════════════════════
+   社区 URL 是「平铺 .html」形态 —— 不是 /forum/b14 那种二级路径：
+     /forum.html  ·  /forum-b14.html  ·  /forum-t10.html  ·  /forum-u1.html
+     /forum-new.html  ·  /forum-drafts.html  ·  /forum-all.html  ·  /forum-unread.html
+     /forum-search.html?q=xx  ·  /forum-edit-t10.html  ·  /forum-edit-r5.html
+     /forum-latest.html  ·  /forum-popular.html  ·  /forum-best.html
+     /forum-hot-24h.html  ·  /forum-hot-36h.html  ·  /forum-hot-week.html
+   这里把文件名翻译回 $_GET，再把 $path 还原成 'forum' ⇒ Router 照旧按单段 slug 命中
+   plugin_page，论坛插件内部读 $_GET 的代码一行都不用改。
+   ★ 为什么不在 nginx 做：内核用 $_SERVER['REQUEST_URI'] 取路径，nginx 的 rewrite 只改
+     内部 $uri、不改 REQUEST_URI ⇒ 改写后 PHP 仍看见原路径 ⇒ 404。
+     （nginx 的 `^/[A-Za-z0-9][A-Za-z0-9._-]*\.html$` 规则负责把这类请求送进来即可。）
+   ★ 不认识的 /forum-xxx.html 保持原样，继续交给 Router 出 404（不做通吃重写）。
+   ★ 旧形态 /forum/b14 也在这里归一，再由插件的 yf_canonical_redirect() 301 到 .html。
+   ─────────────────────────────────────────────────────────────────────────── */
+if ($path === 'forum' || $path === 'forum.html'
+    || preg_match('#^forum-[a-z0-9-]+\.html$#', $path) === 1
+    || str_starts_with($path, 'forum/')) {
+    $__sub = '';
+    if ($path === 'forum' || $path === 'forum.html') {
+        $__sub = '';
+    } elseif (str_starts_with($path, 'forum/')) {
+        $__sub = trim(substr($path, 5), '/');                 /* 旧二级形态 */
+    } else {
+        $__sub = (string)preg_replace('#\.html$#', '', substr($path, 6));  /* forum-xxx.html */
+    }
+
+    if ($__sub === '') {
+        $path = 'forum';
+    } else {
+        $__ok = true;
+        if (preg_match('#^(b|t|u|edit-t|edit-r)(\d{1,10})$#', $__sub, $__m)) {
+            $__k = ['b' => 'b', 't' => 't', 'u' => 'u', 'edit-t' => 't', 'edit-r' => 'rid'][$__m[1]];
+            $_GET[$__k] = (int)$__m[2];
+            if ($__m[1] === 'edit-t' || $__m[1] === 'edit-r') { $_GET['mode'] = 'edit'; }
+        } else {
+            $__map = [
+                'new'      => ['mode' => 'new'],
+                'drafts'   => ['mode' => 'drafts'],
+                'all'      => ['view' => 'all'],
+                'unread'   => ['view' => 'all', 'unread' => 1],
+                'search'   => [],                                   /* q 本来就在 query 里 */
+                'attach'   => ['mode' => 'attach'],                 /* yf-upload-20261020：上传端点 */
+                'latest'   => ['sort' => 'new'],
+                'popular'  => ['sort' => 'hot'],
+                'best'     => ['sort' => 'good'],
+                'hot-24h'  => ['hot' => '24h'],
+                'hot-36h'  => ['hot' => '36h'],
+                'hot-week' => ['hot' => 'week'],
+            ];
+            if (isset($__map[$__sub])) {
+                foreach ($__map[$__sub] as $__k2 => $__v2) { $_GET[$__k2] = $__v2; }
+            } else {
+                $__ok = false;   /* 不认识：保持原路径，让 Router 正常 404 */
+            }
+        }
+        if ($__ok) {
+            $path = 'forum';
+            foreach ($_GET as $__gk => $__gv) { $_REQUEST[$__gk] = $__gv; }
+        }
+    }
+}
+$query = $_GET;
+unset($query['r']);
+/* ══ yf-seo-20261020 END ══ */
+
 $query   = $_GET;
 unset($query['r']);
 $route   = Router::resolve($path, $query);

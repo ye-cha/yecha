@@ -1,0 +1,621 @@
+/* ============================================================================
+   lq-align.css —— 「实例功能件 ↔ www 形态」桥接层（lqalign2 · 2026-10-05）
+   ----------------------------------------------------------------------------
+   加载顺序：lqwww/www.css（www 自己的 Tailwind 产物）→ style.css（实例功能件）
+             → 本文件（最后，覆盖/接线）
+   职责只有三件：
+     ① 把页面底座接到 www 的设计令牌（--background/--foreground/--card/--border/--radius）
+     ② 把实例既有的**功能件**（侧栏 / 评论区 / 目录 / 阅读条 / 分页 / 搜索 / 图库 /
+        归档 / 标签 / 页面列表 / 404）接到 www 的卡片语言（圆角 + 细边框 + 轻阴影）
+     ③ 深色模式下给这些功能件补一套令牌化配色（www.css 已带 .dark 令牌）
+   ★ 不改任何功能件的行为，只改表皮；不引入图片/字体等外链资源。
+   ========================================================================== */
+
+:root {
+  /* 实例功能件用的强调色 = www 的主色（style.css 已把 --accent 改名为 --lq-accent） */
+  --lq-accent: hsl(var(--primary));
+  --lq-accent-soft: hsl(var(--accent));
+  --lq-muted: hsl(var(--muted-foreground));
+  --lq-line: hsl(var(--border));
+  --lq-fg: hsl(var(--foreground));
+  --lq-soft: hsl(var(--muted));
+  --lq-codebg: hsl(var(--muted));
+}
+
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  background: hsl(var(--background));
+  color: hsl(var(--foreground));
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  font: 15px/1.75 -apple-system, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+}
+a { color: inherit; text-decoration: none; }
+a:hover { color: hsl(var(--primary)); }
+img { max-width: 100%; }
+.img-miss {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 40px; min-height: 24px; padding: 2px 6px; margin: 0 2px;
+  border: 1px dashed hsl(var(--border)); border-radius: 6px;
+  color: hsl(var(--muted-foreground)); font-size: 12px;
+}
+
+/* ---------- ① 容器：www 的 .container 已定义，这里只补"实例自造容器" ---------- */
+.wrap, .g-box-1200, .g-home-wrap { max-width: 1280px; margin: 0 auto; padding: 0 1rem; }
+
+/* ---------- ② 侧栏：.side-box → www 的 `rounded-xl border bg-card p-3 text-sm shadow-sm` ---------- */
+.side-box, .article-toc, .lq-rel, .lq-dl, .search-page-form, .meta-index, .comments-area,
+.c-form, .c-item, .reader-bar, .side-search, .uc-empty, .empty, .sticky > .side-box {
+  background: hsl(var(--card));
+  border: 1px solid hsl(var(--border));
+  border-radius: var(--radius);
+  box-shadow: 0 1px 2px 0 rgb(0 0 0 / .05);
+}
+.side-box { padding: .75rem; margin-bottom: 1rem; font-size: .875rem; }
+.side-box h4 {
+  margin: 0 0 .375rem; padding: 0 .5rem; font-size: .75rem; font-weight: 600;
+  letter-spacing: .05em; text-transform: uppercase; color: hsl(var(--muted-foreground));
+}
+.side-box h4 a { color: inherit; }
+.side-list { list-style: none; margin: 0; padding: 0; }
+.side-list li { margin: 0; }
+.side-list a, .side-cat {
+  display: flex; align-items: center; justify-content: space-between; gap: .5rem;
+  padding: .375rem .5rem; border-radius: calc(var(--radius) - .375rem);
+  color: hsl(var(--muted-foreground)); transition: background-color .15s, color .15s;
+}
+.side-list a:hover, .side-cat:hover { background: hsl(var(--accent)); color: hsl(var(--accent-foreground)); }
+.side-list .d { font-size: .75rem; color: hsl(var(--muted-foreground)); }
+.side-nick { font-weight: 700; margin-bottom: .375rem; }
+.side-bio { color: hsl(var(--muted-foreground)); font-size: .875rem; }
+.side-search { display: flex; gap: .5rem; padding: .5rem; background: transparent; border: 0; box-shadow: none; }
+.side-search input {
+  flex: 1; min-width: 0; border: 1px solid hsl(var(--border)); background: hsl(var(--background));
+  border-radius: 9999px; padding: .375rem .875rem; font-size: .875rem; color: inherit;
+}
+.side-search input:focus { outline: none; box-shadow: 0 0 0 2px hsl(var(--ring) / .4); }
+.side-search button, .btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: .375rem;
+  border: 1px solid hsl(var(--border)); background: hsl(var(--background));
+  border-radius: calc(var(--radius) - .25rem); padding: .375rem .875rem;
+  font-size: .875rem; font-weight: 500; color: inherit; cursor: pointer;
+  transition: background-color .15s, color .15s;
+}
+.side-search button { border-radius: 9999px; background: hsl(var(--primary)); border-color: transparent; color: hsl(var(--primary-foreground)); }
+.side-search button:hover, .btn:hover { background: hsl(var(--accent)); color: hsl(var(--accent-foreground)); }
+.side-search button:hover { background: hsl(var(--primary) / .9); color: hsl(var(--primary-foreground)); }
+.btn-sm { padding: .25rem .625rem; font-size: .8125rem; }
+.btn.ghost { background: transparent; }
+
+/* 侧栏标签云 */
+.side-tags { display: flex; flex-wrap: wrap; gap: .375rem; padding: .25rem .5rem .5rem; }
+.side-tags li { margin: 0; }
+.side-tags a {
+  display: inline-flex; padding: .125rem .5rem; border: 1px solid hsl(var(--border));
+  border-radius: 9999px; font-size: .75rem; color: hsl(var(--muted-foreground));
+}
+.side-tags a:hover { border-color: hsl(var(--primary)); color: hsl(var(--primary)); }
+
+/* ---------- ③ 目录（lq-mech 的 toc-side / 老站的 article-toc） ---------- */
+.article-toc { padding: .75rem; margin-bottom: 1rem; font-size: .875rem; }
+.toc-cap, .article-toc .toc-cap {
+  margin: 0 .5rem .375rem; font-size: .75rem; font-weight: 600; letter-spacing: .05em;
+  text-transform: uppercase; color: hsl(var(--muted-foreground));
+}
+.article-toc ul { list-style: none; margin: 0; padding: 0; }
+.article-toc li { margin: 0; }
+.article-toc a {
+  display: block; padding: .25rem .5rem; border-radius: calc(var(--radius) - .375rem);
+  color: hsl(var(--muted-foreground));
+}
+.article-toc a:hover { background: hsl(var(--accent)); color: hsl(var(--accent-foreground)); }
+.article-toc .l4 { padding-left: .5rem; }
+.article-toc .l5 { padding-left: 1rem; }
+
+/* ---------- ④ 正文：与 www 的 `.tip-article` 同族（www.css 自带规则，这里补实例特有件） ---------- */
+.tip-article { font-size: 16px; }
+.tip-article > :first-child { margin-top: 0; }
+.article-content, .article, .page { color: hsl(var(--foreground)); }
+.article-title, .page h1 { font-weight: 700; }
+.article-meta, .kicker { font-size: .75rem; color: hsl(var(--muted-foreground)); }
+.article-tags { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; }
+.tag, .article-tags .tag {
+  display: inline-flex; padding: .125rem .625rem; border: 1px solid hsl(var(--border));
+  border-radius: 9999px; font-size: .75rem; color: hsl(var(--muted-foreground));
+}
+.tags-label { font-size: .75rem; font-weight: 600; letter-spacing: .05em; color: hsl(var(--muted-foreground)); }
+.poly-notice {
+  margin: 0 0 1rem; padding: .625rem .875rem; border: 1px solid hsl(var(--border));
+  border-radius: var(--radius); background: hsl(var(--muted)); font-size: .875rem;
+  color: hsl(var(--muted-foreground));
+}
+.tip-fig, .lq-thumb { display: block; }
+
+/* ---------- ⑤ 列表页遗留件（搜索 / 归档 / 标签索引 / 页面列表 / 404） ---------- */
+.page-head { margin-bottom: 1.25rem; }
+.page-head h1 { font-size: 1.875rem; font-weight: 700; margin: 0; }
+.page-head .sub, .sub { display: block; margin-top: .5rem; color: hsl(var(--muted-foreground)); font-size: .875rem; }
+.post-list { margin: 0; padding: 0; }
+.post-item {
+  padding: 1.25rem; margin-bottom: .875rem;
+  background: hsl(var(--card)); border: 1px solid hsl(var(--border));
+  border-radius: var(--radius); box-shadow: 0 1px 2px 0 rgb(0 0 0 / .05);
+  transition: box-shadow .15s, transform .15s;
+}
+.post-item:hover { box-shadow: 0 4px 6px -1px rgb(0 0 0 / .1); transform: translateY(-1px); }
+.post-item h2 { margin: 0 0 .5rem; font-size: 1rem; font-weight: 600; line-height: 1.5; }
+.post-excerpt { margin: 0 0 .625rem; color: hsl(var(--muted-foreground)); font-size: .875rem; }
+.post-meta { display: flex; flex-wrap: wrap; gap: .75rem; font-size: .75rem; color: hsl(var(--muted-foreground)); }
+.post-meta .cat { color: hsl(var(--primary)); }
+.readmore { display: inline-flex; align-items: center; gap: .25rem; color: hsl(var(--primary)); font-size: .875rem; }
+.search-page-form { display: flex; gap: .5rem; padding: .75rem; margin-bottom: 1.25rem; }
+.search-page-form input {
+  flex: 1; min-width: 0; border: 1px solid hsl(var(--border)); background: hsl(var(--background));
+  border-radius: 9999px; padding: .5rem 1rem; font-size: .875rem; color: inherit;
+}
+.meta-index { padding: 1rem; }
+.meta-chip, .cat-chip {
+  display: inline-flex; align-items: center; gap: .375rem; padding: .375rem .75rem; margin: 0 .375rem .375rem 0;
+  border: 1px solid hsl(var(--border)); border-radius: 9999px; font-size: .875rem;
+  color: hsl(var(--muted-foreground)); background: hsl(var(--card));
+}
+.meta-chip:hover, .cat-chip:hover { border-color: hsl(var(--primary)); color: hsl(var(--primary)); }
+.cat-chip.on, .cat-chip.on:hover { background: hsl(var(--primary)); border-color: transparent; color: hsl(var(--primary-foreground)); }
+.meta-index .mi-count { color: hsl(var(--muted-foreground)); font-size: .75rem; }
+.idx-hint, .uc-empty, .empty, .c-empty {
+  padding: 1.25rem; color: hsl(var(--muted-foreground)); font-size: .875rem;
+}
+.archives-list, .side-list.arch { padding: 0; }
+.hint { color: hsl(var(--muted-foreground)); font-size: .8125rem; }
+
+/* ---------- ⑥ 评论区（**保留**的功能件；只换表皮） ---------- */
+.comments-area { padding: 1.25rem; margin-top: 1.5rem; }
+.comments-title, .comments-area h3 { margin: 0 0 .875rem; font-size: 1.125rem; font-weight: 600; }
+.c-item { padding: .875rem; margin-bottom: .625rem; }
+.c-nick { font-weight: 600; }
+.c-who, .c-text, .c-row { font-size: .9375rem; }
+.c-actions { display: flex; gap: .75rem; font-size: .8125rem; color: hsl(var(--muted-foreground)); }
+.c-replies { margin-top: .625rem; padding-left: .875rem; border-left: 2px solid hsl(var(--border)); }
+.avatar { border-radius: 9999px; }
+.seg-block { border-top: 1px solid hsl(var(--border)); padding-top: .75rem; margin-top: .75rem; }
+.seg-head { font-size: .8125rem; font-weight: 600; color: hsl(var(--muted-foreground)); }
+.c-form { padding: 1rem; margin-top: 1rem; }
+.c-form textarea, .c-input, .reply-form textarea, .c-form input[type=text] {
+  width: 100%; border: 1px solid hsl(var(--border)); border-radius: calc(var(--radius) - .25rem);
+  background: hsl(var(--background)); color: inherit; padding: .625rem .75rem; font: inherit;
+}
+.c-form textarea:focus, .c-input:focus { outline: none; box-shadow: 0 0 0 2px hsl(var(--ring) / .4); }
+.anchor-quote, .mention {
+  border-left: 3px solid hsl(var(--primary)); background: hsl(var(--muted));
+  padding: .375rem .625rem; border-radius: 0 calc(var(--radius) - .25rem) calc(var(--radius) - .25rem) 0;
+  color: hsl(var(--muted-foreground)); font-size: .875rem;
+}
+.reply-to { font-size: .8125rem; color: hsl(var(--muted-foreground)); }
+
+/* ---------- ⑦ 分页 / 阅读条（功能件） ---------- */
+.pager { display: flex; flex-wrap: wrap; align-items: center; gap: .375rem; margin-top: 1.5rem; }
+.pager a, .pager span, .pager b {
+  display: inline-flex; align-items: center; justify-content: center; min-width: 2.25rem; height: 2.25rem;
+  padding: 0 .75rem; border: 1px solid hsl(var(--border)); border-radius: calc(var(--radius) - .25rem);
+  font-size: .875rem; color: inherit;
+}
+.pager a:hover { background: hsl(var(--accent)); color: hsl(var(--accent-foreground)); }
+.pager b, .pager .on { background: hsl(var(--primary)); border-color: transparent; color: hsl(var(--primary-foreground)); }
+.pager .cur { background: hsl(var(--primary)); border-color: transparent; color: hsl(var(--primary-foreground)); font-weight: 600; }
+/* 分页按钮（www 形状，宽度对齐 www 的方形页码键；www 没有 min-w-9 这个类 ⇒ 在这里补） */
+.lq-pager a, .lq-pager span { min-width: 2.25rem; }
+.reader-bar { display: flex; flex-wrap: wrap; align-items: center; gap: .75rem; }
+.fav-btn.on { background: hsl(var(--primary)); border-color: transparent; color: hsl(var(--primary-foreground)); }
+
+/* ---------- ⑧ lq-mech 机制件（面包屑 / 更新时间 / 朗读打印 / 相关阅读 / 下载表） ---------- */
+.lq-crumbs {
+  margin: 0 0 1.5rem; padding: 0; max-width: none;
+  font-size: .875rem; color: hsl(var(--muted-foreground));
+}
+.lq-crumbs ol { list-style: none; display: flex; flex-wrap: wrap; align-items: center; gap: .25rem; margin: 0; padding: 0; }
+.lq-crumbs li { display: flex; align-items: center; gap: .25rem; }
+.lq-crumbs a:hover { color: hsl(var(--foreground)); }
+.lq-crumbs .sep { font-style: normal; opacity: .6; }
+.lq-meta { display: flex; flex-wrap: wrap; align-items: center; gap: .75rem; margin: 0 0 1rem; font-size: .75rem; color: hsl(var(--muted-foreground)); }
+.lq-updated { color: hsl(var(--muted-foreground)); }
+.lq-acts { display: inline-flex; gap: .375rem; }
+.lq-act {
+  display: inline-flex; align-items: center; padding: .125rem .625rem; border: 1px solid hsl(var(--border));
+  border-radius: 9999px; background: hsl(var(--card)); color: hsl(var(--muted-foreground));
+  font-size: .75rem; cursor: pointer;
+}
+.lq-act:hover { border-color: hsl(var(--primary)); color: hsl(var(--primary)); }
+.lq-rel { padding: 1rem; margin-top: 1.5rem; }
+.lq-rel-cap { margin: 0 0 .5rem; font-size: .875rem; font-weight: 600; }
+.lq-rel ul { list-style: none; margin: 0; padding: 0; }
+.lq-rel li { padding: .25rem 0; font-size: .875rem; }
+.lq-dl { padding: 1rem; margin-top: 1.5rem; }
+.lq-dl h2 { margin: 0 0 .5rem; font-size: 1.125rem; font-weight: 600; }
+.lq-dl-note { margin: 0 0 .75rem; font-size: .75rem; color: hsl(var(--muted-foreground)); }
+.lq-dl-wrap { overflow-x: auto; }
+.lq-dl-t { width: 100%; border-collapse: collapse; font-size: .8125rem; }
+.lq-dl-t th, .lq-dl-t td { padding: .5rem .625rem; border-bottom: 1px solid hsl(var(--border)); text-align: left; }
+.lq-dl-t th { font-weight: 600; color: hsl(var(--muted-foreground)); }
+.lq-dl-t code { font-size: .75rem; word-break: break-all; }
+
+/* ---------- ⑨ 工具页本体（137 个工具自带样式，这里只给中性外框） ---------- */
+.lq-toolbody { color: hsl(var(--foreground)); }
+.lq-toolbody > :first-child { margin-top: 0; }
+
+/* ---------- ⑩ 图库（wall.php 的 wt-* 自带样式；这里把它的容器接到卡片语言） ---------- */
+.wt-sec, .wt-wallbox, .wt-tool, .wt-facts, .wt-quick, .wt-strip {
+  border-radius: var(--radius);
+}
+.wt-btn, .wt-chip, .wt-cat {
+  border-radius: calc(var(--radius) - .25rem);
+}
+.wt-btn { background: hsl(var(--primary)); color: hsl(var(--primary-foreground)); border-color: transparent; }
+.wt-chip.on, .wt-cat.on { background: hsl(var(--primary)); color: hsl(var(--primary-foreground)); border-color: transparent; }
+
+/* ---------- ⑪ 深色模式：把遗留件的硬编码浅色换成 www 的深色令牌 ---------- */
+.dark .side-box, .dark .article-toc, .dark .lq-rel, .dark .lq-dl, .dark .search-page-form,
+.dark .meta-index, .dark .comments-area, .dark .c-form, .dark .c-item, .dark .reader-bar,
+.dark .post-item, .dark .lq-act { background: hsl(var(--card)); border-color: hsl(var(--border)); }
+.dark .side-search input, .dark .search-page-form input, .dark .c-form textarea, .dark .c-input {
+  background: hsl(var(--background)); border-color: hsl(var(--input)); color: hsl(var(--foreground));
+}
+.dark .anchor-quote, .dark .mention { background: hsl(var(--muted)); }
+.dark .c-replies { border-left-color: hsl(var(--border)); }
+.dark .img-miss { border-color: hsl(var(--border)); color: hsl(var(--muted-foreground)); }
+.dark .tip-article img, .dark .article-content img { opacity: .95; }
+
+/* ---------- ⑫ 响应式兜底：窄屏把两栏收成一栏（www 用 lg:grid-cols-[230px_1fr] 达成） ---------- */
+@media (max-width: 1023.98px) {
+  aside.hidden.lg\:block { display: none !important; }
+}
+/* ===== [lqpix 2026-10-05] 精仿基线覆盖 ===== */
+/* 参照 www 的 html/body 基准（实测 computed）：16px / line-height 1.5 / color = hsl(var(--foreground))
+   = rgb(15,23,41) / font-family 以 system-ui 打头。
+   实例 style.css 里 `body{font:15px/1.85 -apple-system,…;color:var(--fg)}` 是**功能件的老基准**：
+   它把 root font-size 定成 15px，而 www 的 Tailwind 间距全是 rem ⇒ 所有 padding/gap/圆角
+   都被缩到 15/16，且字体栈缺 system-ui、正文色也停在 #1f2328 ⇒ 与参照对不上。
+   这里只覆盖 html/body 两条，不删不改 style.css 本体（回滚 = 删掉本段）。 */
+html { font-size: 16px; }
+body {
+  margin: 0;
+  display: block;
+  background: #fff;
+  color: hsl(var(--foreground));
+  min-height: 100vh;
+  font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif;
+}
+/* ===== [lqpix 2026-10-05] 令牌口径修复 ===== */
+/* www.css 的消费端是 hsl(var(--border)) / hsl(var(--card)) —— 需要**通道三元组**。
+   而 style.css 里 `:root{--border:var(--line);--card:var(--soft)}` 把它们改成了**完整颜色**
+   ⇒ hsl(#e6e6e2) 求值失败 ⇒ border-color 落回 initial 值 currentColor（近黑）
+   ⇒ 全站每个 `class="border"` 的卡片边框都会画成近黑（本批像素 diff 实测到的差异源）。
+   这里把三个令牌还原成 www.css 自己的值（本文件晚于 style.css 加载 ⇒ 同权重后者胜）。
+   回滚 = 删掉本段。 */
+:root {
+  --border: 220 12% 90%;
+  --input:  220 12% 90%;
+  --card:   0 0% 100%;
+}
+html.dark, .dark {
+  --border: 222 25% 20%;
+  --input:  222 25% 22%;
+  --card:   222 40% 10%;
+}
+
+/* ============================================================================
+   ⑬ 断点补齐（lqart 2026-10-06）
+   ----------------------------------------------------------------------------
+   实测：参照 `/herontool` 引的 `/assets/index-CIsVBZk.css`（40,479 B）里有
+     @media (min-width:1280px){ .xl\:grid-cols-4{grid-template-columns:repeat(4,minmax(0,1fr))} }
+   而本主题的 `lqwww/www.css`（= 另一构建产物 index-cAFfNupP.css 的逐字节副本，49,004 B）
+   **一个 `xl:` 前缀的类都没有** ⇒ 标记里的 `xl:grid-cols-4` 拿不到规则 ⇒
+   1440 视口下只命中 `lg:`（3 列）⇒ 工具墙每段行数变多、整页高度多出几千 px。
+   这里只补**参照有、我们缺**的那一档（原样照参照的声明），不改复制来的 www.css。
+   ========================================================================== */
+@media (min-width: 1280px) {
+  .xl\:grid-cols-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+
+/* ============================================================================
+   ⑭ 补齐「站内真在用、但任何 CSS（含参照 4 份构建）都没有规则」的工具类（lqart 2026-10-06）
+   ----------------------------------------------------------------------------
+   普查（归一化去变体后逐类比对产物 287 个文件）：
+     list-none   14 页（/download/<slug>）· pl-0  14 页 · pl-6  6 页 · list-decimal 5 页（/learn/<slug>）
+     hover:bg-destructive/10  1 页（/bookmark）· sm:justify-between  1 页（/herontool）
+   这 6 条在参照的 4 份 CSS 构建里**也都查不到规则** ⇒ 是我们模板用了、Tailwind 没生成的真缺口。
+   声明按 Tailwind 标准写法补，不改复制来的 www.css。
+   ========================================================================== */
+.list-none { list-style-type: none; }
+.list-decimal { list-style-type: decimal; }
+.pl-0 { padding-left: 0px; }
+.pl-6 { padding-left: 1.5rem; }
+.hover\:bg-destructive\/10:hover { background-color: hsl(var(--destructive) / 0.1); }
+@media (min-width: 640px) {
+  .sm\:justify-between { justify-content: space-between; }
+}
+
+/* ============================================================================
+   ⑮ 更正 ⑭：`.list-none` / `.pl-0` **确实加载了但没生效**，因为 style.css 里
+      `.tip-article ul { list-style-type: discard }`（实测 `list-style-type:disc`）与
+      `.tip-article ul, .tip-article ol { padding-left:1.5rem }` 的特异性 (0,1,1) 高于
+      `.list-none` / `.pl-0` 的 (0,1,0)。CDP `CSS.getMatchedStylesForNode` 实测匹配表：
+        ol,ul,menu                     list-style:none;margin:0;padding:0        (style.css)
+        .list-none                     list-style-type:none                      (lq-align.css)
+        .pl-0                          padding-left:0px                          (lq-align.css)
+        .tip-article ul,.tip-article ol padding-left:1.5rem                       (style.css)
+        .tip-article ul                list-style-type:disc   ← 压掉的那个        (style.css)
+      这里用更高特异性 (0,2,1) 压回；不改 style.css、不改 www.css。
+   ========================================================================== */
+.tip-article ul.list-none { list-style-type: none; padding-left: 0; }
+.tip-article ol.list-none { list-style-type: none; padding-left: 0; }
+.tip-article ul.pl-0 { padding-left: 0; }
+.tip-article ol.pl-0 { padding-left: 0; }
+.tip-article ol.list-decimal { list-style-type: decimal; }
+.tip-article ul.list-decimal { list-style-type: decimal; }
+
+/* ============================================================================
+   lqlearncolor —— /learn/<slug> 文章页 hero 的【专题色】（第1批 · 2026-10-07）
+   ----------------------------------------------------------------------------
+   为什么在这里：参照 liulanqi.com/learn/<slug> 的 hero 卡是逐篇不同的 inline
+     background:linear-gradient(120deg, #<专题色>14, hsl(var(--card)) 70%) + 徽标行 color:#<专题色>
+   实例这条色由共享 PHP（parts/lq-page.php 硬编码 #2563eb）给 ⇒ 本批不动共享文件，
+     改为在我们自己的层按页覆盖。inline 样式只有 author !important 压得住。
+   每页唯一钩子：header 语言切换里 a[aria-current="true"] 的 href = 本页 URL（全页恰 1 个，6 页逐页核过）。
+   色值逐字节取自参照件：chrome #2563eb · edge #0f766e · firefox #ea580c · opera #c026d3 · quark #7c3aed · yandex #dc2626
+   回滚：删掉本段（备份 /root/learnbk/lq-align.css.before）
+   ========================================================================== */
+body:has(a[aria-current="true"][href="/learn/chrome"]) .min-w-0.space-y-8 > .rounded-2xl.border.px-6.py-7 { background: linear-gradient(120deg, #2563eb14, hsl(var(--card)) 70%) !important; }
+body:has(a[aria-current="true"][href="/learn/chrome"]) .min-w-0.space-y-8 > .rounded-2xl.border.px-6.py-7 > div.flex.items-center.gap-2.text-xs { color: #2563eb !important; }
+body:has(a[aria-current="true"][href="/learn/edge"]) .min-w-0.space-y-8 > .rounded-2xl.border.px-6.py-7 { background: linear-gradient(120deg, #0f766e14, hsl(var(--card)) 70%) !important; }
+body:has(a[aria-current="true"][href="/learn/edge"]) .min-w-0.space-y-8 > .rounded-2xl.border.px-6.py-7 > div.flex.items-center.gap-2.text-xs { color: #0f766e !important; }
+body:has(a[aria-current="true"][href="/learn/firefox"]) .min-w-0.space-y-8 > .rounded-2xl.border.px-6.py-7 { background: linear-gradient(120deg, #ea580c14, hsl(var(--card)) 70%) !important; }
+body:has(a[aria-current="true"][href="/learn/firefox"]) .min-w-0.space-y-8 > .rounded-2xl.border.px-6.py-7 > div.flex.items-center.gap-2.text-xs { color: #ea580c !important; }
+body:has(a[aria-current="true"][href="/learn/opera"]) .min-w-0.space-y-8 > .rounded-2xl.border.px-6.py-7 { background: linear-gradient(120deg, #c026d314, hsl(var(--card)) 70%) !important; }
+body:has(a[aria-current="true"][href="/learn/opera"]) .min-w-0.space-y-8 > .rounded-2xl.border.px-6.py-7 > div.flex.items-center.gap-2.text-xs { color: #c026d3 !important; }
+body:has(a[aria-current="true"][href="/learn/quark"]) .min-w-0.space-y-8 > .rounded-2xl.border.px-6.py-7 { background: linear-gradient(120deg, #7c3aed14, hsl(var(--card)) 70%) !important; }
+body:has(a[aria-current="true"][href="/learn/quark"]) .min-w-0.space-y-8 > .rounded-2xl.border.px-6.py-7 > div.flex.items-center.gap-2.text-xs { color: #7c3aed !important; }
+body:has(a[aria-current="true"][href="/learn/yandex"]) .min-w-0.space-y-8 > .rounded-2xl.border.px-6.py-7 { background: linear-gradient(120deg, #dc262614, hsl(var(--card)) 70%) !important; }
+body:has(a[aria-current="true"][href="/learn/yandex"]) .min-w-0.space-y-8 > .rounded-2xl.border.px-6.py-7 > div.flex.items-center.gap-2.text-xs { color: #dc2626 !important; }
+
+
+/* lq-fix-bg-20261018 —— 修页面底部 32px 白边
+ * 现象：每页底部恒定一条 32px 白色横条（1440x1000 / 1440x800 两种视口都一样）。
+ * 成因：
+ *   ① body 的 background 被 lq-align.css 钉成 #fff（覆盖 www.css 的 hsl(var(--background)))，
+ *      于是深色模式下也露白底；
+ *   ② body 是 div#root 的父级，而 div.flex.min-h-screen 只有内容高度，
+ *      内容不满一屏时 body 比它高出的那一截就是白条（实测恒为 32px = body 与容器的差）。
+ * 处置：
+ *   - html 上放 background-color，让背景由根元素铺满（含那 32px）；
+ *   - body 的 background 改为 inherit，不再是硬编码 #fff；
+ *   - html,body 都 min-height:100%，保证短页也铺满。
+ *   注意：色值必须写 hsl(var(--background)) 而非 var(--background) ——
+ *         本站 --background 存的是 "0 0% 100%" 这种 HSL 三元组（2026-10-18 实测）。
+ */
+html {
+  background-color: hsl(var(--background));
+  min-height: 100%;
+}
+body {
+  background-color: inherit;
+  min-height: 100%;
+}
+
+
+/* lq-fix-btnfg-20261019 —— 修「按钮文字与底色同色」
+ * 现象：详情页（/download/browser/chrome 等）的「官方下载」按钮，文字渲染成靛蓝而不是白色，
+ *      与 bg-primary 底色撞在一起，看上去像一块纯色方块。
+ * 成因：`www.css` 有一条 `.tip-article a { color: hsl(var(--primary)) }`（把该区块内所有链接染成
+ *      primary 色，对 tips 正文是正确的）。它与 `.text-white` 同 specificity，但加载更晚 ⇒ 胜出。
+ *      于是**任何落在 .tip-article 里的带色按钮都会中招**，换 text-primary-foreground / text-white 都无效。
+ * 处置：不动那条规则（它对正文是对的），只把「按钮型链接」的文字色提回来 ——
+ *      选择器限定到 .tip-article 内、且带背景/边框 class 的 a（即卡片按钮、pill 按钮），
+ *      普通正文链接的 primary 着色完全不受影响。
+ */
+.tip-article a.bg-primary,
+.tip-article a[class*="bg-primary"],
+.tip-article a[class*="bg-muted/40"],
+.tip-article button.bg-primary,
+.tip-article a.border[class*="rounded"] {
+  color: hsl(var(--primary-foreground));
+}
+.tip-article a[class*="bg-primary"]:hover {
+  color: hsl(var(--primary-foreground));
+}
+
+
+/* lq-fix-linkfg-20261019 —— 承接上一条
+ * 现象：下载地址那几行（`flex items-center justify-between rounded-lg border bg-card`）的
+ *      「应用商店官方页」「访问官网打不开时走这里…」等说明文字是浅色，几乎看不清。
+ * 成因：同上 —— `.tip-article a` 把整个区块的链接文字染成 primary 色（说明文字在 a 里面）。
+ * 处置：把「行型链接」的文字色定回前景色变量；右侧那颗小标签（「官方 →」「镜像 →」）保持 primary。
+ */
+.tip-article a[class*="rounded-lg"][class*="border"]:not([class*="bg-primary"]) {
+  color: hsl(var(--foreground));
+}
+.tip-article a[class*="rounded-lg"][class*="border"] > span > span:first-child {
+  color: hsl(var(--foreground));
+}
+.tip-article a[class*="rounded-lg"][class*="border"] > span > span:last-child {
+  color: hsl(var(--muted-foreground, 215 20% 55%));
+}
+.tip-article a[class*="rounded-lg"][class*="border"] > span.text-primary {
+  color: hsl(var(--primary));
+}
+
+
+/* ══════════════════════════════════════════════════════════════════════════════
+ * yf-wap-footer-20261020 · 手机端 footer 精简
+ *
+ *   实测（390px 宽首页）：footer 占 1219px，是整页 6688px 的 18%。构成：
+ *     搜索条 175 + 四列网格 942 + 链接条 101 + 版权条 64
+ *   942 的来源是 `md:grid-cols-4` 在手机上堆成一列（品牌 76 + 导航列 308 + 工具箱列 308 + 更多 74）。
+ *
+ *   这里只压缩「形态」，一条链接都不删：
+ *     · 搜索条：副标题说明收掉，padding 收窄
+ *     · 四列 → 两列，品牌块跨满（导航列与工具箱列并排）
+ *     · 列内行高/字号略收
+ *     · 链接条与版权条 padding 收窄
+ *   ═══════════════════════════════════════════════════════════════════════════ */
+@media (max-width: 767px) {
+  footer > div.border-b > .container { padding-top: 12px; padding-bottom: 12px; gap: 10px; }
+  footer > div.border-b .mb-2 { margin-bottom: 4px; font-size: 13px; }
+  /* 「记录与同步，登录后可用」这类说明文字在手机上是纯占位，收掉；登录按钮保留 */
+  footer > div.border-b .container > .flex.items-center.gap-3 > span { display: none; }
+  footer > div.border-b .container > .flex.items-center.gap-3 > p { display: none; }
+
+  footer > .container.grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px 14px;
+    padding-top: 20px;
+    padding-bottom: 20px;
+  }
+  footer > .container.grid > div { min-width: 0; }
+  footer > .container.grid > div:first-child { grid-column: 1 / -1; }
+  footer > .container.grid > div:first-child p { margin-bottom: 2px; }
+
+  footer > .container.grid ul { gap: 1px; }
+  footer > .container.grid li,
+  footer > .container.grid li a { font-size: 13px; line-height: 1.45; }
+  footer > .container.grid .mb-2 { margin-bottom: 4px; }
+
+  footer > .border-t.py-4 { padding-top: 10px; padding-bottom: 10px; }
+  footer > .border-t.py-4 .flex { gap: 8px 12px; font-size: 12.5px; }
+}
+
+/* 更窄（≤380）时两列改一列半宽：避免「浏览器下载」这类短词被折行 */
+@media (max-width: 360px) {
+  footer > .container.grid { gap: 14px 10px; }
+  footer > .container.grid li, footer > .container.grid li a { font-size: 12.5px; }
+}
+
+/* ══ yf-wap-footer2-20261020 · 再压一轮（1219 → 目标 ~490）
+ *   上一轮四列改两列后仍有 736px。这一轮：
+ *     · 搜索框与登录按钮并成一行（原来上下两行，占 141px）
+ *     · 品牌简介收成 1 行
+ *     · 两个分类列各只留前 6 项（其余入口在汉堡菜单与底部链接条里都有）
+ *     · 底部链接条与版权条间距收窄
+ *   ══════════════════════════════════════════════════════════════════════════ */
+@media (max-width: 767px) {
+  footer > div.border-b > .container {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding-top: 10px;
+    padding-bottom: 10px;
+  }
+  footer > div.border-b > .container > .flex-1 { min-width: 0; flex: 1 1 auto; }
+  footer > div.border-b > .container > .flex.items-center.gap-3 { flex: 0 0 auto; }
+  footer > div.border-b .mb-2 { font-size: 12px; margin-bottom: 3px; }
+  footer > div.border-b .mb-2 + div,
+  footer > div.border-b form > div { padding-top: 6px; padding-bottom: 6px; }
+
+  /* 品牌简介只留一行 */
+  footer > .container.grid > div:first-child p {
+    display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical;
+    overflow: hidden; margin-bottom: 0;
+  }
+
+  /* 两个分类列各留前 6 项 */
+  footer > .container.grid > div:nth-child(2) ul > li:nth-child(n+7),
+  footer > .container.grid > div:nth-child(3) ul > li:nth-child(n+7) { display: none; }
+
+  footer > .border-t.py-4 .flex { row-gap: 6px; }
+}
+
+/* ══ yf-wap-footer3-20261020 · 「更多」列在手机上冗余
+ *   「更多」里只有「书签导航」「关于 浏览工坊」，而这两条在底部链接条里已经有了
+ *   （书签 / 关于）。手机端藏掉整列，省 68px，入口一个不少。 */
+@media (max-width: 767px) {
+  footer > .container.grid > div:nth-child(4) { display: none; }
+}
+
+/* ══ yf-wap-footer4-20261020 · 手机端藏掉最底部那条 tail
+ *   tail 里是「浏览工坊 · 浏览器工具与书签导航 · 内容本地优先 · © 2026 · 隐私政策 · 关于」，
+ *   而它的每一项在上面都已经有了：品牌名+简介（网格第一块）、© 2026（链接条下一行）、
+ *   隐私政策 / 关于（链接条里）。手机上纯重复，藏掉省 64px。
+ *   注意选择器要排除 `div.border-t.py-4`（那是底部链接条，不是 tail）。 */
+@media (max-width: 767px) {
+  /* tail 其实是 footer 的**兄弟**（body 直接子元素 div.py-4），不是 footer 内部 —— 
+     一开始写成 `footer > div.py-4` 完全没命中（高度一点没变，很容易误以为「规则无效」）。 */
+  /* ★ footer 与 tail 之间还隔着浮动「快速记录」那个 <button> ⇒ 相邻兄弟 `+` 不命中，
+     必须用通用兄弟 `~`。这一条是我第二次改错选择器：先写成 footer 的子元素、
+     再写成相邻兄弟，都没命中，表现都是「高度一点没变」。 */
+  /* ★ 第三次才改对：footer 在 `div` wrapper 里，而 tail 是 **body 的直接子元素**
+     ⇒ 两者根本不同父，`footer >` 和 `footer ~` 都不可能命中。
+     body 下带 .py-4 的只有这一条 tail（正文里的 py-4 卡片都是多层嵌套的）。 */
+  body > div.py-4 { display: none; }
+}
+
+/* ══ yf-pc-footer-20261020 · PC 端 footer 压缩
+ *   实测 1440 宽：总高 561px = 搜索条 123 + 四列网格 388 + 链接条 49（+ tail 64）。
+ *   网格那 388 里 padding 占 80（py-10），列表 11 项 × 20px 行高。
+ *   这一轮只收紧间距与行高，不动列数与内容：
+ *     · 网格 py-10(80) → 24+24，gap-8 → 6
+ *     · 列表字号 14/20 → 13.5/18（11 项省 22px）
+ *     · 搜索条与链接条 padding 同步收窄
+ *   ══════════════════════════════════════════════════════════════════════════ */
+@media (min-width: 768px) {
+  footer > div.border-b > .container { padding-top: 14px; padding-bottom: 14px; }
+  footer > div.border-b .mb-2 { margin-bottom: 5px; font-size: 13px; }
+
+  footer > .container.grid {
+    gap: 24px;
+    padding-top: 24px;
+    padding-bottom: 24px;
+  }
+  footer > .container.grid ul { gap: 2px; }
+  footer > .container.grid li,
+  footer > .container.grid li a { font-size: 13.5px; line-height: 1.35; }
+  footer > .container.grid .mb-2 { margin-bottom: 6px; }
+
+  footer > .border-t.py-4 { padding-top: 12px; padding-bottom: 12px; }
+}
+
+/* ══ yf-tail-pc-20261020 · PC 端 tail 收窄
+ *   tail（body 下最后一个 div.py-4）PC 上是 64px：py-4 上下 16×2 + 一行 32px。
+ *   PC 不藏（里面有版权年份，链接条里没有），只把 padding 收到 8px。 */
+@media (min-width: 768px) {
+  /* ★ 链接条里已有「(c) 2026 浏览工坊」与「隐私政策/关于」，tail 是同一批信息的第二份 ⇒ PC 也藏。 */
+  body > div.py-4 { display: none !important; }
+}
+
+/* ══ yf-drop-20261020 · 页头「浏览器」下拉面板必须有实体背景
+ *   症状：鼠标移到「浏览器」上，下拉是透明的，下面的帖子列表透上来，字完全看不清。
+ *   根因：模板写的是 `bg-popover`，但 www.css 里**没有这个类**（Tailwind 按需生成，
+ *         popover 这套色标没进配置）⇒ background 为空 ⇒ 只有 border 和 shadow。
+ *   这里用一定存在的 --background 兜底，并给暗色单独一档；同时把面板与页面的层级感做足。 */
+.lq-browse-panel {
+  min-width: 16rem;
+  background: hsl(var(--background, 0 0% 100%));
+  border-color: hsl(var(--border, 214 32% 91%));
+  box-shadow: 0 12px 32px rgba(15, 23, 42, .12), 0 2px 8px rgba(15, 23, 42, .06);
+  backdrop-filter: none;
+}
+html.dark .lq-browse-panel {
+  background: hsl(var(--card, 222 47% 11%));
+  border-color: hsl(var(--border, 217 33% 20%));
+  box-shadow: 0 12px 32px rgba(0, 0, 0, .5), 0 2px 8px rgba(0, 0, 0, .3);
+}
+/* 面板里的每一项也补一层 hover 底，透明背景下 hover 也不明显 */
+.lq-browse-panel a:hover { background: hsl(var(--accent, 210 40% 96%)); }
+html.dark .lq-browse-panel a:hover { background: hsl(var(--accent, 217 33% 17%)); }
+
+/* ══ yf-cardlink-20261021 · 富文本里的「块级卡片链接」
+ *   症状：/browsers 频道页「继续了解」三张卡的标题看不见（白字白底）。
+ *   根因：.tip-article a 给正文链接设了颜色，而这类 <a> 是**整张卡片**（bg-card 白底），
+ *        继承下来就成了白底白字。正文行内链接用 primary 是对的，卡片不该套这个色。
+ *   约束：只命中「带 bg-card 的 a」，正文里的普通链接完全不受影响。 */
+.tip-article a[class*="bg-card"] {
+  color: hsl(var(--foreground));
+  text-decoration: none;
+}
+.tip-article a[class*="bg-card"]:hover { opacity: 1; }
+/* 卡片里的小标题、描述各归各色 */
+.tip-article a[class*="bg-card"] .font-medium { color: hsl(var(--foreground)); }
+.tip-article a[class*="bg-card"] .text-muted-foreground { color: hsl(var(--muted-foreground)); }
+/* 卡片里的 CTA（「看看疾风 →」这类）保持主色 */
+.tip-article a[class*="bg-card"] .text-primary { color: hsl(var(--primary)); }

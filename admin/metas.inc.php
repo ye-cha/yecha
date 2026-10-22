@@ -80,13 +80,13 @@ function metas_editor_html(string $type, int $id = 0): string
         $v = $i18nVal[$code] ?? (($code === 'en') ? $d['name_en'] : '');
         $cells .= '<div><label class="pf">名称（' . e(Poly::label($code)) . '）</label><input name="name_i18n_' . $code . '" value="' . e((string)$v) . '" placeholder="留空：前台自动回落中文名"></div>';
     }
-    return '<div class="card"><h3>' . ($id > 0 ? '编辑' : '新增') . $typeName . '</h3>'
+    return '<div class="card"><h3>' . ($id > 0 ? '编辑' : '新建') . $typeName . '</h3>'
         . '<form method="post" action="/admin/?s=metas">' . Csrf::field()
         . '<input type="hidden" name="do" value="meta-save"><input type="hidden" name="id" value="' . $id . '">'
         . '<input type="hidden" name="type" value="' . $type . '">'
         . '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;max-width:640px;">' . $cells
         . '<div><label class="pf">slug（留空自动；标签自动用中文名）</label><input name="slug" value="' . e($d['slug']) . '"></div></div>'
-        . '<div style="margin-top:12px;"><button class="btn" type="submit">保存</button> <a class="btn ghost" href="' . $listUrl . '">返回列表</a></div></form>'
+        . '<div style="margin-top:12px;display:flex;justify-content:flex-end;gap:8px;"><a class="btn ghost" href="' . $listUrl . '">返回列表</a><button class="btn" type="submit">保存</button></div></form>'
         . ($id > 0
             ? '<form method="post" action="/admin/?s=metas" style="margin-top:10px;display:inline;" onsubmit="return confirm(\'删除该' . $typeName . '？将同时移除关联。\')">' . Csrf::field()
                 . '<input type="hidden" name="do" value="meta-delete"><input type="hidden" name="id" value="' . $id . '">'
@@ -101,10 +101,14 @@ function metas_list_html(): string
     $q = trim((string)($_GET['q'] ?? ''));
     $qWhere = $q !== '' ? " AND (name LIKE '%" . addcslashes($q, "%_'") . "%' OR slug LIKE '%" . addcslashes($q, "%_'") . "%')" : '';
     $qTagTotal = $q !== '' ? (int)Db::one("SELECT COUNT(*) FROM {$T}metas WHERE type='tag'{$qWhere}") : 0;
-    $cats = Db::rows("SELECT * FROM {$T}metas WHERE type='category' ORDER BY `order` ASC, id ASC");
-    $tags = Db::rows("SELECT * FROM {$T}metas WHERE type='tag'{$qWhere} ORDER BY `count` DESC, id ASC LIMIT 300");
+    [$sort, $dir] = adm_sort('id', ['id', 'name', 'count']);
+    $ord = $dir === 'asc' ? 'ASC' : 'DESC';
+    $col = $sort === 'name' ? 'name' : ($sort === 'count' ? '`count`' : 'id');
+    $cats = Db::rows("SELECT * FROM {$T}metas WHERE type='category' ORDER BY $col $ord, id DESC");
+    $tags = Db::rows("SELECT * FROM {$T}metas WHERE type='tag'{$qWhere} ORDER BY $col $ord, id DESC LIMIT 300");
     $totalTags = $q !== '' ? $qTagTotal : (int)Db::one("SELECT COUNT(*) FROM {$T}metas WHERE type='tag'");
-    $rowsOf = function (array $rows, string $type) {
+    $keep = ['s' => 'metas', 'q' => $q, 'sort' => $sort, 'dir' => $dir];
+    $rowsOf = function (array $rows, string $type, string $emptyTxt) {
         $langs = array_values(array_diff(Poly::enabled(), [Poly::defaultLang()]));
         $out = '';
         foreach ($rows as $m) {
@@ -114,20 +118,28 @@ function metas_list_html(): string
                 if ($ln !== '') { $subs[] = '<span style="margin-right:8px;"><b>' . e(Poly::label($code)) . '</b> · ' . e($ln) . '</span>'; }
             }
             $out .= '<tr><td>' . e($m['name']) . (count($subs) ? '<div style="color:#6f767e;font-size:12px;margin-top:2px;">' . implode('', $subs) . '</div>' : '') . '</td><td><code style="font-size:12px;color:#6f767e;">' . e((string)$m['slug']) . '</code></td>'
-                . '<td>' . (int)$m['count'] . '</td>'
-                . '<td><a class="btn ghost mini" href="/' . $type . '/' . rawurlencode((string)$m['slug']) . '/">前台</a> '
+                . '<td>' . number_format((int)$m['count']) . '</td>'
+                . '<td>' . e(substr((string)$m['created_at'], 0, 16)) . '</td>'
+                . '<td class="acts"><a class="btn ghost mini" href="/' . $type . '/' . rawurlencode((string)$m['slug']) . '/">前台</a> '
                 . '<a class="btn ghost mini" href="/admin/?s=metas&action=edit&id=' . (int)$m['id'] . '">编辑</a></td></tr>';
         }
+        if ($out === '') { $out = '<tr><td colspan="5" class="empty">' . $emptyTxt . '</td></tr>'; }
         return $out;
     };
-    $trimNote = $totalTags > 300 ? '<div class="stub" style="margin:8px 0;">共 ' . $totalTags . ' 个标签：仅显示前 300（按文章数），可用上方搜索精确查找。</div>' : '';
-    return '<div class="card"><h3>分类 <small>管理入口：新增 / 改名 / 删除</small></h3>'
-        . '<a class="btn" href="/admin/?s=metas&action=new&type=category">＋ 新增分类</a></div>'
-        . '<div class="card"><table><tr><th>名称</th><th>slug</th><th>文章数</th><th>操作</th></tr>' . $rowsOf($cats, 'category') . '</table></div>'
-        . '<div class="card"><h3>标签 <small>' . $totalTags . ' 个 · 中文名即 slug（可读 URL）</small></h3>'
-        . '<form method="get" action="/admin/" style="display:flex;gap:8px;margin-bottom:8px;"><input type="hidden" name="s" value="metas">'
+    $trimNote = $totalTags > 300 ? '<div class="stub" style="margin:8px 0;">共 ' . number_format($totalTags) . ' 个标签：按当前排序仅显示前 300，可用上方搜索精确查找。</div>' : '';
+    $head = '<tr>' . adm_th('名称', 'name', [$sort, $dir], $keep) . '<th>slug</th>'
+        . adm_th('文章数', 'count', [$sort, $dir], $keep)
+        . adm_th('创建时间', 'id', [$sort, $dir], $keep)
+        . '<th class="acts">操作</th></tr>';
+    return '<div class="card"><h3>分类 <small>最新创建在前 · 管理入口：新建 / 改名 / 删除 · 共 ' . number_format(count($cats)) . ' 个</small></h3>'
+        . '<div class="toolbar"><a class="btn" href="/admin/?s=metas&action=new&type=category">＋ 新建分类</a><span class="sp"></span>'
+        . '<span style="color:#6f767e;font-size:12.5px;">点表头可切换升 / 降序</span></div>'
+        . '<table>' . $head . $rowsOf($cats, 'category', '还没有分类，点「＋ 新建分类」创建。') . '</table></div>'
+        . '<div class="card"><h3>标签 <small>最新创建在前 · ' . number_format($totalTags) . ' 个 · 中文名即 slug（可读 URL）</small></h3>'
+        . '<div class="toolbar"><form method="get" action="/admin/" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;"><input type="hidden" name="s" value="metas">'
+        . '<input type="hidden" name="sort" value="' . e($sort) . '"><input type="hidden" name="dir" value="' . e($dir) . '">'
         . '<input name="q" value="' . e($q) . '" placeholder="搜索标签名/slug…" style="border:1px solid #e6e6e2;border-radius:6px;padding:5px 10px;min-width:180px;">'
-        . '<button class="btn ghost" type="submit">搜索</button>' . ($q !== '' ? ' <a class="btn ghost" href="/admin/?s=metas">清除</a>' : '') . '</form>' . $trimNote
-        . '<a class="btn" href="/admin/?s=metas&action=new&type=tag">＋ 新增标签</a></div>'
-        . '<div class="card"><table><tr><th>名称</th><th>slug</th><th>文章数</th><th>操作</th></tr>' . $rowsOf($tags, 'tag') . '</table></div>';
+        . '<button class="btn ghost" type="submit">搜索</button>' . ($q !== '' ? ' <a class="btn ghost" href="/admin/?s=metas">清除</a>' : '') . '</form>'
+        . '<span class="sp"></span><a class="btn" href="/admin/?s=metas&action=new&type=tag">＋ 新建标签</a></div>' . $trimNote
+        . '<table>' . $head . $rowsOf($tags, 'tag', $q !== '' ? '没有匹配的标签。' : '还没有标签。') . '</table></div>';
 }

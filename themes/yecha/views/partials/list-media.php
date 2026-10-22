@@ -13,24 +13,24 @@ $pfx = $lp === '' ? '/' : $lp . '/';
     if (preg_match('/!\[[^\]]*\]\(([^)\s]+)\)/', $src, $mi)) { $img = $mi[1]; }
     elseif (preg_match('/\]\(([^)\s]+\.(?:webp|png|jpe?g|gif|svg))\)/', $src, $mi)) { $img = $mi[1]; }
     $dt = strtotime((string)($p['published_at'] ?? $p['created_at']));
-    $u = $pfx . e((string)$p['slug']) . '.html';
+    $u = $pfx . (string)$p['slug'] . '.html';
 ?>
   <article class="media-row">
     <div class="media-th">
       <?php if ($img !== ''): ?>
-        <a href="<?= $u ?>"><img src="<?= e($img) ?>" alt="<?= e((string)$p['title']) ?>" loading="lazy"></a>
+        <a href="<?= e($u) ?>"><img src="<?= e($img) ?>" alt="<?= e((string)$p['title']) ?>" loading="lazy"></a>
       <?php else: ?>
-        <a class="noimg" href="<?= $u ?>"><?= e(__('ui.noimg')) ?></a>
+        <a class="noimg" href="<?= e($u) ?>"><?= e(__('ui.noimg')) ?></a>
       <?php endif; ?>
     </div>
     <div class="media-body">
-      <h3><a href="<?= $u ?>"><?= e($p['title']) ?></a></h3>
+      <h3><a href="<?= e($u) ?>"><?= e($p['title']) ?></a></h3>
       <p class="lead"><?= e(Str::excerpt(((string)($p['excerpt'] ?? '')) !== '' ? (string)$p['excerpt'] : $src, 120)) ?></p>
       <div class="post-meta">
         <span><?= e(date('Y-m-d', $dt)) ?></span>
         <span><?= e(__('meta.reads')) ?><?= Str::num((int)$p['views']) ?></span>
         <?php if ($cat !== '' && isset($p['cats'][0]['slug'])): ?><a class="cat" href="<?= e(Poly::termUrl('category', $p['cats'][0])) ?>"><?= e($cat) ?></a><?php endif; ?>
-        <a class="readmore" href="<?= $u ?>"><?= e(__('ui.read_more')) ?></a>
+        <a class="readmore" href="<?= e($u) ?>"><?= e(__('ui.read_more')) ?></a>
       </div>
     </div>
   </article>

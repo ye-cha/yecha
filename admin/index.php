@@ -196,7 +196,7 @@ if ($authed && $isAdmin && ($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
             Auth::setPassword(Auth::id(), $new);
             Cache::flush('pages');
             Cache::flush('blocks');
-            $_SESSION['flash'] = '密码已更新，下次登录请使用新密码';
+            $_SESSION['flash'] = '密码已保存，下次登录请使用新密码';
         }
         header('Location: /admin/?s=settings');
         exit;
@@ -680,6 +680,15 @@ function adm_render(string $title, string $section, string $content): void
         . '.err{color:#9c3f1b;background:#fdf0ec;border:1px solid #efc8ba;border-radius:6px;padding:8px 12px;font-size:13px;margin-bottom:14px}'
         . '.ok{color:#2e6b34;background:#eef4ee;border:1px solid #cfe2d0;border-radius:6px;padding:8px 12px;font-size:13px;margin-bottom:14px}'
         . '.stub{color:#6f767e;background:#fbfbf8;border:1px dashed #e0e0d8;border-radius:6px;padding:14px 16px;font-size:13.5px}'
+        . 'nav.crumb{color:#6f767e;font-size:12.5px;margin:0 0 10px} nav.crumb a{color:#6f767e} nav.crumb a:hover{color:#b3541e} nav.crumb b{color:#3d4147;font-weight:600}'
+        . 'th.sortth a{color:#6f767e;text-decoration:none} th.sortth a:hover{color:#b3541e} th.sortth a.on{color:#b3541e;font-weight:600}'
+        . 'th.acts,td.acts{text-align:right;white-space:nowrap}'
+        . '.pager{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:12px 0 2px;font-size:13px;color:#3d4147}'
+        . '.pager a{color:#b3541e} .pager .dis{color:#c0c0b8} .pager .pt{color:#6f767e}'
+        . '.per{display:inline-flex;align-items:center;gap:6px;color:#6f767e;font-size:12.5px;margin:0}'
+        . '.per select{border:1px solid #dfe2e7;border-radius:5px;padding:1px 4px;font:inherit}'
+        . '.toolbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px} .toolbar .sp{flex:1}'
+        . '.empty td{color:#9a9a90;text-align:center;padding:18px}'
         . '@media(max-width:860px){.wrap{grid-template-columns:1fr}.stats{grid-template-columns:repeat(2,1fr)}}'
         . 'header .logo{display:inline-flex;align-items:center;gap:8px;color:inherit;text-decoration:none}'
         . 'header .logo img{height:34px;width:34px;object-fit:contain;border-radius:50%}'
@@ -689,7 +698,8 @@ function adm_render(string $title, string $section, string $content): void
         . '<a class="c" href="/">查看站点 ↗</a><span class="spacer"></span>'
         . '<span style="color:#6f767e;font-size:13px;">博主：' . $name . '</span>'
         . '<a class="c" href="/admin/?action=logout">退出</a></header>'
-        . '<div class="wrap">' . (!empty($GLOBALS['YC_ADMIN_FOCUS']) ? '' : '<aside><ul>' . $navHtml . '</ul></aside>') . '<main>' . $content . '</main></div>'
+        . '<div class="wrap">' . (!empty($GLOBALS['YC_ADMIN_FOCUS']) ? '' : '<aside><ul>' . $navHtml . '</ul></aside>') . '<main>'
+        . '<nav class="crumb"><a href="/admin/">后台</a> / <b>' . e($title) . '</b></nav>' . $content . '</main></div>'
         . '</body></html>';
 }
 
@@ -725,6 +735,62 @@ $stub = function (string $feature) use ($MODULES, $sec): string {
         . '<div class="stub">' . e($feature) . '：该地址无对应页面（可能模块已停用或地址有误）。当前可用：' . e(implode(' / ', $avail)) . '。</div></div>';
 };
 
+/* ---------- 列表通用：排序 / 分页 / 每页条数 / 空态 ---------- */
+
+/** 读取并校验排序参数：$allowed 为允许的列键；返回 [键, 'asc'|'desc'] */
+function adm_sort(string $defaultKey, array $allowed, string $defaultDir = 'desc'): array
+{
+    $k = (string)($_GET['sort'] ?? $defaultKey);
+    if (!in_array($k, $allowed, true)) { $k = $defaultKey; }
+    $d = strtolower((string)($_GET['dir'] ?? $defaultDir)) === 'asc' ? 'asc' : 'desc';
+    return [$k, $d];
+}
+
+/** 每页条数：仅允许 20 / 50，默认 20 */
+function adm_per(): int
+{
+    return ((int)($_GET['per'] ?? 20) === 50) ? 50 : 20;
+}
+
+/** 排序表头（箭头 + aria-sort）；点同列在升降序间切换 */
+function adm_th(string $label, string $key, array $sort, array $keep, string $cls = ''): string
+{
+    [$cur, $dir] = $sort;
+    $next = ($cur === $key && $dir === 'desc') ? 'asc' : 'desc';
+    $arrow = $cur === $key ? ($dir === 'desc' ? ' ↓' : ' ↑') : ' ↕';
+    $url = '/admin/?' . http_build_query(array_merge($keep, ['sort' => $key, 'dir' => $next]));
+    $aria = $cur === $key ? ($dir === 'desc' ? 'descending' : 'ascending') : 'none';
+    return '<th class="sortth' . ($cls !== '' ? ' ' . $cls : '') . '" aria-sort="' . $aria . '"><a href="' . e($url) . '"'
+        . ($cur === $key ? ' class="on"' : '') . ' title="点击切换升序 / 降序">' . e($label) . $arrow . '</a></th>';
+}
+
+/** 分页条：上一页 / 下一页（首末页禁用态）+ 第 X / Y 页 + 共 N 条；保留筛选与排序 */
+function adm_pager(int $page, int $pages, int $total, array $keep, string $unit = '条'): string
+{
+    $mk = static fn(int $p): string => '/admin/?' . http_build_query(array_merge($keep, ['page' => $p]));
+    $h = '<div class="pager">';
+    $h .= $page > 1 ? '<a href="' . e($mk($page - 1)) . '" rel="prev">← 上一页</a>' : '<span class="dis" aria-disabled="true">← 上一页</span>';
+    $h .= '<span>第 ' . $page . ' / ' . $pages . ' 页</span>';
+    $h .= $page < $pages ? '<a href="' . e($mk($page + 1)) . '" rel="next">下一页 →</a>' : '<span class="dis" aria-disabled="true">下一页 →</span>';
+    $h .= '<span class="pt">共 ' . number_format($total) . ' ' . $unit . '</span></div>';
+    return $h;
+}
+
+/** 每页条数选择器（GET 表单，保留其余条件；选择即提交） */
+function adm_per_select(array $keep, int $per): string
+{
+    $h = '<form method="get" action="/admin/" class="per">';
+    foreach ($keep as $k => $v) {
+        if ($k === 'per' || $k === 'page') { continue; }
+        $h .= '<input type="hidden" name="' . e((string)$k) . '" value="' . e((string)$v) . '">';
+    }
+    $h .= '<label>每页 <select name="per" onchange="this.form.submit()">';
+    foreach ([20, 50] as $n) {
+        $h .= '<option value="' . $n . '"' . ($n === $per ? ' selected' : '') . '>' . $n . '</option>';
+    }
+    return $h . '</select> 条</label></form>';
+}
+
 switch ($sec) {
     case 'dashboard':
         $publish = (int)Db::one("SELECT COUNT(*) FROM {$T}contents WHERE type='post' AND status='publish' AND deleted_at IS NULL");
@@ -735,17 +801,35 @@ switch ($sec) {
         $views = (int)Db::one("SELECT COALESCE(SUM(views),0) FROM {$T}contents");
         $top = Db::rows("SELECT title, slug, views FROM {$T}contents WHERE type='post' AND status='publish' ORDER BY views DESC LIMIT 5");
         $recent = Db::rows("SELECT c.title, co.author_name, co.body, co.status, co.kind, co.created_at FROM {$T}comments co LEFT JOIN {$T}contents c ON c.id=co.content_id ORDER BY co.id DESC LIMIT 6");
+        $latestPosts = Db::rows("SELECT id, title, slug, status, published_at, created_at FROM {$T}contents WHERE type='post' AND deleted_at IS NULL ORDER BY id DESC LIMIT 5");
+        $latestUsers = Db::rows("SELECT id, username, display_name, created_at FROM {$T}users ORDER BY id DESC LIMIT 5");
         $smap = ['approved' => '已通过', 'pending' => '待审', 'spam' => '垃圾', 'trash' => '已删'];
         $rows = '';
         foreach ($top as $r) {
             $rows .= '<tr><td><a style="color:#b3541e" href="/' . e((string)$r['slug']) . '.html">' . e($r['title']) . '</a></td><td>' . number_format((int)$r['views']) . '</td></tr>';
         }
+        if ($rows === '') { $rows = '<tr><td colspan="2" class="empty">暂无已发布文章</td></tr>'; }
         $recentHtml = '';
         foreach ($recent as $r) {
             $recentHtml .= '<tr><td>' . e(mb_substr((string)$r['body'], 0, 44))
                 . ($r['kind'] === 'segment' ? ' <span style="color:#b3541e;font-size:11.5px;">段评</span>' : '')
                 . '</td><td>' . e((string)$r['author_name']) . '</td><td>' . e($smap[$r['status']] ?? $r['status']) . '</td><td>' . e(substr((string)$r['created_at'], 0, 16)) . '</td></tr>';
         }
+        if ($recentHtml === '') { $recentHtml = '<tr><td colspan="4" class="empty">还没有评论</td></tr>'; }
+        $postSt = ['publish' => '已发布', 'draft' => '草稿', 'scheduled' => '定时', 'hidden' => '已下线'];
+        $lp = '';
+        foreach ($latestPosts as $r) {
+            $lp .= '<tr><td><a style="color:#b3541e" href="/admin/?s=posts&action=edit&id=' . (int)$r['id'] . '">' . e($r['title']) . '</a></td>'
+                . '<td>' . e($postSt[$r['status']] ?? $r['status']) . '</td>'
+                . '<td>' . e(substr((string)($r['published_at'] ?? $r['created_at']), 0, 16)) . '</td></tr>';
+        }
+        if ($lp === '') { $lp = '<tr><td colspan="3" class="empty">还没有文章</td></tr>'; }
+        $lu = '';
+        foreach ($latestUsers as $r) {
+            $lu .= '<tr><td>' . e($r['username']) . '</td><td>' . e((string)$r['display_name']) . '</td>'
+                . '<td>' . e(substr((string)$r['created_at'], 0, 16)) . '</td></tr>';
+        }
+        if ($lu === '') { $lu = '<tr><td colspan="3" class="empty">还没有注册用户</td></tr>'; }
         // 在线升级提示：仪表盘醒目提示（同类后台的通用做法）；remoteStatus 已短缓存，不影响仪表盘速度
         $upgB = '';
         if (class_exists('Upgrade')) {
@@ -761,13 +845,20 @@ switch ($sec) {
                     . '<a class="btn ghost" href="/admin/?s=upgrade">进入系统升级</a></div>';
             }
         }
-        $out = '<div class="stats">'
-            . '<div class="stat"><b>' . $publish . '</b><span>文章（草稿 ' . $drafts . '）</span></div>'
-            . '<div class="stat"><b>' . $pages . '</b><span>页面</span></div>'
-            . '<div class="stat"><b>' . $comments . '</b><span>评论（待审 ' . $pending . '）</span></div>'
+        $out = $upgB . '<div class="stats">'
+            . '<div class="stat"><b>' . number_format($publish) . '</b><span>文章（草稿 ' . number_format($drafts) . '）</span></div>'
+            . '<div class="stat"><b>' . number_format($pages) . '</b><span>页面</span></div>'
+            . '<div class="stat"><b>' . number_format($comments) . '</b><span>评论（待审 ' . number_format($pending) . '）</span></div>'
             . '<div class="stat"><b>' . number_format($views) . '</b><span>总阅读（日去重口径）</span></div></div>'
-            . '<div class="card"><h3>阅读排行 <small>同一访客自然日去重计 1 次 · 多语共用</small></h3><table><tr><th>文章</th><th>阅读</th></tr>' . $rows . '</table></div>'
-            . '<div class="card"><h3>最近评论 / 段评</h3><table><tr><th>内容</th><th>作者</th><th>状态</th><th>时间</th></tr>' . $recentHtml . '</table></div>'
+            . '<p class="hint" style="margin:-4px 0 12px;">统计口径：实时计数 · 截至 ' . e(date('Y-m-d H:i')) . '（' . e(date_default_timezone_get()) . '）</p>'
+            . '<div class="card"><h3>最新文章 <small>最新在前 · 点标题直接编辑</small></h3>'
+            . '<table><tr><th>标题</th><th>状态</th><th>发布时间</th></tr>' . $lp . '</table></div>'
+            . '<div class="card"><h3>最近评论 / 段评 <small>最新在前</small></h3>'
+            . '<table><tr><th>内容</th><th>作者</th><th>状态</th><th>时间</th></tr>' . $recentHtml . '</table></div>'
+            . '<div class="card"><h3>最新注册用户 <small>最新在前</small></h3>'
+            . '<table><tr><th>账号</th><th>昵称</th><th>注册时间</th></tr>' . $lu . '</table></div>'
+            . '<div class="card"><h3>阅读排行 <small>同一访客自然日去重计 1 次 · 多语共用</small></h3>'
+            . '<table><tr><th>文章</th><th>阅读</th></tr>' . $rows . '</table></div>'
             . '<div class="card"><h3>系统状态与维护</h3><p style="margin:0 0 10px;color:#565b61;">PHP ' . PHP_VERSION . ' · 缓存：文件驱动（var/cache）· 统计代码位 / 多语 / AI 配置见「设置」</p>'
             . '<form class="inline" method="post" action="/admin/?s=dashboard"><input type="hidden" name="do" value="flush-cache">' . Csrf::field()
             . '<button class="btn ghost" type="submit">清空页面缓存</button></form></div>';
@@ -791,23 +882,55 @@ switch ($sec) {
     }
 
     case 'comments': {
-        $rows = Db::rows("SELECT co.*, c.title FROM {$T}comments co LEFT JOIN {$T}contents c ON c.id=co.content_id ORDER BY co.id DESC LIMIT 100");
-        $smap = ['approved' => '已通过', 'pending' => '待审', 'spam' => '垃圾', 'trash' => '已删'];
+        $per = adm_per();
+        [$sort, $dir] = adm_sort('id', ['id', 'created']);
+        $cstReq = (string)($_GET['cst'] ?? '');
+        $cst = in_array($cstReq, ['approved', 'pending', 'spam', 'trash'], true) ? $cstReq : '';
+        $page = max(1, (int)($_GET['page'] ?? 1));
+        $where = $cst !== '' ? ' WHERE co.status=?' : '';
+        $params = $cst !== '' ? [$cst] : [];
+        $total = (int)Db::one("SELECT COUNT(*) FROM {$T}comments co" . $where, $params);
+        $pages = max(1, (int)ceil($total / $per));
+        if ($page > $pages) { $page = $pages; }
+        $offset = ($page - 1) * $per;
+        $ord = $dir === 'asc' ? 'ASC' : 'DESC';
+        $ordCol = $sort === 'created' ? 'co.created_at' : 'co.id';
+        $rows = Db::rows("SELECT co.*, c.title FROM {$T}comments co LEFT JOIN {$T}contents c ON c.id=co.content_id" . $where . " ORDER BY $ordCol $ord, co.id DESC LIMIT $per OFFSET $offset", $params);
+        $smap = ['approved' => '已通过', 'pending' => '待审', 'spam' => '垃圾', 'trash' => '回收站'];
         $list = '';
         foreach ($rows as $r) {
             $acts = '';
-            foreach ([['approved', '通过'], ['spam', '垃圾'], ['trash', '删除']] as $a) {
-                $acts .= '<form class="inline" method="post" action="/admin/?s=comments">' . Csrf::field()
+            foreach ([['approved', '通过'], ['spam', '垃圾'], ['trash', '移入回收站']] as $a) {
+                $confirm = $a[0] === 'trash' ? ' onsubmit="return confirm(\'删除这条评论？（移入回收站，可在状态筛选中找回）\')"' : '';
+                $acts .= '<form class="inline" method="post" action="/admin/?s=comments"' . $confirm . '>' . Csrf::field()
                     . '<input type="hidden" name="do" value="comment-status"><input type="hidden" name="cid" value="' . (int)$r['id'] . '">'
-                    . '<input type="hidden" name="st" value="' . $a[0] . '"><button class="btn ghost mini" type="submit">' . $a[1] . '</button></form>';
+                    . '<input type="hidden" name="st" value="' . $a[0] . '"><button class="btn ghost mini' . ($a[0] === 'trash' ? ' danger' : '') . '" type="submit">' . $a[1] . '</button></form>';
             }
             $list .= '<tr><td>' . e(mb_substr((string)$r['body'], 0, 60))
                 . ($r['kind'] === 'segment' ? '<br><span style="color:#b3541e;font-size:11.5px;">段评 · 锚点 ' . e((string)$r['anchor_ref']) . '</span>' : '')
                 . '</td><td>' . e((string)$r['author_name']) . '</td><td>' . e((string)($r['title'] ?? '')) . '</td>'
-                . '<td>' . e($smap[$r['status']] ?? $r['status']) . '</td><td>' . $acts . '</td></tr>';
+                . '<td>' . e($smap[$r['status']] ?? $r['status']) . '</td><td>' . e(substr((string)$r['created_at'], 0, 16)) . '</td>'
+                . '<td class="acts">' . $acts . '</td></tr>';
         }
-        $out = '<div class="card"><h3>评论与段评 <small>先审后发 · 段评并入审核</small></h3>'
-            . '<table><tr><th>内容</th><th>作者</th><th>文章</th><th>状态</th><th>操作</th></tr>' . $list . '</table></div>';
+        if ($list === '') {
+            $list = '<tr><td colspan="6" class="empty">' . ($cst !== '' ? '当前状态下没有评论。' : '还没有评论。') . '</td></tr>';
+        }
+        $keep = ['s' => 'comments', 'cst' => $cst, 'sort' => $sort, 'dir' => $dir, 'per' => $per];
+        $selC = static fn(string $v): string => $v === $cst ? ' selected' : '';
+        $out = '<div class="card"><h3>评论与段评 <small>先审后发 · 段评并入审核 · 共 ' . number_format($total) . ' 条</small></h3>'
+            . '<div class="toolbar"><form method="get" action="/admin/" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">'
+            . '<input type="hidden" name="s" value="comments"><input type="hidden" name="sort" value="' . e($sort) . '"><input type="hidden" name="dir" value="' . e($dir) . '">'
+            . '<select name="cst" style="border:1px solid #e6e6e2;border-radius:6px;padding:5px 8px;" onchange="this.form.submit()">'
+            . '<option value="">全部状态</option><option value="pending"' . $selC('pending') . '>待审</option>'
+            . '<option value="approved"' . $selC('approved') . '>已通过</option><option value="spam"' . $selC('spam') . '>垃圾</option>'
+            . '<option value="trash"' . $selC('trash') . '>回收站</option></select></form>'
+            . '<span class="sp"></span>' . adm_per_select($keep, $per) . '</div>'
+            . '<table><tr>'
+            . adm_th('内容', 'id', [$sort, $dir], $keep)
+            . '<th>作者</th><th>文章</th><th>状态</th>'
+            . adm_th('时间', 'created', [$sort, $dir], $keep)
+            . '<th class="acts">操作</th></tr>' . $list . '</table>'
+            . adm_pager($page, $pages, $total, $keep) . '</div>';
         break;
     }
 
@@ -825,7 +948,17 @@ switch ($sec) {
 
     case 'users': {
         $me = Auth::id();
-        $rows = Db::rows("SELECT * FROM {$T}users ORDER BY id ASC LIMIT 200");
+        $per = adm_per();
+        [$sort, $dir] = adm_sort('id', ['id', 'name']);
+        $page = max(1, (int)($_GET['page'] ?? 1));
+        $total = (int)Db::one("SELECT COUNT(*) FROM {$T}users");
+        $pages = max(1, (int)ceil($total / $per));
+        if ($page > $pages) { $page = $pages; }
+        $offset = ($page - 1) * $per;
+        $col = $sort === 'name' ? 'username' : 'id';
+        $ord = $dir === 'asc' ? 'ASC' : 'DESC';
+        $rows = Db::rows("SELECT * FROM {$T}users ORDER BY $col $ord, id DESC LIMIT $per OFFSET $offset");
+        $keep = ['s' => 'users', 'sort' => $sort, 'dir' => $dir, 'per' => $per];
         $ul = '';
         foreach ($rows as $u) {
             $uid = (int)$u['id'];
@@ -839,7 +972,7 @@ switch ($sec) {
                     . '<input type="hidden" name="do" value="user-status"><input type="hidden" name="uid" value="' . $uid . '">'
                     . '<input type="hidden" name="status" value="' . ($disable ? 'disabled' : 'normal') . '">'
                     . '<button class="btn ghost mini" type="submit">' . ($disable ? '禁用' : '恢复') . '</button></form> '
-                    . '<form class="inline" method="post" action="/admin/?s=users">' . Csrf::field()
+                    . '<form class="inline" method="post" action="/admin/?s=users"' . ($u['role'] === 'admin' ? ' onsubmit="return confirm(\'将该管理员降为普通注册用户？\')"' : '') . '>' . Csrf::field()
                     . '<input type="hidden" name="do" value="user-role"><input type="hidden" name="uid" value="' . $uid . '">'
                     . '<input type="hidden" name="role" value="' . ($u['role'] === 'admin' ? 'subscriber' : 'admin') . '">'
                     . '<button class="btn ghost mini" type="submit">' . ($u['role'] === 'admin' ? '降为注册' : '设为管理员') . '</button></form>';
@@ -849,10 +982,17 @@ switch ($sec) {
             $ul .= '<tr><td>' . e($u['username']) . '</td><td>' . e((string)$u['display_name']) . '</td><td>' . e((string)$u['email'])
                 . '</td><td>' . ($u['role'] === 'admin' ? '管理员' : '注册用户') . '</td>'
                 . '<td style="color:' . $stCol . ';">' . $statusTxt . '</td>'
-                . '<td>' . e(substr((string)$u['created_at'], 0, 10)) . '</td><td>' . $acts . '</td></tr>';
+                . '<td>' . e(substr((string)$u['created_at'], 0, 16)) . '</td><td class="acts">' . $acts . '</td></tr>';
         }
-        $out = '<div class="card"><h3>用户 <small>禁用/恢复与角色调整即时生效（不可操作当前账号自身）</small></h3>'
-            . '<table><tr><th>账号</th><th>昵称</th><th>邮箱</th><th>角色</th><th>状态</th><th>注册时间</th><th>操作</th></tr>' . $ul . '</table></div>';
+        if ($ul === '') { $ul = '<tr><td colspan="7" class="empty">还没有注册用户。</td></tr>'; }
+        $out = '<div class="card"><h3>用户 <small>最新注册在前 · 禁用/恢复与角色调整即时生效（不可操作当前账号自身）</small></h3>'
+            . '<div class="toolbar"><span style="color:#6f767e;font-size:12.5px;">共 ' . number_format($total) . ' 位用户</span>'
+            . '<span class="sp"></span>' . adm_per_select($keep, $per) . '</div>'
+            . '<table><tr>' . adm_th('账号', 'name', [$sort, $dir], $keep)
+            . '<th>昵称</th><th>邮箱</th><th>角色</th><th>状态</th>'
+            . adm_th('注册时间', 'id', [$sort, $dir], $keep)
+            . '<th class="acts">操作</th></tr>' . $ul . '</table>'
+            . adm_pager($page, $pages, $total, $keep, '位') . '</div>';
         break;
     }
 
@@ -1027,7 +1167,7 @@ switch ($sec) {
             . '<div><label class="pf">旧密码</label><input type="password" name="old_password" required autocomplete="current-password"></div>'
             . '<div><label class="pf">新密码（≥6 位）</label><input type="password" name="new_password" required minlength="6" autocomplete="new-password"></div>'
             . '<div><label class="pf">确认新密码</label><input type="password" name="confirm_password" required minlength="6"></div></div>'
-            . '<div style="margin-top:12px;"><button class="btn" type="submit">更新密码</button></div></form></div>';
+            . '<div style="margin-top:12px;"><button class="btn" type="submit">保存新密码</button></div></form></div>';
         // 各语言博主简介输入（多语插件启用时侧栏按语言展示；留空回落默认语言）
         $defLang = Poly::defaultLang();
         $bioRows = '';
@@ -1122,30 +1262,44 @@ switch ($sec) {
         foreach ($rowsDb as $rel => $a) {
             $all[$rel] = $all[$rel] ?? ['size' => (int)($a['size'] ?? 0), 'mtime' => strtotime((string)$a['created_at']) ?: time()];
         }
-        uksort($all, fn($a2, $b2) => ($all[$b2]['mtime'] ?? 0) <=> ($all[$a2]['mtime'] ?? 0));
+        [$asort, $adir] = adm_sort('mtime', ['mtime', 'size', 'name']);
+        $amul = $adir === 'asc' ? 1 : -1;
+        if ($asort === 'name') {
+            uksort($all, static fn($a2, $b2) => $amul * strcasecmp((string)$a2, (string)$b2));
+        } else {
+            uksort($all, static fn($a2, $b2) => $amul * (($all[$a2][$asort] ?? 0) <=> ($all[$b2][$asort] ?? 0)));
+        }
         $csrfA = Csrf::field();
         $count = count($all);
+        $per = adm_per();
+        $page = max(1, (int)($_GET['page'] ?? 1));
+        $pages = max(1, (int)ceil($count / $per));
+        if ($page > $pages) { $page = $pages; }
+        $slice = array_slice($all, ($page - 1) * $per, $per, true);
+        $keep = ['s' => 'attachments', 'sort' => $asort, 'dir' => $adir, 'per' => $per];
         $rows = '';
-        $shown = 0;
-        foreach ($all as $rel => $info) {
-            if (++$shown > 600) { continue; }
+        foreach ($slice as $rel => $info) {
             $db = $rowsDb[$rel] ?? null;
             $isImg = preg_match('/\.(jpe?g|png|gif|webp|svg)$/i', $rel);
-            $thumb = $isImg ? '<img src="/uploads/' . e($rel) . '" alt="" style="width:52px;height:38px;object-fit:cover;border-radius:6px;background:#f0efe9;">' : '<span style="color:#9a9a90;">📄</span>';
+            $thumb = $isImg ? '<img src="/uploads/' . e($rel) . '" alt="" loading="lazy" style="width:52px;height:38px;object-fit:cover;border-radius:6px;background:#f0efe9;">' : '<span style="color:#9a9a90;">📄</span>';
             $rows .= '<tr><td style="display:flex;align-items:center;gap:10px;">' . $thumb . '<span><a href="/uploads/' . e($rel) . '" target="_blank" rel="noopener">' . e(basename($rel)) . '</a>'
                 . '<div style="color:#9a9a90;font-size:11.5px;">/' . e($rel) . '</div></span></td>'
                 . '<td>' . number_format((int)$info['size']) . ' B</td>'
-                . '<td>' . e(date('Y-m-d', (int)($info['mtime'] ?? time()))) . '</td>'
+                . '<td>' . e(date('Y-m-d H:i', (int)($info['mtime'] ?? time()))) . '</td>'
                 . '<td>' . ($db !== null ? '<span style="color:#2e6b34;">已登记</span>' : '<span style="color:#9a9a90;">扫描</span>') . '</td>'
-                . '<td><form method="post" action="/admin/?s=attachments" onsubmit="return confirm(\'删除该附件文件？文中引用将失效。\')" style="display:inline;">' . $csrfA
+                . '<td class="acts"><form method="post" action="/admin/?s=attachments" onsubmit="return confirm(\'删除该附件文件？文中引用将失效。\')" style="display:inline;">' . $csrfA
                 . '<input type="hidden" name="do" value="attach-del"><input type="hidden" name="path" value="' . e($rel) . '">'
                 . '<button class="btn ghost mini danger">删除</button></form></td></tr>';
         }
-        $out = '<div class="card"><h3>附件管理 <small>统一上传记录 + uploads 目录扫描（' . $count . ' 个文件 / ' . number_format($totalBytes) . ' B）· 正文引用的图片删文件后前台会断图，请谨慎</small></h3>'
-            . '<p style="color:#6f767e;font-size:13px;margin:0 0 6px;">仅列出前 600 个（按修改时间倒序）。「已登记」= 在 ye_attachments 有记录；「扫描」= uploads 里存在但未登记（如导入图）。</p>'
-            . '<table><tr><th>文件</th><th>大小</th><th>日期</th><th>来源</th><th>操作</th></tr>'
-            . ($rows !== '' ? $rows : '<tr><td colspan="5" class="hint">uploads 为空。</td></tr>')
-            . '</table></div>';
+        if ($rows === '') { $rows = '<tr><td colspan="5" class="empty">uploads 为空。</td></tr>'; }
+        $out = '<div class="card"><h3>附件管理 <small>统一上传记录 + uploads 目录扫描（' . number_format($count) . ' 个文件 / ' . number_format($totalBytes) . ' B）· 正文引用的图片删文件后前台会断图，请谨慎</small></h3>'
+            . '<div class="toolbar"><span style="color:#6f767e;font-size:12.5px;">按修改时间倒序（最新上传在前）；「已登记」= 在 ye_attachments 有记录；「扫描」= uploads 里存在但未登记（如导入图）。</span>'
+            . '<span class="sp"></span>' . adm_per_select($keep, $per) . '</div>'
+            . '<table><tr><th>文件</th>'
+            . adm_th('大小', 'size', [$asort, $adir], $keep)
+            . adm_th('修改时间', 'mtime', [$asort, $adir], $keep)
+            . '<th>来源</th><th class="acts">操作</th></tr>' . $rows . '</table>'
+            . adm_pager($page, $pages, $count, $keep, '个') . '</div>';
         break;
     case 'themes': {
         $cur = (string)get_option('theme.default', 'yecha');
@@ -1312,7 +1466,7 @@ switch ($sec) {
                 . '<td style="white-space:nowrap;">' . $act . $enter . '</td></tr>';
         }
         $out = '<div class="card"><h3>插件 <small>内置能力包注册表 · 停用只隐藏功能入口，数据保留</small></h3>'
-            . '<p style="color:#6f767e;font-size:13px;margin:0 0 8px;">记事本、评论防骚扰、统计代码位等都以「能力包」登记在 <code>core/Plugins.php</code> 并在此统一管理；多语言、备份还原同理。第三方目录插件与钩子体系见《插件与扩展-架构说明.md》。</p>'
+            . '<p style="color:#6f767e;font-size:13px;margin:0 0 8px;">记事本、评论防骚扰、统计代码位等都以「能力包」登记在 <code>core/Plugins.php</code> 并在此统一管理；多语言、备份还原同理。第三方目录插件与钩子体系见《插件与扩展-架构说明.md》。列表按内置注册表顺序（插件无创建时间字段，不按时间排序）。</p>'
             . '<table><tr><th>插件</th><th>版本</th><th>状态</th><th>操作</th></tr>' . $rows . '</table></div>';
         break;
     }

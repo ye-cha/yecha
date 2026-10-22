@@ -1,6 +1,18 @@
 {
   "name": "yecha",
-  "version": "1.0.0",
-  "requires_core": "1.0.0",
-  "description": "YeCha default minimal theme"
+  "slug": "yecha",
+  "version": "1.1.0",
+  "requires_core": "1.1.0",
+  "author": "YeCha",
+  "license": "MIT",
+  "homepage": "https://yecha.org/",
+  "description": "YeCha 默认主题：Tailwind 设计系统（www.css）+ 实例功能件（style.css）+ 桥接层（lq-align.css）；白底墨字、橙色强调，支持暗色、多语言、侧栏与文章目录。",
+  "screenshot": "screenshot.png",
+  "settings": [
+    { "key": "width", "label": "内容宽度", "type": "number", "def": "", "help": "像素；留空 = 1152", "min": 720, "max": 1600 },
+    { "key": "accent", "label": "强调色", "type": "color", "def": "", "help": "留空 = 主题默认 #b3541e" },
+    { "key": "per_page", "label": "每页条数", "type": "number", "def": "10", "min": 1, "max": 100 },
+    { "key": "latest_n", "label": "侧栏最新文章数", "type": "number", "def": "8", "min": 1, "max": 30 },
+    { "key": "show_sidebar", "label": "显示侧栏", "type": "select", "def": "1", "opts": { "1": "显示", "0": "隐藏" } }
+  ]
 }

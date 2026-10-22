@@ -8,14 +8,19 @@
 <title><?= e($title) ?></title>
 <?php
 // favicon 跟随“站点 Logo”（后台上传/URL 设置；无则用主题默认）
+/* 主题目录按当前启用主题推导（不写死 slug：改名/换 slug 仍可用） */
+$ycThemeDir = '/themes/' . (string)get_option('theme.default', 'yecha') . '/';
 $favRel = trim((string)get_option('site.logo', ''));
-if ($favRel === '' || !is_file(dirname(__DIR__, 3) . $favRel)) { $favRel = '/themes/yecha/logo-oni.png'; }
+if ($favRel === '' || !is_file(dirname(__DIR__, 3) . $favRel)) { $favRel = $ycThemeDir . 'logo-oni.png'; }
 $favAbs = dirname(__DIR__, 3) . $favRel;
 $favSrc = $favRel . (is_file($favAbs) ? '?v=' . filemtime($favAbs) : '');
 ?>
 <link rel="icon" type="image/png" href="<?= e($favSrc) ?>">
 <link rel="apple-touch-icon" href="<?= e($favSrc) ?>">
+<link rel="stylesheet" href="<?= e(View::asset('www.css')) ?>">
+<?php /* yf-port-20261023：从 liulanqi(bl) 移植 Tailwind 设计系统，色系沿用 yecha 橙。 */ ?>
 <link rel="stylesheet" href="<?= e(View::asset('style.css')) ?>">
+<link rel="stylesheet" href="<?= e(View::asset('lq-align.css')) ?>">
 <?php
 $tw = (string)theme_opt('width', '');
 $tac = (string)theme_opt('accent', '');
@@ -60,7 +65,7 @@ if (!empty($GLOBALS['YC_META'])) {
   <div class="wrap">
     <a class="brand" href="<?= e((Poly::on() && Lang::short() !== Poly::defaultLang()) ? '/' . Lang::short() . '/' : '/') ?>" title="<?= e(site_label()) ?>" aria-label="<?= e(site_label()) ?>">
       <?php
-      $logoRel = trim((string)get_option('site.logo', '/themes/yecha/logo.svg'));
+      $logoRel = trim((string)get_option('site.logo', $ycThemeDir . 'logo.svg'));
       $logoAbs = dirname(__DIR__, 3) . $logoRel;
       if ($logoRel !== '' && is_file($logoAbs)): ?>
       <img class="brand-logo" src="<?= e($logoRel . '?v=' . filemtime($logoAbs)) ?>" alt="<?= e(site_label()) ?>">
@@ -110,6 +115,11 @@ if (!empty($GLOBALS['YC_META'])) {
         <span class="ico-sun" hidden><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2"></path><path d="M12 20v2"></path><path d="m4.93 4.93 1.41 1.41"></path><path d="m17.66 17.66 1.41 1.41"></path><path d="M2 12h2"></path><path d="M20 12h2"></path><path d="m6.34 17.66-1.41 1.41"></path><path d="m19.07 4.93-1.41 1.41"></path></svg></span>
       </button>
       <?php if (\Auth::check()): ?>
+        <?php $ycUnread = (int)($GLOBALS['YC_UNREAD_NOTIF'] ?? \Uc::unreadCount()); ?>
+        <a class="icon-btn yc-bell" href="/user/notifications" style="position:relative" aria-label="<?= e(Lang::short() === 'en' ? 'Notifications' : '站内消息') ?>" title="<?= e(Lang::short() === 'en' ? 'Notifications' : '站内消息') ?>">
+          <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"></path><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"></path></svg>
+          <?php if ($ycUnread > 0): ?><span class="yc-bell-b" style="position:absolute;top:-1px;right:-1px;min-width:15px;height:15px;line-height:15px;padding:0 3px;border-radius:8px;background:#B3541E;color:#fff;font-size:10px;font-weight:700;text-align:center;box-sizing:border-box"><?= $ycUnread > 99 ? '99+' : $ycUnread ?></span><?php endif; ?>
+        </a>
         <a class="btn-login" href="<?= e(ui_user()) ?>"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="5"></circle><path d="M20 21a8 8 0 0 0-16 0"></path></svg><?= __('ui.my') ?></a>
         <?php if (\Auth::isAdmin()): ?><a class="hd-mini" href="/admin/"><?= __('ui.admin') ?></a><?php endif; ?>
         <a class="hd-mini" href="/logout"><?= __('ui.logout') ?></a>
@@ -254,7 +264,7 @@ document.addEventListener('error', function (e) {
   if (t && t.tagName === 'IMG') {
     var s = document.createElement('span');
     s.className = 'img-miss';
-    s.textContent = t.getAttribute('alt') || '<?= __('ui.img_miss') ?>';
+    s.textContent = t.getAttribute('alt') || <?= json_encode(__('ui.img_miss'), JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>;
     t.replaceWith(s);
   }
 }, true);

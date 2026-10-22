@@ -23,7 +23,7 @@ final class Nav
                                 ['label' => 'nav.grp_market', 'items' => ['themes', 'plugins']],
                             ]],
             'docs'      => ['label' => 'nav.docs',      'uri' => '/docs',          'zone' => ['top', 'foot'], 'root' => false],
-            'forum'     => ['label' => 'nav.forum',     'uri' => '/forum',         'zone' => ['top', 'foot'], 'root' => false],
+            'forum'     => ['label' => 'nav.forum',     'uri' => '/forum.html',         'zone' => ['top', 'foot'], 'root' => false],
 
             // 二级 / 页脚项
             'pkg_full'  => ['label' => 'nav.pkg_full',  'uri' => '/downloads',     'zone' => ['foot'], 'root' => false],
@@ -152,6 +152,9 @@ final class Nav
         $base = rtrim($href, '/');
         if ($base === '' || $base === '#') { return false; }
         if ($cur === $base || str_starts_with($cur, $base . '/')) { return true; }
+        /* yf-seo-20261020：社区平铺伪静态 —— /forum.html 族（板块/帖子/用户/热榜…）都算社区项高亮 */
+        if (($base === '/forum' || $base === '/forum.html')
+            && (preg_match('#^/forum(-[a-z0-9-]+)?\\.html$', $cur) === 1 || preg_match('#^/forum(/|$)', $cur) === 1)) { return true; }
         if (!str_ends_with($base, '.html') && $cur === $base . '.html') { return true; }
         return false;
     }

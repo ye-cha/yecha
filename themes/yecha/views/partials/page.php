@@ -7,7 +7,7 @@ $pt = strtotime((string)($p['updated_at'] ?? $p['published_at'] ?? $p['created_a
   <?php if (!empty($fallback) && Poly::on() && Lang::short() !== Poly::defaultLang()): ?>
   <div class="poly-notice"><?= e(__('poly.fallback')) ?> · <a href="/<?= e((string)$p['slug']) ?>.html"><?= e(__('poly.view_orig')) ?></a></div>
   <?php endif; ?>
-  <div class="kicker"><a href="/pages"><?= e(__('pg.back')) ?></a></div>
+  <div class="kicker"><a href="<?= e(ui_lp() . '/pages') ?>"><?= e(__('pg.back')) ?></a></div>
   <h1 class="article-title"><?= e($p['title']) ?></h1>
   <div class="article-meta"><span><?= e(__('pg.updated_at')) ?><?= e(date('Y-m-d', $pt)) ?></span></div>
   <div class="article-content"><?= $html ?></div>

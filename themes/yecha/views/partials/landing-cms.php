@@ -498,7 +498,7 @@ $lcT = static function (string $zh, string $en) use ($lcEn): string { return $lc
         <a class="lc-btn-ghost" href="<?= e($lcLp) ?>/docs"><?= $lcT('文档', 'Docs') ?></a>
         <a class="lc-btn-ghost" href="<?= e($lcLp) ?>/changelog"><?= $lcT('更新日志', 'Changelog') ?></a>
         <a class="lc-btn-ghost" href="<?= e($lcLp) ?>/market"><?= $lcT('应用市场', 'App market') ?></a>
-        <a class="lc-btn-ghost" href="<?= e($lcLp) ?>/forum"><?= $lcT('论坛', 'Forum') ?></a>
+        <a class="lc-btn-ghost" href="<?= e($lcLp) ?>/forum.html"><?= $lcT('论坛', 'Forum') ?></a>
       </div>
     </div>
     <figure class="lc-hero-media">
@@ -547,7 +547,7 @@ $lcT = static function (string $zh, string $en) use ($lcEn): string { return $lc
         <span class="lc-thumb"><?php if ($c['img'] !== ''): ?><img src="<?= e($c['img']) ?>" alt="<?= e($c['name']) ?>" loading="lazy" width="640" height="400"><?php else: ?><span class="lc-thumb-ph"><?= e($c['name']) ?></span><?php endif; ?></span>
         <span class="lc-card-body">
           <span class="lc-card-name"><?= e($c['name']) ?><?php if ($c['ver'] !== ''): ?><span class="lc-ver">v<?= e($c['ver']) ?></span><?php endif; ?></span>
-          <p class="lc-card-desc"><?= e($c['desc']) ?></p>
+          <p class="lc-card-desc"><?= e(Str::md2text((string)$c['desc'])) ?></p>
         </span>
       </a>
       <?php endforeach; ?>
@@ -569,7 +569,7 @@ $lcT = static function (string $zh, string $en) use ($lcEn): string { return $lc
         <span class="lc-thumb"><?php if ($c['img'] !== ''): ?><img src="<?= e($c['img']) ?>" alt="<?= e($c['name']) ?>" loading="lazy" width="640" height="400"><?php else: ?><span class="lc-thumb-ph"><?= e($c['name']) ?></span><?php endif; ?></span>
         <span class="lc-card-body">
           <span class="lc-card-name"><?= e($c['name']) ?><?php if ($c['ver'] !== ''): ?><span class="lc-ver">v<?= e($c['ver']) ?></span><?php endif; ?></span>
-          <p class="lc-card-desc"><?= e($c['desc']) ?></p>
+          <p class="lc-card-desc"><?= e(Str::md2text((string)$c['desc'])) ?></p>
         </span>
       </a>
       <?php endforeach; ?>
@@ -643,14 +643,14 @@ $lcT = static function (string $zh, string $en) use ($lcEn): string { return $lc
         <h2 class="lc-h2"><?= $lcT('社区', 'Community') ?></h2>
         <p class="lc-sub"><?= $lcT('论坛里的最新主题与站点统计，数字取自论坛表本身。', 'The newest forum topics and site figures, read straight from the forum tables.') ?></p>
       </div>
-      <a class="lc-more" href="<?= e($lcLp) ?>/forum"><?= $lcT('进入论坛', 'Open the forum') ?> →</a>
+      <a class="lc-more" href="<?= e($lcLp) ?>/forum.html"><?= $lcT('进入论坛', 'Open the forum') ?> →</a>
     </div>
     <div class="lc-comm">
       <div class="lc-comm-main">
         <?php if ($lc['forum']['threads'] !== []): ?>
         <?php foreach ($lc['forum']['threads'] as $t): ?>
         <div class="lc-th">
-          <a class="lc-th-a" href="<?= e($lcLp) ?>/forum?t=<?= (int)$t['id'] ?>"><?= e($t['title']) ?></a>
+          <a class="lc-th-a" href="<?= e($lcLp) ?>/forum-t<?= (int)$t['id'] ?>.html"><?= e($t['title']) ?></a>
           <div class="lc-th-meta">
             <?php if (!empty($t['pinned'])): ?><span class="lc-pin"><?= $lcT('置顶', 'Pinned') ?></span><?php endif; ?>
             <span class="lc-chip"><?= e($t['board']) ?></span>
@@ -670,7 +670,7 @@ $lcT = static function (string $zh, string $en) use ($lcEn): string { return $lc
           <div><b><?= (int)$lc['forum']['users_n'] ?></b><span><?= $lcT('会员', 'members') ?></span></div>
           <div><b><?= (int)$lc['forum']['boards_n'] ?></b><span><?= $lcT('版块', 'boards') ?></span></div>
         </div>
-        <a class="lc-side-btn" href="<?= e($lcLp) ?>/forum?mode=new"><?= $lcT('发新帖', 'New topic') ?></a>
+        <a class="lc-side-btn" href="<?= e($lcLp) ?>/forum-new.html"><?= $lcT('发新帖', 'New topic') ?></a>
       </div>
     </div>
   </section>
@@ -698,7 +698,7 @@ $lcT = static function (string $zh, string $en) use ($lcEn): string { return $lc
     <div class="lc-cta">
       <a class="lc-btn-main" href="<?= e($lcLp) ?>/downloads"><b><?= $lcT('下载', 'Download') ?></b><small><?= $lcT('完整包 · 主题 · 插件', 'Full package · themes · plugins') ?></small></a>
       <a class="lc-btn-ghost" href="<?= e($lcLp) ?>/docs"><?= $lcT('先看文档', 'Read the docs') ?></a>
-      <a class="lc-btn-ghost" href="<?= e($lcLp) ?>/forum"><?= $lcT('去论坛讨论', 'Ask in the forum') ?></a>
+      <a class="lc-btn-ghost" href="<?= e($lcLp) ?>/forum.html"><?= $lcT('去论坛讨论', 'Ask in the forum') ?></a>
     </div>
   </section>
 
@@ -724,7 +724,7 @@ $lcT = static function (string $zh, string $en) use ($lcEn): string { return $lc
     <div>
       <h4><?= $lcT('社区', 'Community') ?></h4>
       <ul>
-        <li><a href="<?= e($lcLp) ?>/forum"><?= $lcT('论坛', 'Forum') ?></a></li>
+        <li><a href="<?= e($lcLp) ?>/forum.html"><?= $lcT('论坛', 'Forum') ?></a></li>
         <li><a href="<?= e($lcLp) ?>/about.html"><?= $lcT('关于 YeCha', 'About YeCha') ?></a></li>
         <li><a href="<?= e($lcLp) ?>/join.html"><?= $lcT('联系与加入', 'Contact &amp; join') ?></a></li>
         <?php if (!$lcEn): ?><li><a href="/blog-circle.html">博客圈</a></li><?php endif; ?>

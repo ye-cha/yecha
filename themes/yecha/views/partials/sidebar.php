@@ -64,7 +64,7 @@ if ($en) {
   <h4><?= e(__('sb.arch')) ?></h4>
   <ul class="side-list">
     <?php foreach ($months as $mm): ?>
-    <li><a class="side-cat" href="/archives/<?= (int)$mm['y'] ?>/<?= (int)$mm['m'] ?>/"><span><?= e(lang_month((int)$mm['y'], (int)$mm['m'])) ?></span><span><?= (int)$mm['n'] ?></span></a></li>
+    <li><a class="side-cat" href="<?= e(ui_lp() . '/archives/' . (int)$mm['y'] . '/' . (int)$mm['m'] . '/') ?>"><span><?= e(lang_month((int)$mm['y'], (int)$mm['m'])) ?></span><span><?= (int)$mm['n'] ?></span></a></li>
     <?php endforeach; ?>
   </ul>
 </div>

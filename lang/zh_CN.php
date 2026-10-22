@@ -24,7 +24,7 @@ return [
     'nav.download' => '下载',
     'nav.developers' => '开发文档',
     'nav.market'   => '应用市场',
-    'nav.forum'    => '论坛',
+    'nav.forum'    => '社区',
     'nav.join'     => '联系与加入',
     'nav.download_page' => '安装包',
     'nav.pkg_full'     => '完整包',

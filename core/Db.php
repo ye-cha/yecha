@@ -27,6 +27,9 @@ final class Db
                 PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
                 PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
                 PDO::ATTR_EMULATE_PREPARES   => false,
+                // 会话时区与站点一致：否则 DEFAULT CURRENT_TIMESTAMP / NOW() 走 MySQL 的 UTC，
+                // 会让 created_at 比站点时间早 8 小时、定时发布晚 8 小时（ta43 体检）。
+                PDO::MYSQL_ATTR_INIT_COMMAND => "SET time_zone = '" . date('P') . "'",
             ]);
         }
         return self::$pdo;

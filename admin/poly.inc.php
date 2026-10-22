@@ -186,7 +186,7 @@ function poly_overview_html(string $cur): string
     $chipRow = '<div class="card" style="padding:10px 16px;margin-bottom:14px;"><span style="color:#6f767e;font-size:12.5px;margin-right:8px;">查看语言：</span>' . implode(' ', $chips)
         . '<span style="margin-left:10px;color:#9a9a90;font-size:12px;">基准语言（' . e(Poly::label($def)) . '）为原文；数字=已发布/全部；「N 篇过期」=中文原文修改后待重译（基准保存时自动标记）。</span></div>';
 
-    $rows = Db::rows("SELECT * FROM {$T}contents WHERE type IN ('post','page') AND deleted_at IS NULL ORDER BY type ASC, id DESC LIMIT 400");
+    $rows = Db::rows("SELECT * FROM {$T}contents WHERE type IN ('post','page') AND deleted_at IS NULL ORDER BY id DESC LIMIT 400");
     $map = [];
     foreach (Db::rows('SELECT group_id, title, slug, status, ai_generated, manual_override, stale, updated_at FROM ' . Poly::table() . ' WHERE lang=?', [$cur]) as $e) {
         $map[(int)$e['group_id']] = $e;
@@ -214,8 +214,9 @@ function poly_overview_html(string $cur): string
     return $chipRow
         . poly_langs_card()
         . poly_modes_card()
-        . '<div class="card"><h3>多语 · 翻译组总览 <small>' . e(Poly::label($def)) . '(默认) ↔ ' . e($label) . '（' . e($cur) . '）· ye_poly_contents 按语言分行；覆盖全部已发布文章与独立页；逐语言工作台与编辑器均可编辑</small></h3>'
-        . '<table><tr><th>' . e(Poly::label($def)) . '内容</th><th>slug</th><th>' . e($label) . '状态</th><th>更新时间</th><th>操作</th></tr>' . $list . '</table></div>'
+        . '<div class="card"><h3>多语 · 翻译组总览 <small>' . e(Poly::label($def)) . '(默认) ↔ ' . e($label) . '（' . e($cur) . '）· 最新在前 · ye_poly_contents 按语言分行；覆盖全部已发布文章与独立页；逐语言工作台与编辑器均可编辑</small></h3>'
+        . '<table><tr><th>' . e(Poly::label($def)) . '内容</th><th>slug</th><th>' . e($label) . '状态</th><th>更新时间</th><th class="acts">操作</th></tr>'
+        . ($list !== '' ? $list : '<tr><td colspan="5" class="empty">还没有文章或独立页。</td></tr>') . '</table></div>'
         . poly_batch_card()
         . poly_settings_card();
 }

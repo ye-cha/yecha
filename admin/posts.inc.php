@@ -6,7 +6,7 @@ declare(strict_types=1);
  */
 
 /** 回收站外所有 post/page 行（供列表）；$st='trash' 时列回收站 */
-function pc_list_rows(string $type, string $q = '', string $st = '', int $page = 1, int $per = 20): array
+function pc_list_rows(string $type, string $q = '', string $st = '', int $page = 1, int $per = 20, string $sort = 'date', string $dir = 'desc'): array
 {
     $where = "type=?";
     $p = [$type];
@@ -18,9 +18,21 @@ function pc_list_rows(string $type, string $q = '', string $st = '', int $page =
         if ($st !== '') { $where .= ' AND status=?'; $p[] = $st; }
     }
     $total = (int)Db::one('SELECT COUNT(*) FROM ' . Db::t('contents') . " WHERE $where", $p);
+    $pages = max(1, (int)ceil($total / $per));
+    if ($page > $pages) { $page = $pages; }
+    if ($page < 1) { $page = 1; }
     $offset = ($page - 1) * $per;
-    $rows = Db::rows('SELECT * FROM ' . Db::t('contents') . " WHERE $where ORDER BY COALESCE(published_at, created_at) DESC, id DESC LIMIT $per OFFSET $offset", $p);
-    return ['rows' => $rows, 'total' => $total, 'page' => $page, 'pages' => max(1, (int)ceil($total / $per))];
+    $cols = [
+        'date' => 'COALESCE(published_at, created_at)',
+        'created' => 'created_at',
+        'updated' => 'updated_at',
+        'views' => 'views',
+        'title' => 'title',
+    ];
+    $col = $cols[$sort] ?? $cols['date'];
+    $ord = $dir === 'asc' ? 'ASC' : 'DESC';
+    $rows = Db::rows('SELECT * FROM ' . Db::t('contents') . " WHERE $where ORDER BY $col $ord, id DESC LIMIT $per OFFSET $offset", $p);
+    return ['rows' => $rows, 'total' => $total, 'page' => $page, 'pages' => $pages, 'per' => $per];
 }
 
 /** 回收站动作：restore 恢复（保留原状态字段外，置回草稿或原状态）；purge 彻底删除 */
@@ -175,10 +187,16 @@ function pc_save(): void
     Cache::flush('pages');
     Cache::flush('blocks');
     $statusText = ['draft' => '草稿', 'publish' => '已发布', 'scheduled' => '定时', 'hidden' => '已下线'][$status] ?? $status;
-    $_SESSION['flash'] = ($id > 0 ? '更新成功' : '已保存') . '（' . $statusText . '）· slug：' . $slug . $autoNote
+    $_SESSION['flash'] = '已保存（' . $statusText . '）· slug：' . $slug . $autoNote
         . ($emptyContentKeep ? ' · ⚠ 提交的正文没有有效文字，已保留原正文（请刷新后台编辑器后重试）' : '');
-    header('Location: /admin/?s=' . $type . 's');
+    header('Location: ' . pc_back_url((string)($_POST['from'] ?? ''), '/admin/?s=' . $type . 's'));
     exit;
+}
+
+/** 校验「返回列表」地址：只接受本站文章/页面列表页（防开放跳转） */
+function pc_back_url(string $raw, string $fallback): string
+{
+    return preg_match('#^/admin/\?s=(?:posts|pages)(?:&[A-Za-z0-9_%&=.,+-]*)?$#', $raw) ? $raw : $fallback;
 }
 
 /** 回收站（软删除） */
@@ -341,7 +359,10 @@ function pc_ai_row(): void
 
 function pc_render_list(string $type, string $q, string $st, int $page): string
 {
-    $d = pc_list_rows($type, $q, $st, $page);
+    $per = adm_per();
+    [$sort, $dir] = adm_sort('date', ['date', 'created', 'updated', 'views', 'title']);
+    $d = pc_list_rows($type, $q, $st, $page, $per, $sort, $dir);
+    $page = (int)$d['page'];
     $typeName = $type === 'page' ? '页面' : '文章';
     $list = '';
     $statusMap = ['publish' => '已发布', 'draft' => '草稿', 'scheduled' => '定时', 'hidden' => '已下线', 'trash' => '回收站'];
@@ -366,21 +387,28 @@ function pc_render_list(string $type, string $q, string $st, int $page): string
     $langTxt = static fn(string $lc): string => $langTag[$lc] ?? strtoupper(substr($lc, 0, 3));
     $tgtNames = implode('、', array_map(static fn(string $lc): string => Poly::label($lc), $polyLangs));
     /* 回到当前筛选/页码，翻译完不用重新找 */
-    $keep = ['type' => $type, 'page' => (string)$page];
-    if ($q !== '') { $keep['q'] = $q; }
-    if ($st !== '') { $keep['st'] = $st; }
+    $keepAi = ['type' => $type, 'page' => (string)$page];
+    if ($q !== '') { $keepAi['q'] = $q; }
+    if ($st !== '') { $keepAi['st'] = $st; }
+    /* 列表链接参数：筛选 / 排序 / 每页条数，翻页与排序切换都带着走 */
+    $keep = ['s' => $type . 's', 'q' => $q, 'st' => $st, 'sort' => $sort, 'dir' => $dir, 'per' => $per];
+    $keep = array_filter($keep, static fn($v): bool => (string)$v !== '');
+    /* 编辑器「返回列表」用：带回当前筛选 / 排序 / 页码，返回不丢状态 */
+    $backUrl = '/admin/?' . http_build_query($page > 1 ? array_merge($keep, ['page' => $page]) : $keep);
 
     foreach ($d['rows'] as $r) {
         $stTxt = $statusMap[$r['status']] ?? $r['status'];
         $styl = $r['status'] === 'draft' ? ' style="color:#9a6b3f;"' : ($r['status'] === 'scheduled' ? ' style="color:#2e6b34;"' : '');
+        $showDate = substr((string)($r['published_at'] ?? $r['created_at']), 0, 16);
+        $upd = substr((string)$r['updated_at'], 0, 16);
         if ($isTrash) {
             // 回收站行：恢复 / 彻底删除
-            $list .= '<tr><td>' . e($r['title']) . '<br><span style="color:#c0c0b8;font-size:11.5px;">删除于 ' . e(substr((string)$r['deleted_at'], 0, 16)) . ' · slug ' . e((string)$r['slug']) . '</span></td>'
+            $list .= '<tr><td>' . e($r['title']) . '<br><span style="color:#c0c0b8;font-size:11.5px;">删除于 ' . e(substr((string)$r['deleted_at'], 0, 16)) . '</span></td>'
                 . '<td><code style="font-size:12px;color:#6f767e;">' . e((string)$r['slug']) . '</code></td>'
                 . '<td style="color:#9c3f1b;">回收站</td>'
                 . '<td>' . number_format((int)$r['views']) . '</td>'
-                . '<td>' . e(substr((string)($r['published_at'] ?? $r['created_at']), 0, 10)) . '</td>'
-                . '<td><form class="inline" method="post" action="/admin/?s=' . $type . 's"><input type="hidden" name="do" value="trash-restore"><input type="hidden" name="type" value="' . $type . '">' . Csrf::field()
+                . '<td>' . e($showDate) . '</td><td>' . e($upd) . '</td>'
+                . '<td class="acts"><form class="inline" method="post" action="/admin/?s=' . $type . 's"><input type="hidden" name="do" value="trash-restore"><input type="hidden" name="type" value="' . $type . '">' . Csrf::field()
                 . '<input type="hidden" name="cid" value="' . (int)$r['id'] . '"><button class="btn ghost mini" type="submit">恢复</button></form> '
                 . '<form class="inline" method="post" action="/admin/?s=' . $type . 's" onsubmit="return confirm(\'彻底删除（含其评论/译文/关系，不可恢复）？\')"><input type="hidden" name="do" value="trash-purge"><input type="hidden" name="type" value="' . $type . '">' . Csrf::field()
                 . '<input type="hidden" name="cid" value="' . (int)$r['id'] . '"><button class="btn ghost mini danger" type="submit">彻底删除</button></form></td></tr>';
@@ -390,48 +418,40 @@ function pc_render_list(string $type, string $q, string $st, int $page): string
             . '</td><td><code style="font-size:12px;color:#6f767e;">' . e((string)$r['slug']) . '</code></td>'
             . '<td' . $styl . '>' . $stTxt . '</td>'
             . '<td>' . number_format((int)$r['views']) . '</td>'
-            . '<td>' . e(substr((string)($r['published_at'] ?? $r['created_at']), 0, 10)) . '</td>'
-            . '<td><a class="btn ghost mini" href="/admin/?s=' . $type . 's&action=edit&id=' . (int)$r['id'] . '">编辑</a> '
+            . '<td>' . e($showDate) . '</td><td>' . e($upd) . '</td>'
+            . '<td class="acts"><a class="btn ghost mini" href="/admin/?s=' . $type . 's&action=edit&id=' . (int)$r['id'] . '&from=' . rawurlencode($backUrl) . '">编辑</a> '
             . ($r['status'] === 'publish'
-                ? '<a class="btn ghost mini" href="/' . e((string)$r['slug']) . '.html">预览</a> '
+                ? '<a class="btn ghost mini" href="/' . e((string)$r['slug']) . '.html" target="_blank" rel="noopener">预览</a> '
                 : '<span style="color:#c0c0b8;font-size:12px;">未发布</span> ')
-            . '<form class="inline" method="post" action="/admin/?s=' . $type . 's" onsubmit="return confirm(\'移入回收站？\')">' . Csrf::field()
+            . '<form class="inline" method="post" action="/admin/?s=' . $type . 's" onsubmit="return confirm(\'移入回收站？（可在「回收站」筛选中恢复）\')">' . Csrf::field()
             . '<input type="hidden" name="do" value="post-trash"><input type="hidden" name="type" value="' . $type . '">'
-            . '<input type="hidden" name="cid" value="' . (int)$r['id'] . '"><button class="btn ghost mini danger" type="submit">回收站</button></form>'
-            . pc_ai_cell((int)$r['id'], $type, $trMap[(int)$r['id']] ?? [], $polyLangs, $aiReady, $langTxt, $tgtNames, $keep, $isTrash)
+            . '<input type="hidden" name="cid" value="' . (int)$r['id'] . '"><button class="btn ghost mini danger" type="submit">移入回收站</button></form>'
+            . pc_ai_cell((int)$r['id'], $type, $trMap[(int)$r['id']] ?? [], $polyLangs, $aiReady, $langTxt, $tgtNames, $keepAi, $isTrash)
             . '</td></tr>';
     }
-    $pager = '';
-    if ($d['pages'] > 1) {
-        $qprm = (($q !== '') ? '&q=' . rawurlencode($q) : '') . (($st !== '') ? '&st=' . $st : '');
-        $lnk = function (int $i) use ($type, $qprm): string {
-            return '/admin/?s=' . $type . 's&page=' . $i . $qprm;
-        };
-        $cur = fn(int $i) => $i === $d['page'] ? ' style="color:#b3541e;font-weight:700;"' : '';
-        $pager = '<div style="padding:12px 0 4px;">';
-        if ($d['page'] > 1) { $pager .= '<a href="' . $lnk($d['page'] - 1) . '">← 上一页</a> '; }
-        $window = 5;
-        $start = max(1, min($d['page'] - 2, $d['pages'] - $window + 1));
-        $end = min($d['pages'], $start + $window - 1);
-        if ($start > 1) { $pager .= '<a' . $cur(1) . ' href="' . $lnk(1) . '">1</a> … '; }
-        for ($i = $start; $i <= $end; $i++) {
-            $pager .= '<a' . $cur($i) . ' href="' . $lnk($i) . '">' . $i . '</a> ';
-        }
-        if ($end < $d['pages']) { $pager .= '… <a' . $cur($d['pages']) . ' href="' . $lnk($d['pages']) . '">' . $d['pages'] . '</a> '; }
-        if ($d['page'] < $d['pages']) { $pager .= '<a href="' . $lnk($d['page'] + 1) . '">下一页 →</a> '; }
-        $pager .= '（共 ' . $d['total'] . ' 条）</div>';
+    if ($list === '') {
+        $msg = $isTrash ? '回收站是空的。' : ($q !== '' ? '没有匹配「' . $q . '」的' . $typeName . '。' : '还没有' . $typeName . '，点右上角「＋ 新建' . $typeName . '」开始。');
+        $list = '<tr><td colspan="7" class="empty">' . e($msg) . '</td></tr>';
     }
     $sel = function (string $v) use ($st): string { return $v === $st ? ' selected' : ''; };
-    return '<div class="card"><h3>' . $typeName . '列表 <small>共 ' . $d['total'] . ' 条</small></h3>'
-        . '<form method="get" action="/admin/" style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;">'
-        . '<input type="hidden" name="s" value="' . $type . 's"><input name="q" value="' . e($q) . '" placeholder="搜索标题…" style="border:1px solid #e6e6e2;border-radius:6px;padding:6px 10px;min-width:200px;">'
+    $head = '<tr>' . adm_th('标题', 'title', [$sort, $dir], $keep) . '<th>slug</th><th>状态</th>'
+        . adm_th('阅读', 'views', [$sort, $dir], $keep)
+        . adm_th('发布时间', 'date', [$sort, $dir], $keep)
+        . adm_th('更新时间', 'updated', [$sort, $dir], $keep)
+        . '<th class="acts">操作</th></tr>';
+    return '<div class="card"><h3>' . $typeName . '列表 <small>最新在前 · 共 ' . number_format((int)$d['total']) . ' 条</small></h3>'
+        . '<div class="toolbar"><form method="get" action="/admin/" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">'
+        . '<input type="hidden" name="s" value="' . $type . 's"><input type="hidden" name="sort" value="' . e($sort) . '"><input type="hidden" name="dir" value="' . e($dir) . '"><input type="hidden" name="per" value="' . $per . '">'
+        . '<input name="q" value="' . e($q) . '" placeholder="搜索标题…" style="border:1px solid #e6e6e2;border-radius:6px;padding:6px 10px;min-width:180px;">'
         . '<select name="st" style="border:1px solid #e6e6e2;border-radius:6px;padding:6px 8px;"><option value="">全部状态</option>'
         . '<option value="publish"' . $sel('publish') . '>已发布</option><option value="draft"' . $sel('draft') . '>草稿</option>'
         . '<option value="scheduled"' . $sel('scheduled') . '>定时</option><option value="hidden"' . $sel('hidden') . '>已下线</option>'
         . '<option value="trash"' . $sel('trash') . '>回收站</option></select>'
         . '<button class="btn ghost" type="submit">筛选</button></form>'
+        . '<span class="sp"></span>' . adm_per_select($keep, $per)
         . '<a class="btn" href="/admin/?s=' . $type . 's&action=new">＋ 新建' . $typeName . '</a></div>'
-        . '<div class="card"><table><tr><th>标题</th><th>slug</th><th>状态</th><th>阅读</th><th>日期</th><th>操作</th></tr>' . $list . '</table>' . $pager . '</div>';
+        . '<table>' . $head . $list . '</table>'
+        . adm_pager($page, (int)$d['pages'], (int)$d['total'], $keep) . '</div>';
 }
 
 /* ================= 多语（翻译组模型） ================= */
@@ -773,7 +793,8 @@ function pc_render_editor(string $type, int $id = 0, string $lang = ''): string
     $tagsJson = json_encode(array_values($d['tagNames']), JSON_UNESCAPED_UNICODE);
     $csrf = Csrf::token();
     $titleVal = e($d['title']);
-    $listUrl = '/admin/?s=' . $type . 's';
+    $listUrl = pc_back_url((string)($_GET['from'] ?? ''), '/admin/?s=' . $type . 's');
+    $listUrlHtml = e($listUrl);
     $formAction = '/admin/?s=' . $type . 's';
     $csrfField = Csrf::field();
     $mdBody = e($d['content']);
@@ -798,16 +819,17 @@ function pc_render_editor(string $type, int $id = 0, string $lang = ''): string
 <input type="hidden" name="do" value="post-save">
 <input type="hidden" name="type" value="{$type}">
 <input type="hidden" name="id" value="{$id}">
+<input type="hidden" name="from" value="__FROM_ESC__">
 <input type="hidden" name="content" id="contentValue">
 $csrfField
 <div class="ed-bar">
-  <a class="ed-back" href="{$listUrl}" title="返回列表" aria-label="返回列表">__ICO_BACK__</a>
+  <a class="ed-back" href="{$listUrlHtml}" title="返回列表" aria-label="返回列表">__ICO_BACK__</a>
   <span class="ed-state" id="edState">{$stateText}</span>
   <span class="ed-sp"></span>
   <button type="button" class="ed-btn ghost" id="edCfgBtn" aria-expanded="__CFG_ARIA__">__ICO_SLIDERS__<span>发布设置</span></button>
   <button type="submit" class="ed-btn primary">保存</button>
 </div>
-<input name="title" id="edTitle" value="{$titleVal}" placeholder="标题" class="ed-title" required autocomplete="off">
+<input name="title" id="edTitle" value="{$titleVal}" placeholder="标题（必填）" class="ed-title" required aria-required="true" autocomplete="off">
 <div class="ed-toolbar" id="toolbar">
   {$tbBtn('h2', 'h2', '二级标题')}{$tbBtn('h3', 'h3', '三级标题')}<span class="sep"></span>{$tbBtn('bold', 'bold', '加粗')}{$tbBtn('italic', 'italic', '斜体')}{$tbBtn('del', 'del', '删除线')}{$tbBtn('code', 'code', '行内代码')}<span class="sep"></span>{$tbBtn('quote', 'quote', '引用')}{$tbBtn('ul', 'ul', '无序列表')}{$tbBtn('ol', 'ol', '有序列表')}{$tbBtn('link', 'link', '链接')}{$tbBtn('img', 'img', '图片')}{$tbBtn('table', 'table', '表格')}{$tbBtn('hr', 'hr', '分割线')}
   <span class="ed-sp"></span>
@@ -852,15 +874,19 @@ HTML
     . '<div class="side-field"><label>图片 / 附件</label><button type="button" class="btn ghost" id="btnUpload">选择文件上传</button>
         <input type="file" id="upFile" style="display:none;"><div class="hint" id="upMsg"></div></div>'
     . '</aside></div>'
-    . '<div class="ed-actions"><button type="submit" class="btn">保存</button> <a class="btn ghost" href="' . $listUrl . '">返回列表</a>'
-    . ($id > 0 && $d['status'] === 'publish' ? ' <a class="btn ghost" target="_blank" href="/' . e($d['slug']) . '.html">预览前台 ↗</a>' : '')
-    . '</div></form>'
+    . '<div class="ed-actions" style="display:flex;justify-content:flex-end;align-items:center;gap:8px;">'
+    . ($id > 0 && $d['status'] === 'publish' ? '<a class="btn ghost" target="_blank" href="/' . e($d['slug']) . '.html">预览前台 ↗</a>' : '')
+    . '<a class="btn ghost" href="' . e($listUrl) . '">返回列表</a><button type="submit" class="btn">保存</button></div></form>'
+    . '<script>(function(){var f=document.getElementById("postForm");if(!f)return;var dirty=false;'
+    . 'var mark=function(){dirty=true;};f.addEventListener("input",mark);f.addEventListener("change",mark);'
+    . 'f.addEventListener("submit",function(){dirty=false;});'
+    . 'window.addEventListener("beforeunload",function(e){if(!dirty)return;e.preventDefault();e.returnValue="";});})();</script>'
     . '<script>window.__YC = {csrf:' . json_encode($csrf) . ', tags:' . $tagsJson . ', page:' . ($isPage ? 'true' : 'false') . '};</script>'
     . '<link rel="stylesheet" href="/admin/assets/editor.css?v=' . @filemtime(__DIR__ . '/assets/editor.css') . '"><script src="/admin/assets/editor.js?v=' . @filemtime(__DIR__ . '/assets/editor.js') . '"></script>';
     $out = str_replace(
-        ['__MD_BODY__', '__ICO_BACK__', '__ICO_SLIDERS__', '__ICO_MD__', '__ICO_RICH__', '__ICO_EYE__', '__CFG_ARIA__', '__CFG_HIDDEN__', '__CFG_CLS__'],
+        ['__MD_BODY__', '__ICO_BACK__', '__ICO_SLIDERS__', '__ICO_MD__', '__ICO_RICH__', '__ICO_EYE__', '__CFG_ARIA__', '__CFG_HIDDEN__', '__CFG_CLS__', '__FROM_ESC__'],
         [$mdBody, ed_ico('back'), ed_ico('sliders'), ed_ico('md'), ed_ico('rich'), ed_ico('eye'),
-         $cfgOpen ? 'true' : 'false', $cfgOpen ? '' : ' hidden', $cfgOpen ? 'ed-grid open' : 'ed-grid'],
+         $cfgOpen ? 'true' : 'false', $cfgOpen ? '' : ' hidden', $cfgOpen ? 'ed-grid open' : 'ed-grid', e($listUrl)],
         $__html
     );
     /* 插件挂载点：编辑器尾部（如「文章自动保存」在此注入状态条与前端脚本） */
