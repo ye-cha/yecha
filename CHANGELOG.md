@@ -1,10 +1,81 @@
 # CHANGELOG · YeCha（夜叉）系统
 
-> 发布日：2026-11-05 · 版本：**1.2.0**
+> 发布日：2026-11-05 · 版本：**1.2.3**（含 1.2.1 / 1.2.2 / 1.2.3）
 > 口径：只写「做了什么 + 判据」，逐条可回溯到 `/root/ta55/`（本轮）与 `_lqpix/ta/报告-*.md`（历史）。
 > 说明：本文件随发行包冻结；出包后再改文字 = 重发一次版本。
 
-## 0. 1.2.0 要点（性能：总数去规范化 + 缓存次序修正）
+## 0. 1.2.3 要点（AI 翻译健壮性：覆盖模式防雪崩 + 语种校验防源文回显）
+
+| 组成 | 数值 |
+|---|---|
+| 系统版本 | `core/version.php` = `1.2.3` |
+| 改动面 | `core/Poly.php`（`aiTranslate` 语种校验 + 重试）、`admin/posts.inc.php`（续链容错）、`admin/index.php`（`ai_cont` 续链入口） |
+| 规范检查 | 改后 `php -l` 全过；xuecha.org 日语页实测渲染为日语（含假名） |
+
+### 0.1 根因（xuecha.org `xianyexianniangshucha` 实测）
+- 1.2.2 的「覆盖翻译」在中文→日语/韩语时把**中文源文原样回显**：DeepSeek 因中日/中韩同属汉字文化圈，常将中文当日语/韩语输出；旧 `aiTranslate` 仅校验 JSON 能否解析，解析成功即 `ok:true`，于是把中文静默入库。
+- 后果：前台 `/ja/`、`/ko/` 进的是目标语言模式（站点名已是日文/韩文），但文章标题正文全是中文 —— 表现为「翻译很快结束、日语没翻出来」。
+- 另：1.2.2 的自动续链在**单种语言失败即整批停链**，表现为「只翻了 1 种就结束」。
+
+### 0.2 修复
+- **语种校验 + 自动重试（2 次）**：`Poly::aiTranslate` 新增目标语种脚本校验（日语须含假名、韩语须含谚文、拉丁语种须含字母且非纯汉字）；不通过则强化提示词（"必须用目标语言 native 书写、不得保留中文"）重试；仍失败**如实报错、绝不入库**。
+- **系统提示词强化**：明确 "Translate into fluent {lang}, keep Markdown/links, return JSON" 并列出受保护术语，降低源文回显概率。
+- **接口超时 20s → 18s**：配合单次单语言节奏，坏接口快速失败。
+- **续链容错**：`admin/posts.inc.php` 自动续链改为「单种失败也继续翻下一种」，最后统一报告成功/跳过/失败，不再因某语言失败整批停链。
+
+### 0.3 判据 / 验收
+- CLI 实测 `Poly::aiTranslate(30,'ja')`：title「本来このお茶は存在しなかったが…」、正文日文、`kana_check=含假名(YES)`、7.5s。
+- 前台 `/ja/xianyexianniangshucha.html` 标题已变为日语；`php -l` 三文件全过。
+- 测试脚本已清理，未留痕。
+
+### 0.4 发行包与部署
+- **发行包**：`yecha-1.2.3.tar.gz` —— 基于 tag `v1.2.3` 的 `git archive`（校验和见同目录 `MANIFEST.sha256`）。
+- **部署实例**：xuecha.org（canonical 仓库同级实例）已应用 1.2.1→1.2.3 全部修复并冒烟；yecha.org 仓库同步提交 v1.2.1 / v1.2.2 / v1.2.3 三个 tag。
+
+### 0.5 回滚
+- 版本回滚：`core/version.php` 改回 `1.2.2`；`Poly.php` / `posts.inc.php` / `index.php` 回退对应 commit（`git revert` 或 checkout 历史版本）。
+
+## 1. 1.2.2 要点（AI 翻译「覆盖翻译」致死服务器 → 单请求单语言 + 并发锁 + 自动续链）
+
+| 组成 | 数值 |
+|---|---|
+| 系统版本 | `core/version.php` = `1.2.2` |
+| 改动面 | `core/Poly.php`（接口超时 60s→20s）、`admin/posts.inc.php`（续链）、`admin/index.php`（`ai_cont` 入口） |
+| 规范检查 | `php -l` 全过；xuecha.org 重压后 `load average` 117→0.6 |
+
+### 1.1 根因（xuecha.org 实测 load 117、Cloudflare 524）
+- 旧 `pc_ai_row` 在**单个 HTTP 请求里串行翻译全部语言**，配合 `Poly::aiTranslate` 用 `file_get_contents(...,['timeout'=>60])` 且无 `set_time_limit`：重复点击 → 多个 FPM 进程各卡 60s 网络等待 → 进程池雪崩。
+
+### 1.2 修复
+- **单请求只翻 1 种语言**：不再一口气跑全部语言。
+- **按 `cid` 文件并发锁**（300s TTL）：重复点击/多标签页不再叠加 FPM 进程。
+- **会话队列 + meta-refresh 自动续链**：把 N 种语言拆成 N 个短请求自动连做；任意一种失败即停链（防坏接口烧服务器）；安全阀 20 次迭代。
+- **`set_time_limit(30)` 硬墙钟** + `Poly.php` AI 接口超时 **60s→20s**（快速失败）。
+- 后台分发器新增 `ai_cont` GET 续链入口。
+
+### 1.3 判据 / 验收
+- xuecha.org / yecha.org 后台均 HTTP 200；`load average` 117→0.6；`php -l` 三文件无语法错误。
+
+## 2. 1.2.1 要点（AI 翻译「覆盖翻译」模式 + 同步线上在研改动）
+
+| 组成 | 数值 |
+|---|---|
+| 系统版本 | `core/version.php` = `1.2.1` |
+| 改动面 | `admin/posts.inc.php`（覆盖翻译 UI/逻辑）、后台重写、`plugins/market/showcase.php`、`plugins/site`（留言回复）、`themes/bl`、`core/bootstrap.php` 等 |
+| 规范检查 | `php -l` 全过；13 个在研改动 + `003_message_reply.sql` 迁移一并入版 |
+
+### 2.1 覆盖翻译（force 模式）
+- 列表页「AI 翻译」旁新增 **☐ 覆盖翻译** 勾选：勾选后重译全部语言（仍保护人工修正 `manual_override`）；用 `$_SESSION['force_ai_<cid>']` 记本会话起点，已重译语言（`last_ai_at` ≥ 起点）跳过，支持 45s 超时后续做。
+
+### 2.2 同步线上已在运行的改动（合并入版，与线上运行态一致）
+- `admin/index.php` 后台重写；`plugins/market/showcase.php` 主题/插件画廊（lightbox 点击放大、左右/键盘/Esc/循环切换）；`plugins/site` 留言回复后台（新增 `003_message_reply.sql` 幂等迁移，补 `reply`/`reply_at`/`reply_by`/`is_public`）；`plugins/statx/*`；`themes/bl` 详情页；`core/bootstrap.php`。
+
+### 2.3 判据 / 验收
+- 13 个改动 + 1 个未跟踪迁移脚本一并提交；`php -l` 全过；v1.2.0 仍可独立回滚。
+
+---
+
+## 3. 1.2.0 要点（性能：总数去规范化 + 缓存次序修正）
 
 | 组成 | 数值 |
 |---|---|
@@ -45,7 +116,7 @@
 - **版本回滚**：`core/version.php` 改回 `1.1.0`。
 - **注意**：仓库工作树另有 12 个未提交在研改动（`admin/` 后台重写、`plugins/market/showcase.php`、`themes/bl` 等，共 +2969/−2740 行）**不在 1.2.0 发行包内**；回滚 1.2.0 不影响它们（仍留在工作树、线上照常运行），是否纳入版本由站主另行裁定。
 
-## 1. 1.1.0 要点（新默认主题）
+## 4. 1.1.0 要点（新默认主题）
 
 | 组成 | 数值 |
 |---|---|
@@ -82,7 +153,7 @@
 - 主题回滚：`tar xzf /root/ta55/backup/themes-yecha-before-*.tar.gz -C /www/wwwroot/yecha.org --overwrite`，再清页缓存。
 - 版本回滚：`core/version.php` 改回 `1.0.0`。
 
-## 2. 1.0.0（2026-10-18）摘要
+## 5. 1.0.0（2026-10-18）摘要
 
 - YeCha 1.0.0 定版：主题包 33 套 + 插件集 + 更新日志随站上线；13 个内容页静态件、sitemap 三方一致。
 - 首页 CMS 化（`themes/yecha/views/landing.php` + `partials/landing-cms.php`），数字全部来自目录/DB，不写死。
@@ -90,7 +161,7 @@
 
 ---
 
-## 3. 附录 · 1.0.0 发布记录（原样存档）
+## 6. 附录 · 1.0.0 发布记录（原样存档）
 
 > 本段是 1.0.0 出包时随附的站点发布记录（载体 liulanqi.com），原样保留以供回溯；标题已降一级。
 
