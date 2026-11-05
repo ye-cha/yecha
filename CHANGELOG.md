@@ -31,6 +31,20 @@
 - 慢日志复核：不再出现 `home_total` / `posts_total` 的 `COUNT(*) FROM ye_contents` 与 `(SELECT COUNT(*) FROM ye_relationships)` 标签子查询指纹。
 - 归档数据（`published_at` 历史脏数据）**按决策不动**，本次未触碰。
 
+### 0.4 发行包与部署
+
+- **发行包**：`yecha-1.2.0.tar.gz` —— 基于 tag `v1.2.0` 的 `git archive`（含全部已提交框架代码 + 1.2.0 主题清理，校验和见同目录 `MANIFEST.sha256`）。
+- **部署实例**：
+  - `yecha.org`（canonical，git 仓库）：已应用 1.2.0（commit `a731b37` + 本更新日志修订）；前端经 Cloudflare。
+  - `gushuwu.com`（实例 `xuecha-yecha-stage`，非 git）：版本号升 `1.2.0`；`core/Front.php` 保留其暂存优化版（含 `masterworks()` / `daozangIds()` 等专属扩展），框架侧 `home()` / `postsTotal()` 修复已在其中。
+- 代码已部署并冒烟：首页 200、零 PHP 报错；部署后慢日志无新增 `home_total` / `posts_total` / 标签子查询指纹。
+
+### 0.5 回滚
+
+- **文件回滚**：`/root/yecha_120_bak_20261105063324/`（yecha.org 的 `Front` / `version` / 主题）、`/root/yecha_120_gushu_theme_20261105063605/`（gushuwu 主题）。
+- **版本回滚**：`core/version.php` 改回 `1.1.0`。
+- **注意**：仓库工作树另有 12 个未提交在研改动（`admin/` 后台重写、`plugins/market/showcase.php`、`themes/bl` 等，共 +2969/−2740 行）**不在 1.2.0 发行包内**；回滚 1.2.0 不影响它们（仍留在工作树、线上照常运行），是否纳入版本由站主另行裁定。
+
 ## 1. 1.1.0 要点（新默认主题）
 
 | 组成 | 数值 |
