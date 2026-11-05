@@ -374,7 +374,7 @@ final class Poly
             'method' => 'POST',
             'header' => "Content-Type: application/json\r\nAuthorization: Bearer " . $key . "\r\n",
             'content' => $payload,
-            'timeout' => 60,
+            'timeout' => 20,
             'ignore_errors' => true,
         ]]);
         $resp = @file_get_contents($base, false, $ctx);

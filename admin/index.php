@@ -371,8 +371,8 @@ if ($authed && $isAdmin && ($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
     if ($do === 'poly-ai-en') {
         pc_poly_ai();
     }
-    if ($do === 'poly-ai-row') {
-        pc_ai_row();   // 文章/页面列表里的「AI 翻译」按钮
+    if ($do === 'poly-ai-row' || isset($_GET['ai_cont'])) {
+        pc_ai_row();   // 文章/页面列表里的「AI 翻译」按钮（含自动续链）
     }
     if ($do === 'upload') {
         pc_upload();

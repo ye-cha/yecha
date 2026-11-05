@@ -307,20 +307,29 @@ function pc_ai_cell(int $cid, string $type, array $have, array $langs, bool $aiR
         . '<button class="btn ghost mini ai" type="submit" title="AI 翻译成：' . e($tgtNames) . '">AI 翻译</button></form>';
 }
 
-/** 列表页「AI 翻译」按钮的处理：把该篇翻译成所有启用的非基准语言（跳过人工修正的；超时可再点一次续做） */
+/**
+ * 列表页「AI 翻译」按钮处理。
+ *
+ * 关键改动（防止一次请求把服务器打挂）：
+ *   1) 每次 HTTP 请求只翻译 1 种语言，绝不在单个请求里串行跑全部语言；
+ *   2) 按 cid 加文件并发锁，重复点击 / 多标签不会叠加 FPM 进程；
+ *   3) 通过「会话队列 + meta-refresh 自动续链」把 N 种语言拆成 N 个短请求；
+ *   4) set_time_limit(30) + Poly 接口 20s 超时，单请求绝不卡过 Cloudflare(100s)/nginx；
+ *   5) 任意一种失败即停止续链，避免坏接口把服务器烧死。
+ */
 function pc_ai_row(): void
 {
-    $type = ((string)($_POST['type'] ?? '')) === 'page' ? 'page' : 'post';
-    $typeName = $type === 'page' ? '页面' : '文章';
+    $isCont = isset($_GET['ai_cont']);
+    $type = ((string)($_POST['type'] ?? $_GET['type'] ?? '')) === 'page' ? 'page' : 'post';
     $q = trim((string)($_POST['back_q'] ?? ''));
     $st = trim((string)($_POST['back_st'] ?? ''));
     $page = max(1, (int)($_POST['back_page'] ?? 1));
     $back = '/admin/?s=' . $type . 's' . ($page > 1 ? '&page=' . $page : '')
         . ($q !== '' ? '&q=' . rawurlencode($q) : '') . ($st !== '' ? '&st=' . rawurlencode($st) : '');
-    $cid = (int)($_POST['cid'] ?? 0);
+    $cid = (int)($_POST['cid'] ?? $_GET['cid'] ?? 0);
 
     $row = $cid > 0 ? Db::row('SELECT id, title FROM ' . Db::t('contents') . ' WHERE id=? LIMIT 1', [$cid]) : null;
-    if ($row === null) { $_SESSION['flash'] = '找不到该' . $typeName; header('Location: ' . $back); exit; }
+    if ($row === null) { $_SESSION['flash'] = '找不到该' . ($type === 'page' ? '页面' : '文章'); header('Location: ' . $back); exit; }
     $head = '「' . mb_substr((string)$row['title'], 0, 24) . '」AI 翻译：';
 
     if (!Poly::on()) { $_SESSION['flash'] = $head . '多语言未启用'; header('Location: ' . $back); exit; }
@@ -328,58 +337,119 @@ function pc_ai_row(): void
         $_SESSION['flash'] = $head . '未配置 AI 密钥（后台 → 多语 → AI 设置 填 DeepSeek / OpenAI 兼容 Key）';
         header('Location: ' . $back); exit;
     }
+
+    // ---- 并发锁（按 cid；300s 内同一篇只允许一个任务在进行）----
+    $lockDir = rtrim(sys_get_temp_dir(), '/') . '/yecha_ai_locks';
+    if (!is_dir($lockDir)) { @mkdir($lockDir, 0700, true); }
+    $lock = $lockDir . '/cid_' . $cid . '.lock';
+    if (!$isCont && is_file($lock) && (time() - (int)@filemtime($lock) < 300)) {
+        $_SESSION['flash'] = $head . '已有翻译任务在进行中（若异常卡住，5 分钟后可重试）';
+        header('Location: ' . $back); exit;
+    }
+
     $langs = [];
     foreach (Poly::enabled() as $lc) { if ($lc !== Poly::defaultLang()) { $langs[] = (string)$lc; } }
     if (!$langs) { $_SESSION['flash'] = $head . '没有启用其它语言（设置 → 站点 → 语言）'; header('Location: ' . $back); exit; }
 
-    $t0 = microtime(true);
-    $done = []; $skip = []; $fail = []; $later = [];
-    $force = !empty($_POST['force']);
-    $fsKey = 'force_ai_' . $cid;
-    $forceStart = null;
-    if ($force) {
-        // 覆盖翻译：用会话内起始时间区分「本次覆盖会话」，
-        // 已在本会话内重译的语言（last_ai_at >= 起点）跳过，从而支持 45s 超时后「再点一次续做」。
-        $fs = ($_SESSION[$fsKey] ?? null);
-        if (!is_string($fs) || (time() - (int)strtotime($fs)) > 7200) {
-            $fs = date('Y-m-d H:i:s');
-            $_SESSION[$fsKey] = $fs;
+    // ---- 会话队列：初次构建；自动续链时复用 ----
+    $qKey = 'ai_queue_' . $cid;
+    if (!$isCont || !is_array($_SESSION[$qKey] ?? null)) {
+        $force = !empty($_POST['force']) || !empty($_GET['force']);
+        $fsKey = 'force_ai_' . $cid;
+        $forceStart = null;
+        if ($force) {
+            $fs = ($_SESSION[$fsKey] ?? null);
+            if (!is_string($fs) || (time() - (int)strtotime($fs)) > 7200) {
+                $fs = date('Y-m-d H:i:s');
+                $_SESSION[$fsKey] = $fs;
+            }
+            $forceStart = $fs;
         }
-        $forceStart = $fs;
+        $queue = [];
+        foreach ($langs as $lc) {
+            $ex = Poly::row($cid, $lc);
+            if ($ex !== null && (int)($ex['manual_override'] ?? 0) === 1) { continue; }   // 人工修正始终保留
+            if ($force) {
+                if ($ex !== null && !empty($ex['last_ai_at']) && (string)$ex['last_ai_at'] >= (string)$forceStart) { continue; }
+            } else {
+                if ($ex !== null) { continue; }   // 普通模式：已有译文跳过
+            }
+            $queue[] = $lc;
+        }
+        $_SESSION[$qKey] = $queue;
+        $_SESSION['ai_force_' . $cid] = $force;
+        $_SESSION['ai_back_' . $cid] = $back;
+        $_SESSION['ai_total_' . $cid] = count($queue);
+        $_SESSION['ai_done_' . $cid] = 0;
+        $_SESSION['ai_done_labels_' . $cid] = [];
+        $_SESSION['ai_fail_labels_' . $cid] = [];
+        $_SESSION['ai_iter_' . $cid] = 0;
+    } else {
+        $force = !empty($_SESSION['ai_force_' . $cid]);
+        $back = (string)($_SESSION['ai_back_' . $cid] ?? $back);
     }
-    foreach ($langs as $lc) {
-        $ex = Poly::row($cid, $lc);
-        // 人工修正的译文始终保留（无论是否覆盖）
-        if ($ex !== null && (int)($ex['manual_override'] ?? 0) === 1) {
-            $skip[] = Poly::label($lc) . '（已人工修正·保留）';
-            continue;
-        }
-        // 覆盖翻译：本会话内已重译的跳过，确保「再点一次」能续做剩余语言
-        if ($force && $ex !== null && !empty($ex['last_ai_at']) && (string)$ex['last_ai_at'] >= (string)$forceStart) {
-            continue;
-        }
-        // 普通模式：已有译文（非人工）直接跳过，避免每次重译前几条导致后面语言轮不到
-        if (!$force && $ex !== null) {
-            $skip[] = Poly::label($lc) . '（已有译文）';
-            continue;
-        }
-        if ((microtime(true) - $t0) > 45) { $later[] = Poly::label($lc); continue; }   // 单请求限时，剩下的再点一次续做
+
+    @touch($lock);            // 续链期间保持锁鲜活
+    set_time_limit(30);       // 硬墙钟上限，宁可报错也不无限挂起
+
+    $queue = $_SESSION[$qKey] ?? [];
+    $doneCount = (int)($_SESSION['ai_done_' . $cid] ?? 0);
+    $doneLabels = $_SESSION['ai_done_labels_' . $cid] ?? [];
+    $failLabels = $_SESSION['ai_fail_labels_' . $cid] ?? [];
+
+    $lc = array_shift($queue);
+    if ($lc !== null) {
         $r = ['ok' => false, 'error' => '未知错误'];
         try {
-            $r = Poly::aiTranslate($cid, $lc, '', '', '', true, $force);   // 覆盖时 ignoreOverride=true 确保覆盖已有译文
+            $r = Poly::aiTranslate($cid, $lc, '', '', '', true, $force);   // 覆盖时 ignoreOverride=true
         } catch (Throwable $e) {
             $r = ['ok' => false, 'error' => $e->getMessage()];
         }
-        if (!empty($r['skipped_override'])) { $skip[] = Poly::label($lc) . '（已人工修正）'; }
-        elseif (!empty($r['ok'])) { $done[] = Poly::label($lc); }
-        else { $fail[] = Poly::label($lc) . '（' . mb_substr((string)($r['error'] ?? '失败'), 0, 60) . '）'; }
+        if (!empty($r['ok'])) { $doneLabels[] = Poly::label($lc); $doneCount++; }
+        else { $failLabels[] = Poly::label($lc) . '（' . mb_substr((string)($r['error'] ?? '失败'), 0, 60) . '）'; }
     }
-    if (empty($later)) { unset($_SESSION[$fsKey]); }   // 本批跑完（或无需续做）清除覆盖会话标记
+    $_SESSION[$qKey] = $queue;
+    $_SESSION['ai_done_' . $cid] = $doneCount;
+    $_SESSION['ai_done_labels_' . $cid] = $doneLabels;
+    $_SESSION['ai_fail_labels_' . $cid] = $failLabels;
 
-    $msg = $head . ($done ? ('已翻译并发布 ' . implode('、', $done)) : '没有产生新译文');
-    if ($skip) { $msg .= ' · 跳过 ' . implode('、', $skip); }
-    if ($fail) { $msg .= ' · 失败 ' . implode('、', $fail); }
-    if ($later) { $msg .= ' · 本次时间到，' . implode('、', $later) . ' 请再点一次继续'; }
+    $total = (int)($_SESSION['ai_total_' . $cid] ?? ($doneCount + count($queue)));
+    $remaining = count($queue);
+
+    if ($lc === null) {
+        @unlink($lock);
+        unset($_SESSION[$qKey], $_SESSION['ai_force_' . $cid], $_SESSION['ai_back_' . $cid], $_SESSION['ai_total_' . $cid], $_SESSION['ai_done_' . $cid], $_SESSION['ai_done_labels_' . $cid], $_SESSION['ai_fail_labels_' . $cid], $_SESSION['ai_iter_' . $cid]);
+        $_SESSION['flash'] = $head . '没有需要翻译的语言（可能都已存在或已人工修正）';
+        header('Location: ' . $back); exit;
+    }
+
+    if ($remaining > 0 && empty($failLabels)) {
+        $iter = (int)($_SESSION['ai_iter_' . $cid] ?? 0) + 1;
+        $_SESSION['ai_iter_' . $cid] = $iter;
+        if ($iter > 20) {   // 安全阀：异常情况下也不无限续链
+            @unlink($lock);
+            unset($_SESSION[$qKey]);
+            $_SESSION['flash'] = $head . '已自动翻译 ' . $doneCount . ' 种（达到安全上限），其余请手动重试';
+            header('Location: ' . $back); exit;
+        }
+        http_response_code(200);
+        header('Content-Type: text/html; charset=utf-8');
+        echo '<!doctype html><html lang="zh-CN"><head><meta charset="utf-8">'
+            . '<meta http-equiv="refresh" content="1;url=/admin/?s=' . $type . 's&amp;ai_cont=1&amp;cid=' . $cid . '">'
+            . '<title>AI 翻译中…</title></head><body style="font:14px/1.8 system-ui,-apple-system,sans-serif;padding:48px;color:#333;max-width:640px;margin:0 auto">'
+            . '<h3 style="margin:0 0 12px">AI 翻译进行中</h3>'
+            . '<p>已完成：<b>' . e(implode('、', $doneLabels) ?: '—') . '</b>（' . $doneCount . '/' . $total . '）</p>'
+            . '<p style="color:#888">剩余 ' . $remaining . ' 种，1 秒后自动继续。若长时间无响应可<a href="/admin/?s=' . $type . 's">点此返回</a>。</p>'
+            . '</body></html>';
+        exit;
+    }
+
+    // 完成，或失败停止
+    @unlink($lock);
+    unset($_SESSION[$qKey], $_SESSION['ai_force_' . $cid], $_SESSION['ai_back_' . $cid], $_SESSION['ai_total_' . $cid], $_SESSION['ai_done_' . $cid], $_SESSION['ai_done_labels_' . $cid], $_SESSION['ai_fail_labels_' . $cid], $_SESSION['ai_iter_' . $cid]);
+    $msg = $head . ($doneLabels ? ('已翻译并发布 ' . implode('、', $doneLabels)) : '没有产生新译文');
+    if ($failLabels) { $msg .= ' · 失败 ' . implode('、', $failLabels); }
+    if ($remaining > 0) { $msg .= ' · 已停止，剩余 ' . $remaining . ' 种请稍后重试'; }
     $_SESSION['flash'] = $msg;
     Cache::flush('pages');
     Cache::flush('blocks');
