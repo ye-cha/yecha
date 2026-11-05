@@ -18,9 +18,9 @@ try {
             . " ORDER BY COALESCE(c.published_at, c.created_at) DESC LIMIT 8"
         );
         $tags = Db::rows(
-            "SELECT m.name, m.slug, (SELECT COUNT(*) FROM {$R} r WHERE r.meta_id=m.id) AS n"
+            "SELECT m.name, m.slug, m.count AS n"
             . " FROM {$M} m WHERE m.type='tag'"
-            . " AND (SELECT COUNT(*) FROM {$R} r WHERE r.meta_id=m.id) > 0"
+            . " AND m.count > 0"
             . " ORDER BY n DESC, m.name ASC LIMIT 18"
         );
     }

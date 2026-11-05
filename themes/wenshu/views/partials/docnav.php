@@ -12,9 +12,9 @@ try {
         $T = Db::t('contents'); $M = Db::t('metas'); $R = Db::t('relationships');
         $cats = Db::rows(
             "SELECT m.id, m.name, m.slug, m.description,"
-            . " (SELECT COUNT(*) FROM {$R} r WHERE r.meta_id=m.id) AS n"
+            . " m.count AS n"
             . " FROM {$M} m WHERE m.type='category'"
-            . " AND (SELECT COUNT(*) FROM {$R} r WHERE r.meta_id=m.id) > 0"
+            . " AND m.count > 0"
             . " ORDER BY n DESC, m.`order` ASC LIMIT 14"
         );
         $pages = Db::rows(
@@ -23,9 +23,9 @@ try {
             . " ORDER BY c.id ASC LIMIT 12"
         );
         $tags = Db::rows(
-            "SELECT m.id, m.name, m.slug, (SELECT COUNT(*) FROM {$R} r WHERE r.meta_id=m.id) AS n"
+            "SELECT m.id, m.name, m.slug, m.count AS n"
             . " FROM {$M} m WHERE m.type='tag'"
-            . " AND (SELECT COUNT(*) FROM {$R} r WHERE r.meta_id=m.id) > 0"
+            . " AND m.count > 0"
             . " ORDER BY n DESC, m.name ASC LIMIT 10"
         );
     }

@@ -147,9 +147,18 @@ final class Front
      */
     public static function postsTotal(): int
     {
+        /* [A5 去规范化 · 框架通用版] 可选 O(1) 快路径：
+           若站点有离线/导入线维护 ye_options 的 stats.posts_total（如 gushuwu 批量导入），
+           直接读该键即可，完全不跑任何聚合。框架本身【不主动写】该键——
+           避免没有维护方的站点被首次计算值冻结（无维护方时该键不存在，自然走下面缓存）。
+           无该键时退回 Cache(posts_total_v1, 3600s) → 现算，行为与 1.1.0 一致。 */
+        $opt = function_exists('get_option') ? trim((string)get_option('stats.posts_total', '')) : '';
+        if ($opt !== '' && ctype_digit($opt)) { return (int)$opt; }
+
         $ck  = 'posts_total_v1';
         $hit = Cache::get('misc', $ck);
         if ($hit !== false && $hit !== '') { return (int)$hit; }
+
         $n = (int)Db::one('SELECT COUNT(*) FROM ' . Db::t('contents') . ' WHERE ' . self::postWhere());
         Cache::set('misc', $ck, (string)$n, 3600);
         return $n;
@@ -585,10 +594,11 @@ final class Front
             . ' ORDER BY ' . self::publishAt() . ' DESC, id DESC LIMIT ' . (int)$limit . ' OFFSET ' . (int)$offset
         ), 'id'));
         $rows = self::rowsByIds($ids);
-        $total = (int)Db::one('SELECT COUNT(*) FROM ' . Db::t('contents') . ' WHERE ' . self::postWhere());
-        $ctKey = 'home_total_v1';
-        $ctC = Cache::get('misc', $ctKey);
-        if ($ctC !== false) { $total = (int)$ctC; } else { Cache::set('misc', $ctKey, (string)$total, 600); }
+        // [A1 修缓存次序 · 框架通用版] 原代码先无条件跑 COUNT、再读缓存 ⇒ 计数每请求都真跑一次
+        // （在 gushu_stage.ye_contents 上实测 20~35s，且一旦被打断就永远写不进缓存 = 自锁）。
+        // 改为统一走 postsTotal()：内部已按「stats.posts_total 选项 → Cache → 现算」次序，
+        // 既消除每请求 COUNT，又复用同一份去规范化/缓存，避免 home_total_v1 与 posts_total_v1 双份冗余。
+        $total = self::postsTotal();
         return [
             'title' => site_label() . ' · ' . site_tagline(),
             'page_title' => __('tt.latest'),

@@ -1,8 +1,35 @@
 # CHANGELOG · YeCha（夜叉）系统
 
-> 发布日：2026-10-23 · 版本：**1.1.0**
+> 发布日：2026-11-05 · 版本：**1.2.0**
 > 口径：只写「做了什么 + 判据」，逐条可回溯到 `/root/ta55/`（本轮）与 `_lqpix/ta/报告-*.md`（历史）。
 > 说明：本文件随发行包冻结；出包后再改文字 = 重发一次版本。
+
+## 0. 1.2.0 要点（性能：总数去规范化 + 缓存次序修正）
+
+| 组成 | 数值 |
+|---|---|
+| 系统版本 | `core/version.php` = `1.2.0` |
+| 改动面 | `core/Front.php`（`postsTotal()` / `home()`）+ 内置主题 `themes/xinglan`、`themes/wenshu`（同款 COUNT 反模式清理） |
+| 规范检查 | 改后 `php -l` 全过；线上慢日志不再出现对应 COUNT 指纹 |
+
+### 0.1 根因（gushuwu 1.1M 行 `ye_contents` + 3.27M 行 `ye_relationships` 实测）
+
+- `home()` **先无条件跑 `COUNT(*)`、再读缓存**：缓存只是「事后覆盖」，计数每请求都真跑一次。在 gushu_stage 上该 COUNT 实测 20~35s，且一旦被 `max_execution_time` 打断就永远 `Cache::set` 不到 ⇒ 缓存建不起来 ⇒ 自锁（yecha.org 慢日志累计该指纹 5413 次）。
+- `postsTotal()` 缺 `stats.posts_total` 去规范化：缓存过期（3600s）后回退现算，单次 11~100s。
+- 标签云反模式（历史）：慢日志曾出现 `SELECT ... FROM ye_metas ... ORDER BY (SELECT COUNT(*) FROM ye_relationships WHERE meta_id=ye_metas.id) DESC`（时间戳 2026-10-19，已非当前热路径）。当前活跃主题 `gushu`/`yecha` 的标签列表早已走 `ye_metas.count` 预计算列；但该反模式仍残留在**内置**主题 `xinglan`/`wenshu`（`(SELECT COUNT(*) FROM {$R} r WHERE r.meta_id=m.id)`），一旦启用即复现同类 3.27M 表 COUNT。
+
+### 0.2 修复（框架通用版，已在 gushuwu 暂存实例验证后精炼）
+
+- **`postsTotal()` 加可选 O(1) 快路径**：优先读 `ye_options.stats.posts_total`（由离线/导入线维护，如 gushuwu 批量导入），读不到再走 `Cache(posts_total_v1, 3600s)` → 现算。**框架不主动写该键**——避免无维护方的站点被首次计算值冻结；无该键时行为与 1.1.0 完全一致。
+- **`home()` 改走 `self::postsTotal()`**：删除「先 COUNT 后缓存」与冗余的 `home_total_v1` 缓存，统一复用 `postsTotal()` 的去规范化/缓存次序，彻底消除每请求 COUNT。
+- **清理内置主题同款反模式**：`themes/xinglan/views/landing.php` 与 `themes/wenshu`（`landing.php` + `partials/docnav.php`）的标签/分类计数由 `(SELECT COUNT(*) FROM {$R} r WHERE r.meta_id=m.id)` 改为预计算列 `m.count`（8 处/站 ×2 站 = 16 处）。`m.count` 即内核 `Front::tags()` 与 `gushu` 主题已在用的同款口径（已发布文章数），更快且口径更准（不含草稿/删除）。活跃主题 `gushu`/`yecha` 本就如此，无需改动。
+
+### 0.3 判据 / 验收
+
+- 两站（yecha.org / gushuwu）`core/Front.php` + `core/version.php` + 内置主题 `xinglan`/`wenshu`（6 文件）改后 `php -l` 全过。
+- 首页与列表页 curl 冒烟 200，零 PHP 警告。
+- 慢日志复核：不再出现 `home_total` / `posts_total` 的 `COUNT(*) FROM ye_contents` 与 `(SELECT COUNT(*) FROM ye_relationships)` 标签子查询指纹。
+- 归档数据（`published_at` 历史脏数据）**按决策不动**，本次未触碰。
 
 ## 1. 1.1.0 要点（新默认主题）
 

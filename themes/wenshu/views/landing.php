@@ -14,9 +14,9 @@ try {
         $stats['post'] = (int)Db::one("SELECT COUNT(*) FROM {$T} WHERE type='post' AND status='publish' AND deleted_at IS NULL");
         $cats = Db::rows(
             "SELECT m.id, m.name, m.slug, m.description,"
-            . " (SELECT COUNT(*) FROM {$R} r WHERE r.meta_id=m.id) AS n"
+            . " m.count AS n"
             . " FROM {$M} m WHERE m.type='category'"
-            . " AND (SELECT COUNT(*) FROM {$R} r WHERE r.meta_id=m.id) > 0"
+            . " AND m.count > 0"
             . " ORDER BY n DESC, m.`order` ASC LIMIT 9"
         );
         foreach ($cats as &$c) {
