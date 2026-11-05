@@ -54,6 +54,13 @@ function load_options(): void
 
 function get_option(string $name, mixed $default = null): mixed
 {
+    /* [shot-20261101] 主题预览：请求带合法预览令牌时（见 index.php 顶部），
+       theme.default 只在内存里被替换成预览主题，**不落库、不影响其它访客**。
+       主题截图 / 后台预览都靠这一处覆盖，改主题选项目前只有 View::render / View::asset /
+       index.php 的 landing 判断读它，故覆盖点放在这里最全。 */
+    if ($name === 'theme.default' && !empty($GLOBALS['YE_THEME_PREVIEW'])) {
+        return (string)$GLOBALS['YE_THEME_PREVIEW'];
+    }
     load_options();
     return $GLOBALS['YE_OPTIONS'][$name] ?? $default;
 }

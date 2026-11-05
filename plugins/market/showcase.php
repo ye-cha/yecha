@@ -105,7 +105,9 @@ function yc_sc_pkg(array $it): ?array
 function yc_sc_thumb(array $it): string
 {
     $base = dirname(__DIR__, 2) . '/uploads/market';
-    foreach (['png', 'jpg', 'jpeg', 'webp', 'gif'] as $ext) {
+    /* [shot-20261101] webp 优先：2026-11-01 全站统一重截 1440x900 界面图（webp），
+       旧 png 缩略图尺寸/风格不一，仅作兜底。 */
+    foreach (['webp', 'png', 'jpg', 'jpeg', 'gif'] as $ext) {
         $p = $base . '/thumbs/' . $it['type'] . '-' . $it['id'] . '.' . $ext;
         if (is_file($p)) { return '/uploads/market/thumbs/' . $it['type'] . '-' . $it['id'] . '.' . $ext; }
     }
@@ -281,7 +283,22 @@ function yc_sc_css(): string
         . '.sc-meta{color:#9a9a90;font-size:12px;margin-top:8px;display:flex;justify-content:space-between;gap:8px}'
         . '.sc-detail{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,0.95fr);gap:26px;margin:16px 0 8px}'
         . '.sc-shot{width:100%;border:1px solid var(--line,#e6e6e2);border-radius:14px;display:block;background:#f2ede6}'
-        . '.sc-gal{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(180px,100%),1fr));gap:10px;margin-top:12px}.sc-gal img{width:100%;border-radius:10px;border:1px solid var(--line,#e6e6e2);display:block}'
+        . '.sc-gal{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(200px,100%),1fr));gap:12px;margin-top:12px}'
+        . '.sc-gal .sc-fig{margin:0}'
+        . '.sc-gal .sc-fig img{width:100%;aspect-ratio:16/10;object-fit:cover;object-position:top;border-radius:10px;border:1px solid var(--line,#e6e6e2);display:block}'
+        . '.sc-gal .sc-fig figcaption{font-size:12.5px;color:#6f767e;margin-top:6px;text-align:center}'
+        /* [shot-20261101] 画廊点击放大 / 左右切换 */
+        . '.sc-gal .sc-fig img{cursor:zoom-in}'
+        . '.sc-lb{position:fixed;inset:0;z-index:9998;background:rgba(12,14,16,.93);display:flex;align-items:center;justify-content:center;padding:56px 64px}'
+        . '.sc-lb[hidden]{display:none}'
+        . '.sc-lb img{max-width:100%;max-height:100%;width:auto;height:auto;border-radius:8px;box-shadow:0 24px 70px rgba(0,0,0,.55);background:#fff;cursor:zoom-out}'
+        . '.sc-lb button{position:absolute;border:0;background:rgba(255,255,255,.15);color:#fff;width:46px;height:46px;border-radius:50%;font-size:24px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;transition:background .15s}'
+        . '.sc-lb button:hover{background:rgba(255,255,255,.3)}'
+        . '.sc-lb-x{top:16px;right:16px}'
+        . '.sc-lb-p{left:14px;top:50%;transform:translateY(-50%)}'
+        . '.sc-lb-n{right:14px;top:50%;transform:translateY(-50%)}'
+        . '.sc-lb-c{position:absolute;left:0;right:0;bottom:14px;text-align:center;color:#d7dbe0;font-size:13px;letter-spacing:.02em}'
+        . '@media(max-width:640px){.sc-lb{padding:44px 10px}.sc-lb-p{left:6px}.sc-lb-n{right:6px}}'
         . '.sc-kv{width:100%;border-collapse:collapse;font-size:13.5px}.sc-kv th{text-align:left;color:#6f767e;font-weight:500;width:112px;padding:6px 0;vertical-align:top}.sc-kv td{padding:6px 0;color:#1f2328;word-break:break-word}'
         . '.sc-h2{font-size:18px;margin:26px 0 8px}'
         . '.sc-files{font:12px/1.7 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;background:#fbfaf7;border:1px solid var(--line,#e6e6e2);border-radius:12px;padding:12px 14px;max-height:280px;overflow:auto;white-space:pre}'
@@ -294,7 +311,7 @@ function yc_sc_css(): string
         . '@media(max-width:860px){.sc-detail{grid-template-columns:minmax(0,1fr)}}'
         . '@media(max-width:600px){.sc-grid{grid-template-columns:minmax(0,1fr)}}'
         . 'html.dark .sc-card,html.dark .sc-tab,html.dark .sc-search input{background:#1f2328;border-color:#333;color:#e8e8e4}'
-        . 'html.dark .sc-name{color:#f2f3f5}html.dark .sc-shot,html.dark .sc-thumb{background:#2a2f36}'
+        . 'html.dark .sc-name{color:#f2f3f5}html.dark .sc-shot,html.dark .sc-thumb{background:#2a2f36}html.dark .sc-gal .sc-fig figcaption{color:#9aa3ad}'
         . 'html.dark .sc-files{background:#1a1e23;border-color:#333;color:#c9cfd6}'
         . 'html.dark .sc-install{background:#241f1a;border-color:#3a2f24}'
         . '</style>';
@@ -424,7 +441,51 @@ function yc_sc_detail(string $type, string $id): ?string
     }
 
     $gal = '';
-    foreach ($shots as $s) { $gal .= '<img src="' . e($s) . '" alt="' . e($name) . '" loading="lazy">'; }
+    /* [shot-20261101] 界面示例图带图注：按 shots/{id}/{1-index|2-archive|3-article}.webp 命名
+       映射「首页 / 列表页 / 详情页」；未匹配命名的旧图退回通用「界面示例」。 */
+    $shotLb = ['1-index' => ['首页', 'Home page'], '2-archive' => ['列表页', 'List page'], '3-article' => ['详情页', 'Post page']];
+    foreach ($shots as $s) {
+        $bn = pathinfo((string)$s, PATHINFO_FILENAME);
+        $lb = $shotLb[$bn] ?? null;
+        $cap = $lb ? (yc_sc_en() ? $lb[1] : $lb[0]) : (yc_sc_en() ? 'Screenshot' : '界面示例');
+        $gal .= '<figure class="sc-fig"><img src="' . e($s) . '" alt="' . e($name . ' ' . $cap) . '" loading="lazy">'
+            . '<figcaption>' . e($cap) . '</figcaption></figure>';
+    }
+
+    /* [shot-20261101] 点击图片打开大图并支持左右切换（键盘 ←/→/Esc、触摸滑动）。
+       纯增强：脚本不执行时图片仍正常显示。 */
+    $lbBox = '';
+    if ($gal !== '') {
+        $lbClose = yc_sc_t('关闭', 'Close');
+        $lbPrev = yc_sc_t('上一张', 'Previous');
+        $lbNext = yc_sc_t('下一张', 'Next');
+        $lbBox = '<div class="sc-lb" id="scLb" hidden role="dialog" aria-modal="true" aria-label="' . e(yc_sc_t('界面示例大图', 'Screenshot viewer')) . '">'
+            . '<button class="sc-lb-x" type="button" aria-label="' . e($lbClose) . '">&#10005;</button>'
+            . '<button class="sc-lb-p" type="button" aria-label="' . e($lbPrev) . '">&#8249;</button>'
+            . '<img alt="">'
+            . '<button class="sc-lb-n" type="button" aria-label="' . e($lbNext) . '">&#8250;</button>'
+            . '<div class="sc-lb-c"></div></div>'
+            . <<<'JS'
+<script>(function(){
+var g=document.getElementById("scGal"),lb=document.getElementById("scLb");
+if(!g||!lb)return;
+var imgs=[].slice.call(g.querySelectorAll(".sc-fig img")),big=lb.querySelector("img"),cap=lb.querySelector(".sc-lb-c"),i=0;
+function capOf(k){var f=imgs[k].parentNode,q=f?f.querySelector("figcaption"):null;return q?q.textContent:"";}
+function show(k){var n=imgs.length;i=((k%n)+n)%n;big.src=imgs[i].src;big.alt=imgs[i].alt||"";var c=capOf(i);cap.textContent=(i+1)+" / "+n+(c?" · "+c:"");}
+function open(k){show(k);lb.hidden=false;document.documentElement.style.overflow="hidden";}
+function close(){lb.hidden=true;document.documentElement.style.overflow="";}
+imgs.forEach(function(im,k){im.addEventListener("click",function(e){e.preventDefault();open(k);});});
+lb.addEventListener("click",function(e){if(e.target===lb||e.target===big)close();});
+lb.querySelector(".sc-lb-x").addEventListener("click",close);
+lb.querySelector(".sc-lb-p").addEventListener("click",function(e){e.stopPropagation();show(i-1);});
+lb.querySelector(".sc-lb-n").addEventListener("click",function(e){e.stopPropagation();show(i+1);});
+document.addEventListener("keydown",function(e){if(lb.hidden)return;if(e.key==="Escape"){close();}else if(e.key==="ArrowLeft"){show(i-1);}else if(e.key==="ArrowRight"){show(i+1);}});
+var tx=0;
+lb.addEventListener("touchstart",function(e){tx=e.touches[0].clientX;},{passive:true});
+lb.addEventListener("touchend",function(e){var dx=e.changedTouches[0].clientX-tx;if(Math.abs(dx)>50){show(i+(dx<0?1:-1));}},{passive:true});
+})();</script>
+JS;
+    }
 
     $typeLabel = $type === 'theme' ? yc_sc_t('主题', 'Theme') : yc_sc_t('插件', 'Plugin');
     $updated = date('Y-m-d', (int)@filemtime($it['dir']));
@@ -435,7 +496,7 @@ function yc_sc_detail(string $type, string $id): ?string
         . '<div class="sc-hero"><h1>' . e($name) . '</h1><p>' . e($desc) . '</p></div>'
         . '<div class="sc-detail"><div>'
         . '<img class="sc-shot" src="' . e($thumb) . '" alt="' . e($name) . '">'
-        . ($gal !== '' ? '<div class="sc-gal">' . $gal . '</div>' : '')
+        . ($gal !== '' ? '<div class="sc-gal" id="scGal">' . $gal . '</div>' . $lbBox : '')
         . '</div><div>'
         . '<table class="sc-kv">'
         . '<tr><th>' . yc_sc_t('类型', 'Type') . '</th><td>' . e($typeLabel) . '</td></tr>'

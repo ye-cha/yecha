@@ -1,4 +1,14 @@
 <?php
+/* [shot-20261101] yecha.org 官网环境没有 liulanqi 的 lqwww 工具数据层
+   （yc_entry_url / lqwww_* / lqpg_* 等函数均不存在），本文件原样渲染必然
+   Fatal（实测 post 页 500）。缺这些函数时直接回落内核默认主题（yecha）的
+   同名文章模板：内容区用 yecha 的，外壳仍是 bl 的 layout。
+   回滚 = 删掉本守卫块。 */
+if (!function_exists('yc_entry_url')) {
+    $__ycFallback = dirname(__DIR__, 3) . '/yecha/views/partials/post.php';
+    if (is_file($__ycFallback)) { include $__ycFallback; return; }
+}
+
 /** 文章/详情页（★ 精仿第 2 批 2026-10-05 —— 以 www.liulanqi.com 的 /tips/<slug> 真实骨架为模板）
  * ===========================================================================
  * 骨架 = `lqwww/gen/detail_tips.html`（+ `side_nav` / `side_toc` / `detail_related*`），

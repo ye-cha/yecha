@@ -204,6 +204,70 @@ function statx_bot_classify(?string $ua = null): array
 }
 
 /** UA 粗分设备类型：desktop / mobile / tablet / bot */
+
+/**
+ * ★ 机房/云端 ISP 识别（2026-11-01 新增）：UA 通过了真人判定，但**来源 IP 属于
+ *   云厂商 / IDC / 主机商**时，几乎不可能是真实访客（真实用户不会从阿里云/腾讯云/AWS 的
+ *   机房 IP 浏览内容站），而是 AI 拉取 / 采集 / 无头浏览器 / 监控。
+ *
+ * 依据（线上实测，tj-stat hits 表 region 第4段=ISP）：
+ *   · 51puer.com 全部 17,797 条流量里，**阿里（阿里云）占 17,768 条，其中 17,111 被 UA 判为"人类"**，
+ *     仅 657 被识别为爬虫；99.9% 的"人类"其实来自深圳阿里云机房 IP。
+ *   · 同类污染遍布全站：cha.wiki 的 Hostinger、9eb… 的腾讯云、各站 Leaseweb/Amazon/Google 等。
+ *   UA 检测永远抓不到"用 Chrome/Windows 伪装 UA 的云端脚本"，必须从 ISP 维度兜底。
+ *
+ * 判据：region 形如 `国家|省|市|ISP|CC`，取第4段（ISP）做**不区分大小写的子串命中**。
+ *   只列**明确**的云/IDC/主机商关键字；**绝不**列 residential ISP（电信/联通/移动/广电/鹏博士/
+ *   天威/Comcast/Verizon/BT/Deutsche Telekom…），避免误伤真人。
+ *   ⚠️ 不含 'cloudflare'：本站 nginx 已还原真实客户端 IP，若某站未正确还原，含 CF 会把全员判成机房；
+ *      CF 段直连本就极少（实测个位数），宁可漏不可错。
+ */
+function statx_bot_cloud_isp_list(): array
+{
+    static $L = null;
+    if ($L !== null) { return $L; }
+    return $L = [
+        // 中国云厂商 / IDC
+        '阿里', '腾讯', '华为', '百度', '京东', '金山', '火山', '字节', 'ucloud', '优刻得',
+        '青云', '网宿', '天翼云', '移动云', '联通云', '光环新网', '世纪互联', '首都在线',
+        // 海外云 / 主机 / IDC
+        'amazon', 'aws', 'google', 'microsoft', 'azure', 'oracle', '甲骨文',
+        'digitalocean', 'linode', 'akamai', 'vultr', 'choopa', 'ovh', 'hetzner',
+        'hostinger', 'leaseweb', 'f4 networks', 'contabo', 'scaleway', 'datacamp',
+    ];
+}
+
+/** 返回 region 命中的云端 ISP 原名（如 '阿里'），未命中返回 '' */
+function statx_bot_cloud_isp(string $region): string
+{
+    if ($region === '') { return ''; }
+    $seg = explode('|', $region);
+    $isp = mb_strtolower(trim((string)($seg[3] ?? '')));
+    if ($isp === '' || $isp === '0') { return ''; }
+    foreach (statx_bot_cloud_isp_list() as $k) {
+        if (strpos($isp, $k) !== false) { return (string)($seg[3] ?? ''); }
+    }
+    return '';
+}
+
+/**
+ * ★ 2026-11-01 新增：UA 判定 + 机房 ISP 兜底的复合分类。
+ * 仅在 UA 判定为"人类"时，再用 ISP 复核；一旦命中云端机房，改判为 bot_cls='cloud'。
+ * 已有 is_bot=1 的结果（se/ai/scraper/other/empty）原样返回，绝不漂移。
+ * $region 为空（地域解析失败）时退化为纯 UA 判定。
+ */
+function statx_bot_classify_ex(string $ua, string $region = ''): array
+{
+    $r = statx_bot_classify($ua);
+    if ($r['is_bot'] === 0) {
+        $isp = statx_bot_cloud_isp($region);
+        if ($isp !== '') {
+            return ['is_bot' => 1, 'cls' => 'cloud', 'name' => 'cloud:' . $isp];
+        }
+    }
+    return $r;
+}
+
 function statx_device(?string $ua = null, ?bool $isBot = null): string
 {
     $ua = $ua === null ? statx_bot_ua() : mb_strtolower(trim($ua));

@@ -249,7 +249,13 @@ function statx_derive_ua(string $ua): array
 {
     $ua = mb_strtolower($ua);
     $b = 'Other';
-    if (preg_match('~edg[a-z/]~', $ua))                     { $b = 'Edge'; }
+    // ★ 疾风 / Gust：自研浏览器（WebView2 内核）。UA 带 `gust/` 标识时优先认出，
+
+    //   必须在 edg/chrome 之前 —— 否则桌面端 WebView2 默认 UA 含 Edg/、手机端含 Chrome/ 会被先截走。
+
+    if (str_contains($ua, 'gust/') || str_contains($ua, 'org.gust.browser')) { $b = 'Gust'; }
+
+    elseif (preg_match('~edg[a-z/]~', $ua))                 { $b = 'Edge'; }
     elseif (preg_match('~opr/|opera[ /]~', $ua))            { $b = 'Opera'; }
     elseif (str_contains($ua, 'samsungbrowser'))            { $b = 'Samsung'; }
     elseif (str_contains($ua, 'ucbrowser'))                 { $b = 'UCBrowser'; }

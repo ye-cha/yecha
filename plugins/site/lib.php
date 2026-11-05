@@ -608,7 +608,7 @@ final class Site
                 if (preg_match('/' . $re . '/u', $content)) { $intent = $tag; break; }
             }
             try {
-                Db::insert('site_message', ['name' => $name, 'contact' => $contact, 'content' => $content, 'intent' => $intent, 'ip' => $ip]);
+                Db::insert(Site::t('message'), ['name' => $name, 'contact' => $contact, 'content' => $content, 'intent' => $intent, 'ip' => $ip]);
             } catch (Throwable $e) {
                 return;
             }
@@ -1446,6 +1446,17 @@ final class Site
             . '<p><input type="text" name="name" placeholder="您的称呼 *" required> <input type="text" name="contact" placeholder="电话 / 邮箱 / 微信"></p>'
             . '<p><textarea name="content" rows="5" placeholder="请描述您的需求（产品、数量、应用场景等）*" required></textarea></p>'
             . '<p><button class="sc-btn sc-btn-primary" type="submit">提交留言</button></p></form></div></div>';
+        // 公开问答：后台标记「前台公开」且已回复的留言（联系方式不外露，避免隐私泄露）
+        $pub = Db::rows("SELECT * FROM " . Site::t('message') . " WHERE is_public=1 AND reply<>'' ORDER BY reply_at DESC, id DESC LIMIT 20");
+        if ($pub) {
+            $h .= '<section class="sc-qa" style="margin-top:40px"><h2>公开问答</h2>';
+            foreach ($pub as $m) {
+                $h .= '<div style="border-top:1px solid #e6e6e2;padding:16px 0">'
+                    . '<div style="white-space:pre-wrap"><b>' . e((string)$m['name']) . '</b> 问：' . e((string)$m['content']) . '</div>'
+                    . '<div style="margin-top:8px;padding-left:16px;color:#2e6b34;white-space:pre-wrap"><b>答：</b>' . e((string)$m['reply']) . '</div></div>';
+            }
+            $h .= '</section>';
+        }
         return $h;
     }
 

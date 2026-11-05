@@ -308,17 +308,19 @@ function statx_ep_hit(): never
     if ($host === '') { $host = statx_ep_token((string)($_SERVER['HTTP_HOST'] ?? ''), 160); }
 
     $ua   = statx_bot_ua();
-    $bot  = statx_bot_classify($ua);
+    $ip   = (string)($_SERVER['REMOTE_ADDR'] ?? '');
+    // ★ 批次 2：地域在这里算（整个链路唯一还看得到 IP 的一刻；IP 不落盘）
+    // ★ 2026-11-01：UA 判定 + 机房 ISP 兜底（云端/IDC 来源判为 cloud，不污染人类统计）
+    $region = statx_ep_txt(statx_geo_lookup($ip), 64);
+    $bot  = statx_bot_classify_ex($ua, $region);
     $refU = statx_ep_ref((string)($_GET['r'] ?? ''));
     $ref  = statx_ref_split($refU, $host);
-    $ip   = (string)($_SERVER['REMOTE_ADDR'] ?? '');        // nginx 已按 CF 段还原真 IP；不信任任何请求头
     $ts   = time();
     $kind = (string)($_GET['k'] ?? 'pv');
     if (!in_array($kind, ['pv', 'cl', 'ev'], true)) { $kind = 'pv'; }
 
     // ★ 批次 2：地域在这里算 —— 这是整个链路里**唯一还看得到 IP 的一刻**
     //   （算完只把「地域字符串」写进 spool，IP 本身绝不落盘、绝不进 spool；失败一律空串）
-    $region = statx_ep_txt(statx_geo_lookup($ip), 64);
     [$browser, $os] = statx_derive_ua($ua);
 
     $cols = [

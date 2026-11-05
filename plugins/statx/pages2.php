@@ -201,6 +201,8 @@ function stx_bot_tag(string $cls): string
     $c = strtolower($cls);
     if ($c === 'search' || $c === 'se') { return stx_tag('搜索引擎', 'g'); }
     if ($c === 'ai') { return stx_tag('AI 爬虫', 'o'); }
+    /* ★ 2026-11-01：云端/IDC 机房 IP（AI 拉取/采集/无头浏览器）单独成类 */
+    if ($c === 'cloud') { return stx_tag('云端机房', 'o'); }
     /* ★★ r12：原来 'scraper' / 'other' / 'empty' 是**直接把英文 cls 原样印在页面上**
        （站长看到的"类型"栏里会冒出 scraper / other / empty 这种词）——
        这里换成中文，并保持"绿=搜索引擎 / 橙=AI / 红=未知"的三色语义不变。 */

@@ -299,10 +299,11 @@ function pc_ai_cell(int $cid, string $type, array $have, array $langs, bool $aiR
     }
     return '<div style="margin-top:6px">' . $badges . '</div>'
         . '<form class="inline" method="post" action="/admin/?s=' . $type . 's" style="margin-top:4px"'
-        . ' onsubmit="return confirm(\'用 AI 立即翻译成：' . e($tgtNames) . '？（已人工修正的译文会跳过）\')">'
+        . ' onsubmit="return confirm(\'用 AI 立即翻译成：' . e($tgtNames) . '？勾选「覆盖翻译」会重译已有译文（人工修正的仍保留）。\')">'
         . Csrf::field()
         . '<input type="hidden" name="do" value="poly-ai-row"><input type="hidden" name="type" value="' . $type . '">'
         . '<input type="hidden" name="cid" value="' . $cid . '">' . $hid
+        . '<label style="font-size:11px;color:#6f767e;margin-right:6px;white-space:nowrap;"><input type="checkbox" name="force" value="1"> 覆盖翻译</label>'
         . '<button class="btn ghost mini ai" type="submit" title="AI 翻译成：' . e($tgtNames) . '">AI 翻译</button></form>';
 }
 
@@ -333,11 +334,39 @@ function pc_ai_row(): void
 
     $t0 = microtime(true);
     $done = []; $skip = []; $fail = []; $later = [];
+    $force = !empty($_POST['force']);
+    $fsKey = 'force_ai_' . $cid;
+    $forceStart = null;
+    if ($force) {
+        // 覆盖翻译：用会话内起始时间区分「本次覆盖会话」，
+        // 已在本会话内重译的语言（last_ai_at >= 起点）跳过，从而支持 45s 超时后「再点一次续做」。
+        $fs = ($_SESSION[$fsKey] ?? null);
+        if (!is_string($fs) || (time() - (int)strtotime($fs)) > 7200) {
+            $fs = date('Y-m-d H:i:s');
+            $_SESSION[$fsKey] = $fs;
+        }
+        $forceStart = $fs;
+    }
     foreach ($langs as $lc) {
+        $ex = Poly::row($cid, $lc);
+        // 人工修正的译文始终保留（无论是否覆盖）
+        if ($ex !== null && (int)($ex['manual_override'] ?? 0) === 1) {
+            $skip[] = Poly::label($lc) . '（已人工修正·保留）';
+            continue;
+        }
+        // 覆盖翻译：本会话内已重译的跳过，确保「再点一次」能续做剩余语言
+        if ($force && $ex !== null && !empty($ex['last_ai_at']) && (string)$ex['last_ai_at'] >= (string)$forceStart) {
+            continue;
+        }
+        // 普通模式：已有译文（非人工）直接跳过，避免每次重译前几条导致后面语言轮不到
+        if (!$force && $ex !== null) {
+            $skip[] = Poly::label($lc) . '（已有译文）';
+            continue;
+        }
         if ((microtime(true) - $t0) > 45) { $later[] = Poly::label($lc); continue; }   // 单请求限时，剩下的再点一次续做
         $r = ['ok' => false, 'error' => '未知错误'];
         try {
-            $r = Poly::aiTranslate($cid, $lc, '', '', '', true);   // 与「AI 全自动」同参数：直接发布
+            $r = Poly::aiTranslate($cid, $lc, '', '', '', true, $force);   // 覆盖时 ignoreOverride=true 确保覆盖已有译文
         } catch (Throwable $e) {
             $r = ['ok' => false, 'error' => $e->getMessage()];
         }
@@ -345,6 +374,7 @@ function pc_ai_row(): void
         elseif (!empty($r['ok'])) { $done[] = Poly::label($lc); }
         else { $fail[] = Poly::label($lc) . '（' . mb_substr((string)($r['error'] ?? '失败'), 0, 60) . '）'; }
     }
+    if (empty($later)) { unset($_SESSION[$fsKey]); }   // 本批跑完（或无需续做）清除覆盖会话标记
 
     $msg = $head . ($done ? ('已翻译并发布 ' . implode('、', $done)) : '没有产生新译文');
     if ($skip) { $msg .= ' · 跳过 ' . implode('、', $skip); }

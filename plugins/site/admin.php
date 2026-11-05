@@ -128,12 +128,32 @@ function st_admin_handle(): string
     }
 
     if ($act === 'message_delete') {
-        Db::deleteBy('site_message', 'id = ?', [(int)($_POST['id'] ?? 0)]);
+        Db::deleteBy(Site::t('message'), 'id = ?', [(int)($_POST['id'] ?? 0)]);
         return '<div class="notice ok">留言已删除。</div>';
     }
     if ($act === 'message_read') {
-        Db::update('site_message', ['is_read' => 1], 'id = ?', [(int)($_POST['id'] ?? 0)]);
+        Db::update(Site::t('message'), ['is_read' => 1], 'id = ?', [(int)($_POST['id'] ?? 0)]);
         return '<div class="notice ok">已标记已读。</div>';
+    }
+    if ($act === 'message_reply') {
+        $id = (int)($_POST['id'] ?? 0);
+        $reply = trim((string)($_POST['reply'] ?? ''));
+        $isPublic = isset($_POST['is_public']) ? 1 : 0;
+        if ($id <= 0) { return '<div class="notice error">无效的留言。</div>'; }
+        if ($reply === '') { return '<div class="notice error">回复内容不能为空。</div>'; }
+        $by = 'admin';
+        if (!empty($_SESSION['user']) && is_array($_SESSION['user'])) {
+            $u = $_SESSION['user'];
+            $by = (string)($u['display_name'] ?? $u['username'] ?? 'admin');
+        }
+        Db::update(Site::t('message'), [
+            'reply'     => $reply,
+            'reply_at'  => date('Y-m-d H:i:s'),
+            'reply_by'  => $by,
+            'is_public' => $isPublic,
+            'is_read'   => 1,
+        ], 'id = ?', [$id]);
+        return '<div class="notice ok">已保存回复' . ($isPublic ? '（已设为前台公开）' : '') . '。</div>';
     }
     return '';
 }
@@ -336,14 +356,37 @@ function st_job_page(string $base, string $msg): string
 function st_message_page(string $base): string
 {
     $rows = Db::rows("SELECT * FROM " . Site::t('message') . " ORDER BY id DESC LIMIT 200");
-    $h = '<table class="wp-list-table widefat"><thead><tr><th>时间</th><th>称呼</th><th>联系方式</th><th>意图</th><th>内容</th><th>状态</th><th>操作</th></tr></thead><tbody>';
+    if (!$rows) { return '<p class="sc-empty">暂无留言。</p>'; }
+    $csrf = \Csrf::field();
+    $h = '';
     foreach ($rows as $r) {
-        $h .= '<tr><td>' . e((string)$r['created_at']) . '</td><td>' . e((string)$r['name']) . '</td><td>' . e((string)$r['contact']) . '</td><td>' . e((string)$r['intent']) . '</td><td>' . e(mb_substr((string)$r['content'], 0, 80)) . '</td>'
-            . '<td>' . ((int)$r['is_read'] === 1 ? '已读' : '<b style="color:#a32d2d">未读</b>') . '</td><td>'
-            . ((int)$r['is_read'] === 0 ? '<form method="post" style="display:inline">' . \Csrf::field() . '<input type="hidden" name="act" value="message_read"><input type="hidden" name="id" value="' . (int)$r['id'] . '"><button class="btn ghost mini" type="submit">标已读</button></form> ' : '')
-            . '<form method="post" style="display:inline" onsubmit="return confirm(\'确认删除？\')">' . \Csrf::field() . '<input type="hidden" name="act" value="message_delete"><input type="hidden" name="id" value="' . (int)$r['id'] . '"><button class="btn ghost mini" type="submit">删除</button></form></td></tr>';
+        $id = (int)$r['id'];
+        $read = (int)$r['is_read'] === 1;
+        $reply = (string)($r['reply'] ?? '');
+        $pub = (int)($r['is_public'] ?? 0) === 1;
+        $h .= '<div style="border:1px solid #e6e6e2;border-radius:10px;padding:14px 16px;margin-bottom:14px;' . ($read ? '' : 'background:#fff8f8;') . '">';
+        $h .= '<div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;color:#6f767e;font-size:12.5px">';
+        $h .= '<span>' . e((string)$r['created_at']) . ' · ' . e((string)$r['name']) . ' · ' . e((string)$r['intent']) . '</span>';
+        $h .= '<span>' . ($read ? '已读' : '<b style="color:#a32d2d">未读</b>') . ' · ' . ($pub ? '前台公开' : '不公开') . '</span></div>';
+        $h .= '<div style="margin:8px 0;white-space:pre-wrap">' . e((string)$r['content']) . '</div>';
+        $h .= '<div style="font-size:12px;color:#8a6a34">联系方式：' . e((string)$r['contact']) . ' · IP ' . e((string)$r['ip']) . '</div>';
+        if ($reply !== '') {
+            $h .= '<div style="margin-top:10px;padding:10px 12px;border-radius:8px;background:#eef4ee;border:1px solid #cfe2d0">';
+            $h .= '<b>官方回复' . ($r['reply_at'] ? '（' . e((string)$r['reply_at']) . ' · ' . e((string)$r['reply_by']) . '）' : '') . '：</b>';
+            $h .= '<div style="white-space:pre-wrap;margin-top:4px">' . e($reply) . '</div></div>';
+        }
+        $h .= '<form method="post" style="margin-top:10px">' . $csrf
+            . '<input type="hidden" name="act" value="message_reply"><input type="hidden" name="id" value="' . $id . '">'
+            . '<textarea name="reply" rows="3" placeholder="输入回复…" style="width:100%;box-sizing:border-box;border:1px solid #e6e6e2;border-radius:6px;padding:8px 10px;font:inherit">' . e($reply) . '</textarea>'
+            . '<div style="margin-top:6px;display:flex;gap:12px;align-items:center;flex-wrap:wrap">'
+            . '<label style="font-size:13px"><input type="checkbox" name="is_public"' . ($pub ? ' checked' : '') . '> 前台公开（显示为问答）</label>'
+            . '<button class="btn ghost mini" type="submit">保存回复</button></div></form>';
+        $h .= '<div style="margin-top:6px">';
+        if (!$read) { $h .= '<form method="post" style="display:inline">' . $csrf . '<input type="hidden" name="act" value="message_read"><input type="hidden" name="id" value="' . $id . '"><button class="btn ghost mini" type="submit">标已读</button></form> '; }
+        $h .= '<form method="post" style="display:inline" onsubmit="return confirm(\'确认删除？\')">' . $csrf . '<input type="hidden" name="act" value="message_delete"><input type="hidden" name="id" value="' . $id . '"><button class="btn ghost mini" type="submit">删除</button></form>';
+        $h .= '</div></div>';
     }
-    return $h . '</tbody></table>';
+    return $h;
 }
 
 /* ================= 行业风格包（12 套行业皮肤） ================= */

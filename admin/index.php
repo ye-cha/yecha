@@ -17,7 +17,9 @@ require __DIR__ . '/notes.inc.php';
 Plugins::boot(); // 加载第三方插件（Hooks 注册等）
 
 $action = $_GET['action'] ?? '';
-$sec = preg_replace('/[^a-z_]/', '', (string)($_GET['s'] ?? 'dashboard'));
+/* [shot-20261101] 放行连字符：插件 id 可含 -（如 home-static/entry-static），
+   原正则把它们截断成 plug_homestatic ⇒ 后台插件页永远「未知模块」。 */
+$sec = preg_replace('/[^a-z0-9_-]/', '', (string)($_GET['s'] ?? 'dashboard'));
 $msg = $_SESSION['flash'] ?? '';
 $msgErr = false;
 if (is_array($msg)) { $msgErr = !empty($msg['e']); $msg = (string)($msg['m'] ?? ''); }

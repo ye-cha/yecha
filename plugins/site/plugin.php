@@ -6,7 +6,7 @@ declare(strict_types=1);
 return [
     'id' => 'site',
     'name' => '企业官网',
-    'ver' => '0.1.0',
+    'ver' => '0.1.1',
     'desc' => '企业官网插件：产品 / 案例 / 新闻 / 招聘 / 留言 + 主题引擎（商务稳重、国风自然）+ SEO；AI 客服与语义搜索依赖 ai 插件。',
     'author' => 'YeCha',
     'license' => 'MIT',

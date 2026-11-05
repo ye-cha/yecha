@@ -10,6 +10,27 @@ if (!is_file(__DIR__ . '/config.inc.php')) {
 
 require __DIR__ . '/config.inc.php';
 require __DIR__ . '/core/bootstrap.php';
+
+/* ══ shot-20261101 BEGIN · 主题预览（后台预览 / 主题截图用） ════════════════════════
+   用法：任意前台 URL 追加 ?yc_theme=<主题目录名>&yc_key=<YC_PREVIEW_KEY>
+   · 令牌不匹配 → 完全忽略，站点行为与不加参数时一致；
+   · 命中 → 只在本次请求内存里把 theme.default 换成该主题（见 core/bootstrap.php::get_option），
+     **不写库、不影响其他访客**；主题目录必须真有 theme.json；
+   · 必须放在 Plugins::boot() 之前：home-static 等插件会在 boot 时注册输出缓冲，
+     晚于它设置就会截到旧主题的缓存页。
+   回滚：删掉本段 + core/bootstrap.php 里 get_option 的 shot-20261101 分支即可。 */
+if (isset($_GET['yc_theme']) && defined('YC_PREVIEW_KEY') && (string)YC_PREVIEW_KEY !== '') {
+    $__yc_t = (string)preg_replace('/[^a-z0-9_-]/i', '', (string)$_GET['yc_theme']);
+    $__yc_k = (string)($_GET['yc_key'] ?? '');
+    if ($__yc_t !== '' && hash_equals((string)YC_PREVIEW_KEY, $__yc_k)
+        && is_file(__DIR__ . '/themes/' . $__yc_t . '/theme.json')) {
+        $GLOBALS['YE_THEME_PREVIEW'] = $__yc_t;
+        // 带令牌 + yc_debug=1 时临时开错误输出（仅预览请求可见，用于排查主题渲染异常）
+        if (isset($_GET['yc_debug'])) { @ini_set('display_errors', '1'); @error_reporting(E_ALL); }
+    }
+}
+/* ══ shot-20261101 END ══ */
+
 Plugins::boot(); // 第三方插件（Hooks / 侧栏块 / 独立页）
 
 /* 定时文章到点自动上架 */
