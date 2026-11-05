@@ -423,7 +423,7 @@ function pc_ai_row(): void
         header('Location: ' . $back); exit;
     }
 
-    if ($remaining > 0 && empty($failLabels)) {
+    if ($remaining > 0) {
         $iter = (int)($_SESSION['ai_iter_' . $cid] ?? 0) + 1;
         $_SESSION['ai_iter_' . $cid] = $iter;
         if ($iter > 20) {   // 安全阀：异常情况下也不无限续链
@@ -434,17 +434,18 @@ function pc_ai_row(): void
         }
         http_response_code(200);
         header('Content-Type: text/html; charset=utf-8');
+        $failNote = $failLabels ? ' · 失败：' . e(implode('、', $failLabels)) : '';
         echo '<!doctype html><html lang="zh-CN"><head><meta charset="utf-8">'
             . '<meta http-equiv="refresh" content="1;url=/admin/?s=' . $type . 's&amp;ai_cont=1&amp;cid=' . $cid . '">'
             . '<title>AI 翻译中…</title></head><body style="font:14px/1.8 system-ui,-apple-system,sans-serif;padding:48px;color:#333;max-width:640px;margin:0 auto">'
             . '<h3 style="margin:0 0 12px">AI 翻译进行中</h3>'
-            . '<p>已完成：<b>' . e(implode('、', $doneLabels) ?: '—') . '</b>（' . $doneCount . '/' . $total . '）</p>'
-            . '<p style="color:#888">剩余 ' . $remaining . ' 种，1 秒后自动继续。若长时间无响应可<a href="/admin/?s=' . $type . 's">点此返回</a>。</p>'
+            . '<p>已完成：<b>' . e(implode('、', $doneLabels) ?: '—') . '</b>（' . $doneCount . '/' . $total . '）' . $failNote . '</p>'
+            . '<p style="color:#888">剩余 ' . $remaining . ' 种，1 秒后自动继续（单种失败会自动跳过并继续）。若长时间无响应可<a href="/admin/?s=' . $type . 's">点此返回</a>。</p>'
             . '</body></html>';
         exit;
     }
 
-    // 完成，或失败停止
+    // 完成（个别失败的语言已在末尾统一报告，不会中断整批）
     @unlink($lock);
     unset($_SESSION[$qKey], $_SESSION['ai_force_' . $cid], $_SESSION['ai_back_' . $cid], $_SESSION['ai_total_' . $cid], $_SESSION['ai_done_' . $cid], $_SESSION['ai_done_labels_' . $cid], $_SESSION['ai_fail_labels_' . $cid], $_SESSION['ai_iter_' . $cid]);
     $msg = $head . ($doneLabels ? ('已翻译并发布 ' . implode('、', $doneLabels)) : '没有产生新译文');

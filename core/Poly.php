@@ -337,6 +337,38 @@ final class Poly
     }
 
     /** AI 翻译 → 生成/覆盖译文；$publish=true 时直接发布（CLI 批量用） */
+    /**
+     * 校验译文是否真的落在目标语种上（防止 DeepSeek 在「中文→日语/韩语」时把源文同汉字原样回显）。
+     * 返回 false 表示疑似未翻译（日语不含假名、韩语不含谚文、拉丁语种却几乎全是汉字等）。
+     */
+    private static function targetScriptOk(string $text, string $lang): bool
+    {
+        $t = trim($text);
+        if ($t === '') { return false; }
+        switch ($lang) {
+            case 'ja': return (bool)preg_match('/[ぁ-んァ-ヶ]/u', $t);
+            case 'ko': return (bool)preg_match('/[가-힣]/u', $t);
+            case 'ar': return (bool)preg_match('/[؀-ۿ]/u', $t);
+            case 'ru': case 'uk': case 'be': return (bool)preg_match('/[А-Яа-яЁё]/u', $t);
+            case 'th': return (bool)preg_match('/[ก-๛]/u', $t);
+            case 'hi': case 'bn': case 'pa': return (bool)preg_match('/[ऀ-ॿ]/u', $t);
+            case 'el': return (bool)preg_match('/[Ͱ-Ͽ]/u', $t);
+            case 'he': return (bool)preg_match('/[֐-׿]/u', $t);
+            case 'en': case 'es': case 'fr': case 'de': case 'pt': case 'it':
+            case 'nl': case 'sv': case 'pl': case 'tr': case 'id': case 'vi':
+                return (bool)preg_match('/[A-Za-z]/', $t) && !self::mostlyHan($t);
+            default: return true; // zh/tw 等以汉字为主，源即目标，跳过校验
+        }
+    }
+
+    /** 文本是否几乎全是汉字（用于甄别「拉丁语种却原样返回中文」） */
+    private static function mostlyHan(string $t): bool
+    {
+        $han = (int)preg_match_all('/[一-鿿]/u', $t, $m);
+        $len = (int)mb_strlen($t);
+        return $len > 0 && ($han / $len) > 0.8;
+    }
+
     public static function aiTranslate(int $baseId, string $lang, string $model = '', string $base = '', string $key = '', bool $publish = false, bool $ignoreOverride = false): array
     {
         $base = $base !== '' ? $base : (string)get_option('ai.base', 'https://api.deepseek.com/chat/completions');
@@ -355,44 +387,60 @@ final class Poly
         $protect = (string)get_option('ai.protect', 'YeCha,夜叉');
         $srcName = self::label(self::defaultLang());
         $tgtName = self::label($lang);
-        $sys = 'You are a professional translation engine. Translate the following blog post from ' . $srcName . ' (' . self::defaultLang() . ') to ' . $tgtName . ' (' . $lang . '). '
-            . 'Keep Markdown syntax, code blocks and links unchanged. Return ONLY JSON: {"title":"...","excerpt":"...","keywords":"...","content":"..."}. '
-            . 'Do not translate these protected terms: ' . $protect . '.';
         $user = 'Title: ' . $baseRow['title'] . "\n\nExcerpt:\n" . $baseRow['excerpt'] . "\n\nContent:\n" . $baseRow['content'];
-        $payload = json_encode([
-            'model' => $model,
-            'messages' => [
-                ['role' => 'system', 'content' => $sys],
-                ['role' => 'user', 'content' => $user],
-            ],
-            'temperature' => 0.3,
-            'max_tokens' => 8192,
-            'response_format' => ['type' => 'json_object'],
-        ], JSON_UNESCAPED_UNICODE);
 
-        $ctx = stream_context_create(['http' => [
-            'method' => 'POST',
-            'header' => "Content-Type: application/json\r\nAuthorization: Bearer " . $key . "\r\n",
-            'content' => $payload,
-            'timeout' => 20,
-            'ignore_errors' => true,
-        ]]);
-        $resp = @file_get_contents($base, false, $ctx);
-        if ($resp === false) {
-            return ['ok' => false, 'error' => 'AI 接口请求失败（网络/地址），请检查 ai.base 设置'];
+        // 重试 + 语种校验：DeepSeek 在「中文→日语/韩语」时偶尔会把源文（同属汉字文化圈）原样回显，
+        // 必须校验目标语种脚本（日语含假名、韩语含谚文、拉丁语种含字母且非纯汉字），否则会静默存成中文。
+        // 最多重试 2 次；仍不通过则如实报错，绝不把中文当译文落库。
+        $maxAttempts = 2;
+        $parsed = null;
+        $lastErr = '翻译失败';
+        for ($__att = 1; $__att <= $maxAttempts; $__att++) {
+            $reinforce = $__att > 1
+                ? ' 注意：你上一次把源语言原样返回了。你必须真正翻译成「' . $tgtName . '」，并使用其 native writing system'
+                  . '（日语必须用平假名/片假名 + 日语语法，不能只留汉字；韩语必须用谚文），绝对不要输出中文或任何源语言。只输出 JSON。'
+                : '';
+            $sys = 'You are a professional translation engine. Translate the following blog post from '
+                . $srcName . ' (' . self::defaultLang() . ') to ' . $tgtName . ' (' . $lang . '). '
+                . 'The output MUST be written entirely in ' . $tgtName . ' using its native writing system; do NOT output the source language or Chinese-only text. '
+                . 'Keep Markdown syntax, code blocks and links unchanged. Return ONLY JSON: {"title":"...","excerpt":"...","keywords":"...","content":"..."}. '
+                . 'Do not translate these protected terms: ' . $protect . '.' . $reinforce;
+            $payload = json_encode([
+                'model' => $model,
+                'messages' => [
+                    ['role' => 'system', 'content' => $sys],
+                    ['role' => 'user', 'content' => $user],
+                ],
+                'temperature' => 0.3,
+                'max_tokens' => 8192,
+                'response_format' => ['type' => 'json_object'],
+            ], JSON_UNESCAPED_UNICODE);
+            $ctx = stream_context_create(['http' => [
+                'method'  => 'POST',
+                'header'  => "Content-Type: application/json\r\nAuthorization: Bearer " . $key . "\r\n",
+                'content' => $payload,
+                'timeout' => 18,
+                'ignore_errors' => true,
+            ]]);
+            $resp = @file_get_contents($base, false, $ctx);
+            if ($resp === false) { $lastErr = 'AI 接口请求失败（网络/地址），请检查 ai.base 设置'; continue; }
+            $j = json_decode($resp, true);
+            $text = $j['choices'][0]['message']['content'] ?? '';
+            if ($text === '') { $lastErr = 'AI 返回错误：' . ($j['error']['message'] ?? '未知错误'); continue; }
+            // 剥离可能的 ```json 围栏
+            $text = trim(preg_replace('/^```(?:json)?\s*/', '', $text));
+            $text = trim(preg_replace('/```\s*$/', '', $text));
+            $p = json_decode($text, true);
+            if (!is_array($p) || ($p['content'] ?? '') === '') { $lastErr = 'AI 返回格式异常，请重试或手动填写'; continue; }
+            if (!self::targetScriptOk((string)($p['content'] ?? ''), $lang)) {
+                $lastErr = '译文未通过语种校验（疑似原样返回源语言），已自动重试';
+                continue;
+            }
+            $parsed = $p;
+            break;
         }
-        $j = json_decode($resp, true);
-        $text = $j['choices'][0]['message']['content'] ?? '';
-        if ($text === '') {
-            $err = $j['error']['message'] ?? '未知错误';
-            return ['ok' => false, 'error' => 'AI 返回错误：' . $err];
-        }
-        // 剥离可能的 ```json 围栏
-        $text = trim(preg_replace('/^```(?:json)?\s*/', '', $text));
-        $text = trim(preg_replace('/```\s*$/', '', $text));
-        $parsed = json_decode($text, true);
-        if (!is_array($parsed) || ($parsed['content'] ?? '') === '') {
-            return ['ok' => false, 'error' => 'AI 返回格式异常，请重试或手动填写'];
+        if ($parsed === null) {
+            return ['ok' => false, 'error' => $lastErr];
         }
         $d = [
             'title' => (string)($parsed['title'] ?? $baseRow['title']),
