@@ -18,6 +18,7 @@ return [
     'nav.privacy'  => 'Privacy Policy',
     'nav.docs'     => 'Docs',
     'nav.themes'   => 'Themes',
+    'nav.enterprise' => 'Enterprise Themes',
     'nav.plugins'  => 'Plugins',
     'nav.changelog'=> 'Changelog',
     'nav.resources'=> 'Resources',

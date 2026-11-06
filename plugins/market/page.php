@@ -6,9 +6,12 @@ declare(strict_types=1);
 // 市场收录 · 前台申请页（/market-app）
 require_once __DIR__ . '/market_lib.php';
 require_once __DIR__ . '/showcase.php';
+require_once __DIR__ . '/enterprise.php';
 
 function yc_market_page(string $slug): array
 {
+    // 企业主题栏目（/enterprise，与 /theme 并行）
+    if ($slug === 'enterprise') { return yc_enterprise_page(); }
     // t38：主题页 / 插件页（列表 + 详情，见 showcase.php）
     if ($slug === 'theme' || $slug === 'plugin') { return yc_sc_page($slug); }
     // t39：应用市场汇总页（/market：主题 / 插件两块 + 计数）

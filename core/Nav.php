@@ -20,7 +20,7 @@ final class Nav
                             ]],
             'market'    => ['label' => 'nav.market',    'uri' => '/market',        'zone' => ['top', 'foot'], 'root' => false,
                             'children' => [
-                                ['label' => 'nav.grp_market', 'items' => ['themes', 'plugins']],
+                                ['label' => 'nav.grp_market', 'items' => ['themes', 'plugins', 'enterprise']],
                             ]],
             'docs'      => ['label' => 'nav.docs',      'uri' => '/docs',          'zone' => ['top', 'foot'], 'root' => false],
             'forum'     => ['label' => 'nav.forum',     'uri' => '/forum.html',         'zone' => ['top', 'foot'], 'root' => false],
@@ -29,6 +29,7 @@ final class Nav
             'pkg_full'  => ['label' => 'nav.pkg_full',  'uri' => '/downloads',     'zone' => ['foot'], 'root' => false],
             'pkg_install' => ['label' => 'nav.download_page', 'uri' => '/download.html', 'zone' => ['foot'], 'root' => false],
             'themes'    => ['label' => 'nav.themes',    'uri' => '/theme',         'zone' => ['foot'], 'root' => false],
+            'enterprise'=> ['label' => 'nav.enterprise', 'uri' => '/enterprise',    'zone' => ['foot'], 'root' => false],
             'plugins'   => ['label' => 'nav.plugins',   'uri' => '/plugin',        'zone' => ['foot'], 'root' => false],
             'store'     => ['label' => 'nav.store',     'uri' => '/store',         'zone' => ['foot'], 'root' => false],
             'developers'=> ['label' => 'nav.developers', 'uri' => '/developers.html', 'zone' => ['foot'], 'root' => false],

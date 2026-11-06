@@ -25,6 +25,8 @@ return [
         ['slug' => 'theme', 'title' => '主题'],
         ['slug' => 'plugin', 'title' => '插件'],
         ['slug' => 'downloads', 'title' => '下载中心'],
+        // 企业主题栏目（与 /theme 并行）
+        ['slug' => 'enterprise', 'title' => '企业主题'],
     ],
     'admin_file' => 'admin.php',
     'admin_fn' => 'yc_market_admin',

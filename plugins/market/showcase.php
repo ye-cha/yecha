@@ -669,6 +669,7 @@ function yc_sc_market(): string
         . '<div class="mk-kpi">'
         . '<a href="' . $lp . '/theme"><b>' . $nt . '</b>' . yc_sc_t('主题', 'themes') . '</a>'
         . '<a href="' . $lp . '/plugin"><b>' . $np . '</b>' . yc_sc_t('插件', 'plugins') . '</a>'
+        . '<a href="' . $lp . '/enterprise"><b>' . count(yc_ent_styles()) . '</b>' . yc_sc_t('企业风格包', 'enterprise style packs') . '</a>'
         . '<a href="' . $lp . '/downloads"><b>' . ($nt + $np) . '</b>' . yc_sc_t('安装包（tar.gz）', 'packages (tar.gz)') . '</a>'
         . '</div>'
         . $block($themes, 'theme', $lp . '/theme', $nt)

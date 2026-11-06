@@ -18,6 +18,7 @@ return [
     'nav.privacy'  => '隐私政策',
     'nav.docs'     => '文档',
     'nav.themes'   => '主题',
+    'nav.enterprise' => '企业主题',
     'nav.plugins'  => '插件',
     'nav.changelog'=> '更新日志',
     'nav.resources'=> '资源',
