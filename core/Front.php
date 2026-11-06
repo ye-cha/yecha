@@ -528,6 +528,20 @@ final class Front
             $win = min(8192, $win * 8);
         }
         // 退回 relationships 驱动（旧行为）：命中稀疏/时间久远的术语靠这条保证与原来逐行一致。
+        // ↓↓↓ 1.2.4：tw 侧大术语深翻页同样受 relationships 全量 filesort 之累（唐 95k 关联实测 ~2s）。
+        //     先用 meta 命中全序键序（与 zh 侧共用的 ye_meta_page_bounds，排序键与语言无关）取本页精确键，
+        //     再经 polyRowsByIds 回表按 p.lang='tw' 筛译文 —— 密集大术语（唐宋诗）tw 译文占比高，本页基本满
+        //     limit，毫秒级；tw 子集不足 limit 时退回下面旧回退（行为不变，无回归）。
+        //     排序键一致：p.id 与 c.id(group_id) 同序（见上方译文侧注释），内容逐行等价。
+        if (self::metaPageBoundsReady()) {
+            $mTotal   = (int)Db::one('SELECT `count` FROM ' . Db::t('metas') . ' WHERE id=? LIMIT 1', [$metaId]);
+            $byBounds = self::metaPageIdsByBounds($metaId, $mTotal, $limit, $offset);
+            if ($byBounds !== null) {
+                $twRows = self::polyRowsByIds($lang, $byBounds, $limit, 0);
+                // 满页 或 byBounds 已给不出满页（meta 命中到末段）→ 返回；末段 tw 子集可能 < limit，属正常末页，不强行 filesort。
+                if (count($twRows) >= $limit || count($byBounds) < $limit) { return $twRows; }
+            }
+        }
         return Db::rows(
             'SELECT p.title, p.slug, p.excerpt, p.updated_at, c.views, c.published_at, c.words'
             . ' FROM ' . Db::t('relationships') . ' r'

@@ -1,10 +1,38 @@
 # CHANGELOG · YeCha（夜叉）系统
 
-> 发布日：2026-11-05 · 版本：**1.2.3**（含 1.2.1 / 1.2.2 / 1.2.3）
+> 发布日：2026-11-06 · 版本：**1.2.4**（含 1.2.1 / 1.2.2 / 1.2.3 / 1.2.4）
 > 口径：只写「做了什么 + 判据」，逐条可回溯到 `/root/ta55/`（本轮）与 `_lqpix/ta/报告-*.md`（历史）。
 > 说明：本文件随发行包冻结；出包后再改文字 = 重发一次版本。
 
-## 0. 1.2.3 要点（AI 翻译健壮性：覆盖模式防雪崩 + 语种校验防源文回显）
+## 0. 1.2.4 要点（tw 深翻页接 bounds 快路径）
+
+| 组成 | 数值 |
+|---|---|
+| 系统版本 | `core/version.php` = `1.2.4` |
+| 改动面 | `core/Front.php`（`polyMetaPage` 新增 tw 侧 bounds 快路径分支） |
+| 规范检查 | `php -l` 全过；gushuwu.com tw 分类/标签深翻页实测 27~278ms（修复前 2~10s） |
+
+### 0.1 根因（gushuwu.com 慢日志 / 直跑 `Front::enMetaList` 实测）
+- zh 侧分类/标签页深翻页自 v1.2.0 起已走 `ye_meta_page_bounds` 键序快路径（O(limit)，毫秒级）；但 **tw（繁体）侧** `polyMetaPage` 在候选窗口法短页后直接回退 `relationships` 全量 filesort：唐 95k 关联、诗/宋/唐等密集大术语深翻页（offset 数万~百万）扫 10~30 万行 = 2~10s，慢日志可见 10s/166k 行指纹。
+- `ye_meta_page_bounds` 排序键在 `ye_contents`（`published_at DESC, id DESC`），与语言无关，zh/tw 共用同一张表，但 tw 侧此前未接入。
+
+### 0.2 修复
+- 在 `polyMetaPage` 旧 `relationships` 回退之前插入 bounds 快路径分支：`metaPageBoundsReady()` 守卫 → 查 `ye_metas.count` → `metaPageIdsByBounds()` 取本页精确键 → `polyRowsByIds($lang, $byBounds, $limit, 0)` 回表按 `p.lang='tw'` 筛译文。
+- 密集大术语（唐宋诗）tw 译文占比高，本页基本满 `limit`，毫秒级；tw 子集不足 `limit`（末段或稀疏术语）时退回旧 `relationships` 回退（行为不变，无回归）。
+- 排序键一致性：译文侧 `p.id` 与 `c.id(group_id)` 同序（top 3000 互查错位 0 条），内容逐行等价。
+
+### 0.3 判据 / 验收
+- 服务器直跑 `Front::enMetaList`（Lang::switch('zh_TW')）真实路径：诗 page/40000 278ms、宋 page/15000 147ms、唐 page/7000 109ms、曲 page/5 27ms（修复前 2~10s）。
+- `php -l core/Front.php` 通过；依赖的 `metaPageBoundsReady` / `metaPageIdsByBounds` / `polyRowsByIds` / `Db::one` 均为 canon 既有，无新增依赖、不改动既有逻辑。
+
+### 0.4 发行包与部署
+- 发行包：`yecha-1.2.4.tar.gz` —— 基于 tag `v1.2.4` 的 `git archive`（校验和见同目录 `MANIFEST.sha256`）。
+- 部署实例：yecha.org（canonical 仓库）提交 `v1.2.4` tag；gushuwu.com 此前已在实例层先行应用该分支（本次并入框架、消除分叉），bounds 预计算表由 `tools/gushu-meta-page-bounds.php --check` 巡检 cron 维持新鲜（水位守卫失效即自动重建）。
+
+### 0.5 回滚
+- 版本回滚：`core/version.php` 改回 `1.2.3`；`polyMetaPage` 该分支 `git revert` 或 checkout 历史版本；tw 深翻页回退到旧 `relationships` 路径（慢但正确）。
+
+## 1. 1.2.3 要点（AI 翻译健壮性：覆盖模式防雪崩 + 语种校验防源文回显）
 
 | 组成 | 数值 |
 |---|---|
@@ -35,7 +63,7 @@
 ### 0.5 回滚
 - 版本回滚：`core/version.php` 改回 `1.2.2`；`Poly.php` / `posts.inc.php` / `index.php` 回退对应 commit（`git revert` 或 checkout 历史版本）。
 
-## 1. 1.2.2 要点（AI 翻译「覆盖翻译」致死服务器 → 单请求单语言 + 并发锁 + 自动续链）
+## 2. 1.2.2 要点（AI 翻译「覆盖翻译」致死服务器 → 单请求单语言 + 并发锁 + 自动续链）
 
 | 组成 | 数值 |
 |---|---|
@@ -56,7 +84,7 @@
 ### 1.3 判据 / 验收
 - xuecha.org / yecha.org 后台均 HTTP 200；`load average` 117→0.6；`php -l` 三文件无语法错误。
 
-## 2. 1.2.1 要点（AI 翻译「覆盖翻译」模式 + 同步线上在研改动）
+## 3. 1.2.1 要点（AI 翻译「覆盖翻译」模式 + 同步线上在研改动）
 
 | 组成 | 数值 |
 |---|---|
@@ -75,7 +103,7 @@
 
 ---
 
-## 3. 1.2.0 要点（性能：总数去规范化 + 缓存次序修正）
+## 4. 1.2.0 要点（性能：总数去规范化 + 缓存次序修正）
 
 | 组成 | 数值 |
 |---|---|
