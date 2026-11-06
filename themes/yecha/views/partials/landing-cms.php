@@ -598,41 +598,23 @@ $lcT = static function (string $zh, string $en) use ($lcEn): string { return $lc
     </ul>
   </section>
 
-  <?php if ($lcPosts !== []): ?>
-  <section class="lc-sec">
-    <div class="lc-sec-head">
-      <div>
-        <div class="lc-kicker">Posts</div>
-        <h2 class="lc-h2"><?= $lcT('最新发布', 'Latest posts') ?></h2>
-        <p class="lc-sub"><?= $lcT('站内最近发布的文章与页面。', 'The most recently published posts and pages.') ?></p>
-      </div>
-      <a class="lc-more" href="<?= e($lcLp) ?>/archives"><?= $lcT('全部归档', 'Archive') ?> →</a>
-    </div>
-    <ul class="lc-list">
-      <?php foreach ($lcPosts as $p): ?>
-      <li>
-        <span class="lc-date"><?= e(substr((string)($p['date'] ?? ''), 0, 10)) ?></span>
-        <span class="lc-li-main"><a class="lc-list-a" href="<?= e((string)$p['href']) ?>"><?= e((string)$p['title']) ?></a></span>
-      </li>
-      <?php endforeach; ?>
-    </ul>
-  </section>
-  <?php endif; ?>
 
   <section class="lc-sec">
     <div class="lc-sec-head">
       <div>
         <div class="lc-kicker">Docs</div>
         <h2 class="lc-h2"><?= $lcT('文档入口', 'Documentation') ?></h2>
-        <p class="lc-sub"><?= $lcT('安装、升级、二次开发都在站内文档，随版本一起更新。', 'Install, upgrade and extension guides live in the on-site docs and ship with each release.') ?></p>
+        <p class="lc-sub"><?= $lcT('安装、使用、开发、运维九章，每章独立页面，随版本一起更新。', 'Nine standalone chapters: install, use, extend and operate — updated with every release.') ?></p>
       </div>
       <a class="lc-more" href="<?= e($lcLp) ?>/docs"><?= $lcT('全部文档', 'All docs') ?> →</a>
     </div>
     <div class="lc-docs">
-      <a class="lc-doc" href="<?= e($lcLp) ?>/docs#install"><span class="ic">📦</span><span class="txt"><b><?= $lcT('安装', 'Install') ?></b><span><?= $lcT('环境要求、伪静态、目录权限与常见报错', 'Requirements, rewrite rules, permissions and common errors') ?></span></span><em>→</em></a>
-      <a class="lc-doc" href="<?= e($lcLp) ?>/docs#upgrade"><span class="ic">⬆️</span><span class="txt"><b><?= $lcT('升级', 'Upgrade') ?></b><span><?= $lcT('升级前备份 → 覆盖 → 自检 → 回滚', 'Backup, replace, self-check and roll back') ?></span></span><em>→</em></a>
-      <a class="lc-doc" href="<?= e($lcLp) ?>/docs#theme-dev"><span class="ic">🎨</span><span class="txt"><b><?= $lcT('主题开发', 'Theme development') ?></b><span><?= $lcT('目录结构、theme.json、模板与变量', 'Structure, theme.json, templates and variables') ?></span></span><em>→</em></a>
-      <a class="lc-doc" href="<?= e($lcLp) ?>/docs#plugin-dev"><span class="ic">🔌</span><span class="txt"><b><?= $lcT('插件开发', 'Plugin development') ?></b><span><?= $lcT('plugin.php 清单、路由、权限与迁移', 'Manifest, routes, permissions and migrations') ?></span></span><em>→</em></a>
+      <a class="lc-doc" href="<?= e($lcLp) ?>/docs-install.html"><span class="ic">📦</span><span class="txt"><b><?= $lcT('安装与部署', 'Installation') ?></b><span><?= $lcT('环境要求、伪静态、目录权限、首次加固', 'Requirements, rewrite rules, permissions, hardening') ?></span></span><em>→</em></a>
+      <a class="lc-doc" href="<?= e($lcLp) ?>/docs-quickstart.html"><span class="ic">🚀</span><span class="txt"><b><?= $lcT('快速开始', 'Quick start') ?></b><span><?= $lcT('登录后台、设置站点、发布第一篇文章', 'Sign in, configure, publish your first post') ?></span></span><em>→</em></a>
+      <a class="lc-doc" href="<?= e($lcLp) ?>/docs-usage.html"><span class="ic">📖</span><span class="txt"><b><?= $lcT('使用手册', 'User guide') ?></b><span><?= $lcT('后台 16 个模块、内容与导航、设置与工具', '16 admin modules, content, nav, settings, tools') ?></span></span><em>→</em></a>
+      <a class="lc-doc" href="<?= e($lcLp) ?>/docs-theme.html"><span class="ic">🎨</span><span class="txt"><b><?= $lcT('主题开发', 'Theme development') ?></b><span><?= $lcT('theme.json、模板变量、视图回落与暗色', 'theme.json, variables, fallbacks, dark mode') ?></span></span><em>→</em></a>
+      <a class="lc-doc" href="<?= e($lcLp) ?>/docs-plugin.html"><span class="ic">🔌</span><span class="txt"><b><?= $lcT('插件开发', 'Plugin development') ?></b><span><?= $lcT('清单、路由、后台页、迁移与卸载', 'Manifest, routes, admin pages, migrations, uninstall') ?></span></span><em>→</em></a>
+      <a class="lc-doc" href="<?= e($lcLp) ?>/docs-ops.html"><span class="ic">🛠️</span><span class="txt"><b><?= $lcT('运维与升级', 'Operations') ?></b><span><?= $lcT('备份、回滚、缓存、性能与发版规范', 'Backup, rollback, cache, performance, release') ?></span></span><em>→</em></a>
     </div>
   </section>
 
@@ -708,7 +690,9 @@ $lcT = static function (string $zh, string $en) use ($lcEn): string { return $lc
       <ul>
         <li><a href="<?= e($lcLp) ?>/downloads"><?= $lcT('下载中心', 'Downloads') ?></a></li>
         <li><a href="<?= e($lcLp) ?>/changelog"><?= $lcT('更新日志', 'Changelog') ?></a></li>
-        <li><a href="<?= e($lcLp) ?>/docs"><?= $lcT('使用文档', 'Documentation') ?></a></li>
+        <li><a href="<?= e($lcLp) ?>/docs"><?= $lcT('文档中心', 'Documentation') ?></a></li>
+        <li><a href="<?= e($lcLp) ?>/docs-usage.html"><?= $lcT('使用手册', 'User guide') ?></a></li>
+        <li><a href="<?= e($lcLp) ?>/docs-dev.html"><?= $lcT('内核开发', 'Core development') ?></a></li>
         <li><a href="<?= e($lcLp) ?>/developers.html"><?= $lcT('开发文档', 'Developer docs') ?></a></li>
       </ul>
     </div>

@@ -390,6 +390,9 @@ function yc_side_box(string $title, string $inner, string $headLink = ''): strin
     return '<div class="side-box"><h4>' . $h . '</h4>' . $inner . '</div>';
 }
 
+// 官网文档侧栏共用数据源：内核功能块与主题 partials/sidebar.php 使用同一套清单
+require_once dirname(__FILE__) . '/core/docs-nav.php';
+
 /* ---------- 门户落地页（option home.landing=1）：主题没有落地页模板则不接管 ----------
  * ● 2026-09-27 landing 守卫
  * 起因：`home.landing=1` 时内核**无条件**渲染 `landing`，而 `View::render()` 找不到模板就抛
@@ -453,10 +456,10 @@ function render_page(string $title, string $mainHtml): string
         $blocks = [];
     } elseif ($cur === null) {
         $show = theme_opt('show_sidebar', '1') !== '0';
-        $blocks = ['search', 'cats', 'latest', 'tags'];
+        $blocks = ['search', 'about', 'docs', 'recent', 'resources'];
     } else {
         $show = ($cur['show'] ?? '1') !== '0';
-        $blocks = is_array($cur['blocks'] ?? null) ? $cur['blocks'] : ['search', 'cats', 'latest', 'tags'];
+        $blocks = is_array($cur['blocks'] ?? null) ? $cur['blocks'] : ['search', 'about', 'docs', 'recent', 'resources'];
     }
 
     if ($show) {
@@ -469,6 +472,11 @@ function render_page(string $title, string $mainHtml): string
             $sb = Front::sidebar();
             $html = $pre;
             foreach ($blocks as $b) {
+                // 文档式侧栏块：与译文界面的 partials/sidebar.php 同源（core/docs-nav.php）
+                if (in_array($b, ['about', 'docs', 'recent', 'resources'], true)) {
+                    $html .= yc_side_block_html($b);
+                    continue;
+                }
                 if ($b === 'search') {
                     $html .= yc_side_box(__('sb.search'),
                         '<form class="side-search" method="get" action="/search" role="search">'

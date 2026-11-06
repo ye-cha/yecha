@@ -492,7 +492,8 @@ if ($authed && $isAdmin && ($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
     }
     if ($do === 'layouts-save') {
         $types = ['home', 'post', 'page', 'tag', 'category', 'archives', 'search'];
-        $allBlocks = array_merge(['search', 'blogger', 'cats', 'latest', 'tags', 'archives'], array_keys(Plugins::sideBlocks()));
+        $allBlocks = array_merge(['search', 'blogger', 'cats', 'latest', 'tags', 'archives',
+            'about', 'docs', 'recent', 'resources'], array_keys(Plugins::sideBlocks()));
         $out = [];
         foreach ($types as $tp) {
             $show = ($_POST["sb_show_$tp"] ?? '') === '1' ? '1' : '0';
@@ -1043,9 +1044,10 @@ switch ($sec) {
             'tag' => '/tag/… 列表右栏', 'category' => '/category/… 列表右栏',
             'archives' => '归档总览/按月归档右栏', 'search' => '站内搜索页右栏',
         ];
-        $blkLabel = ['search' => '搜索框', 'blogger' => '博主信息', 'cats' => '分类', 'latest' => '最新文章', 'tags' => '标签云', 'archives' => '归档'];
+        $blkLabel = ['search' => '搜索框', 'blogger' => '博主信息', 'cats' => '分类', 'latest' => '最新文章', 'tags' => '标签云', 'archives' => '归档',
+            'about' => '关于 YeCha', 'docs' => '文档导航', 'recent' => '最近更新', 'resources' => '资源入口'];
         $blkLabel += Plugins::sideBlocks(); // 第三方插件块（如 友链墙）
-        $defBlocks = ['search', 'blogger', 'cats', 'latest', 'tags', 'archives'];
+        $defBlocks = ['search', 'about', 'docs', 'recent', 'resources'];
         $cards = '';
         $csrf = Csrf::field();
         foreach ($labels as $tp => $name) {

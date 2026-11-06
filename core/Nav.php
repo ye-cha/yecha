@@ -22,7 +22,11 @@ final class Nav
                             'children' => [
                                 ['label' => 'nav.grp_market', 'items' => ['themes', 'plugins', 'enterprise']],
                             ]],
-            'docs'      => ['label' => 'nav.docs',      'uri' => '/docs',          'zone' => ['top', 'foot'], 'root' => false],
+            'docs'      => ['label' => 'nav.docs',      'uri' => '/docs',          'zone' => ['top', 'foot'], 'root' => false,
+                            'children' => [
+                                ['label' => 'nav.grp_docs', 'items' => ['docs_install', 'docs_quickstart', 'docs_usage', 'docs_faq']],
+                                ['label' => 'nav.grp_dev',  'items' => ['docs_theme', 'docs_plugin', 'docs_dev', 'docs_i18n', 'docs_ops']],
+                            ]],
             'forum'     => ['label' => 'nav.forum',     'uri' => '/forum.html',         'zone' => ['top', 'foot'], 'root' => false],
 
             // 二级 / 页脚项
@@ -34,9 +38,16 @@ final class Nav
             'store'     => ['label' => 'nav.store',     'uri' => '/store',         'zone' => ['foot'], 'root' => false],
             'developers'=> ['label' => 'nav.developers', 'uri' => '/developers.html', 'zone' => ['foot'], 'root' => false],
             'changelog' => ['label' => 'nav.changelog', 'uri' => '/changelog',     'zone' => ['foot'], 'root' => false],
-            'cats'      => ['label' => 'nav.cats',      'uri' => '/category/',     'zone' => ['foot'], 'root' => false],
-            'tags'      => ['label' => 'nav.tags',      'uri' => '/tag/',          'zone' => ['foot'], 'root' => false],
-            'archive'   => ['label' => 'nav.archive',   'uri' => '/archives',      'zone' => ['foot'], 'root' => false],
+            // 文档中心章节：顶部「文档」下拉 + 页脚平铺（与 /docs 索引同源）
+            'docs_install'    => ['label' => 'nav.docs_install',    'uri' => '/docs-install.html',    'zone' => ['foot'], 'root' => false],
+            'docs_quickstart' => ['label' => 'nav.docs_quickstart', 'uri' => '/docs-quickstart.html', 'zone' => ['foot'], 'root' => false],
+            'docs_usage'      => ['label' => 'nav.docs_usage',      'uri' => '/docs-usage.html',      'zone' => ['foot'], 'root' => false],
+            'docs_theme'      => ['label' => 'nav.docs_theme',      'uri' => '/docs-theme.html',      'zone' => ['foot'], 'root' => false],
+            'docs_plugin'     => ['label' => 'nav.docs_plugin',     'uri' => '/docs-plugin.html',     'zone' => ['foot'], 'root' => false],
+            'docs_dev'        => ['label' => 'nav.docs_dev',        'uri' => '/docs-dev.html',        'zone' => ['foot'], 'root' => false],
+            'docs_i18n'       => ['label' => 'nav.docs_i18n',       'uri' => '/docs-i18n.html',       'zone' => ['foot'], 'root' => false],
+            'docs_ops'        => ['label' => 'nav.docs_ops',        'uri' => '/docs-ops.html',        'zone' => ['foot'], 'root' => false],
+            'docs_faq'        => ['label' => 'nav.docs_faq',        'uri' => '/docs-faq.html',        'zone' => ['foot'], 'root' => false],
             'search'    => ['label' => 'nav.search',    'uri' => '/search',        'zone' => ['foot'], 'root' => false],
             'about'     => ['label' => 'nav.about',     'uri' => '/about.html',    'zone' => ['foot'], 'root' => false],
             'join'      => ['label' => 'nav.join',      'uri' => '/join.html',     'zone' => ['foot'], 'root' => false],
