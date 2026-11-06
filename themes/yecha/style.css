@@ -473,3 +473,118 @@ pre { max-width: 100%; overflow-x: auto; }
 /* t55 · 正文兜底断行：CJK+ASCII 混排里偶有不可断长串（含 &nbsp; 的整段），
    390 档会顶出版心 40px。break-word 只在「这一行确实放不下」时才断，不改变 min-content。 */
 .article-content { overflow-wrap: break-word; }
+
+
+
+/* ==========================================================================
+   /changelog · 版本时间线（2026-11-07 整理）
+   对齐：Keep a Changelog（每版独立/分类分组/可链接/倒序/ISO 日期）
+        GitHub Releases、WordPress 生态（版本徽章/分类标签/Latest/Release 链接）
+        shadcn、Bruno 文档站（时间线竖线、版本索引、移动端单列）
+        本站 /docs（开篇导语 + 本页导航锚点目录 + 表格 + 带语言标签的代码块）
+   仅作用于 /changelog 内容页，不影响其它页面。
+   ========================================================================== */
+.cl-wrap{margin:0}
+.cl-intro{margin:0 0 18px;padding:14px 18px;background:var(--soft);border:1px solid var(--line);border-left:3px solid var(--accent);border-radius:0 10px 10px 0}
+.article-content .cl-intro p{margin:0;font-size:14.5px;line-height:1.85;color:var(--fg)}
+.article-content .cl-intro p.cl-intro-meta{margin-top:8px;font-size:13px;color:var(--muted)}
+.cl-intro-meta b{font:600 13px Consolas,Menlo,monospace;color:var(--fg)}
+.cl-intro a{color:var(--accent)}
+
+/* 版本导航：与 /docs 的「本页导航」同一形态 */
+.cl-nav{display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:12px 14px;margin:0 0 28px;background:var(--soft);border:1px solid var(--line);border-radius:10px}
+.cl-nav-cap{font-size:11.5px;letter-spacing:.6px;text-transform:uppercase;color:var(--muted);margin-right:4px}
+.article-content .cl-nav a{display:inline-flex;align-items:center;gap:7px;padding:3px 10px;background:#fff;border:1px solid var(--line);border-radius:999px;font-size:12.5px;line-height:1.7;color:var(--fg);text-decoration:none}
+.article-content .cl-nav a:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-soft);opacity:1}
+.cl-nav a b{font:600 12.5px Consolas,Menlo,monospace}
+.cl-nav a time{font:11.5px Consolas,Menlo,monospace;color:var(--muted)}
+
+/* 时间线竖线 + 圆点 */
+.cl-timeline{position:relative;padding-left:26px}
+.cl-timeline::before{content:"";position:absolute;left:7px;top:10px;bottom:10px;width:2px;background:var(--line);border-radius:2px}
+.cl-rel{position:relative;margin:0 0 34px;padding:0}
+.cl-rel:last-child{margin-bottom:4px}
+.cl-rel::before{content:"";position:absolute;left:-25px;top:9px;width:11px;height:11px;border-radius:50%;background:#fff;border:2px solid var(--line);box-shadow:0 0 0 4px #fff}
+.cl-rel.is-latest::before{left:-26px;top:8px;width:13px;height:13px;background:var(--accent);border-color:var(--accent);box-shadow:0 0 0 4px #fff,0 0 0 6px var(--accent-soft)}
+
+/* 版本头：徽章 + 日期 + Latest + Release/Tag 链接 */
+.cl-head{margin:0 0 10px}
+.cl-badges{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:0 0 7px}
+.cl-ver{display:inline-block;font:700 13.5px/1.5 Consolas,Menlo,monospace;letter-spacing:.3px;color:#fff;background:var(--accent);padding:2px 9px;border-radius:6px}
+.cl-date{font:12.5px Consolas,Menlo,monospace;color:var(--muted)}
+.cl-latest{font-size:11px;font-weight:700;color:var(--accent);background:var(--accent-soft);border:1px solid var(--accent);border-radius:999px;padding:1px 9px;white-space:nowrap}
+.article-content .cl-gh{font-size:12px;color:var(--muted);text-decoration:none;border-bottom:1px dotted var(--line)}
+.article-content .cl-gh:hover{color:var(--accent);border-bottom-color:var(--accent);opacity:1}
+.article-content h2.cl-title{font-size:20px;line-height:1.45;margin:0;scroll-margin-top:80px;font-weight:700}
+
+/* 摘要 */
+.cl-sum{margin:0 0 14px;padding:9px 14px;background:var(--soft);border-left:3px solid var(--line);border-radius:0 8px 8px 0;font-size:14.5px;line-height:1.8;color:var(--fg)}
+.cl-sum code{background:var(--codebg);border-radius:4px;padding:1px 5px;font:12.5px Consolas,Menlo,monospace}
+
+/* 分类组：符号 + 文字的彩色标签（不靠颜色单独表意） */
+.cl-grp{margin:0 0 15px}
+.cl-grp-h{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:0 0 6px}
+.cl-chip{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:700;line-height:1.7;padding:1px 10px;border:1px solid;border-radius:999px;white-space:nowrap}
+.cl-chip i{font-style:normal;font-weight:800;font-size:12px}
+.cl-grp-extra{font-size:12.5px;color:var(--muted)}
+.article-content .cl-grp-body ul,
+.article-content .cl-grp-body ol{padding-left:1.35em;margin:0 0 .7em}
+.article-content .cl-grp-body li{margin:.3em 0;line-height:1.85}
+.article-content .cl-grp-body p{margin:0 0 .7em}
+.article-content .cl-grp-body pre{margin:.7em 0 1em}
+.article-content .cl-grp-body table{margin:.7em 0 1em}
+
+.cl-grp-add .cl-chip{color:#1a7f4b;background:#eaf7ef;border-color:#b7e3c8}
+.cl-grp-change .cl-chip{color:#1c5fa8;background:#eaf2fc;border-color:#bcd6f2}
+.cl-grp-fix .cl-chip{color:#b02a4a;background:#fdeef2;border-color:#f4c2ce}
+.cl-grp-security .cl-chip{color:#96580a;background:#fff4e3;border-color:#f0d29a}
+.cl-grp-verify .cl-chip{color:#0f6d72;background:#e8f6f7;border-color:#b3dfe2}
+.cl-grp-cause .cl-chip{color:#626970;background:#f2f3f4;border-color:#dcdfe2}
+.cl-grp-docs .cl-chip{color:#5b4a9e;background:#f1eefb;border-color:#d5cdf0}
+.cl-grp-remove .cl-chip{color:#8a4b12;background:#fdf1e7;border-color:#eed3b8}
+.cl-grp-note .cl-chip{color:var(--muted);background:var(--soft);border-color:var(--line)}
+
+/* 代码块语言角标（Markdown 围栏 ```lang 输出 data-lang） */
+.article-content pre[data-lang]{padding-top:36px}
+.article-content pre[data-lang]::before{content:attr(data-lang);position:absolute;right:12px;top:9px;font:11px/1 Consolas,Menlo,monospace;letter-spacing:.5px;text-transform:uppercase;color:#98a1aa}
+.article-content pre[data-lang]::after{content:"";position:absolute;left:16px;right:16px;top:30px;height:1px;background:rgba(255,255,255,.1)}
+
+/* 深色模式 */
+html.dark .cl-intro{background:#1c1f23;border-color:#2b3038;border-left-color:var(--accent)}
+html.dark .article-content .cl-intro p,
+html.dark .article-content .cl-intro p.cl-intro-meta{color:#d6d3cc}
+html.dark .cl-intro-meta b{color:#f2f0eb}
+html.dark .cl-nav{background:#1c1f23;border-color:#2b3038}
+html.dark .article-content .cl-nav a{background:#22262c;border-color:#343a42;color:#e6e6e2}
+html.dark .article-content .cl-nav a:hover{background:#2b241f;border-color:var(--accent);color:#e9a97c}
+html.dark .cl-timeline::before{background:#343a42}
+html.dark .cl-rel::before{background:#1c1f23;border-color:#4a515b;box-shadow:0 0 0 4px #1c1f23}
+html.dark .cl-rel.is-latest::before{background:var(--accent);border-color:var(--accent);box-shadow:0 0 0 4px #1c1f23,0 0 0 6px #3b2a20}
+html.dark .cl-date,html.dark .cl-nav a time,html.dark .cl-grp-extra{color:#a8adb2}
+html.dark .cl-latest{color:#e9a97c;background:#33251c;border-color:#8a5a37}
+html.dark .cl-sum{background:#1c1f23;border-left-color:#3a4048;color:#d6d3cc}
+html.dark .cl-sum code{background:#262b31;color:#e6e6e2}
+html.dark .article-content .cl-gh{border-bottom-color:#3a4048}
+html.dark .cl-grp-add .cl-chip{color:#7bd6a0;background:#163124;border-color:#2c5a3d}
+html.dark .cl-grp-change .cl-chip{color:#8abcf0;background:#16283d;border-color:#2c4c72}
+html.dark .cl-grp-fix .cl-chip{color:#f0a2b6;background:#3a1d27;border-color:#6d3345}
+html.dark .cl-grp-security .cl-chip{color:#edc178;background:#382a15;border-color:#6b5227}
+html.dark .cl-grp-verify .cl-chip{color:#84d3d8;background:#143033;border-color:#2b5a5e}
+html.dark .cl-grp-cause .cl-chip{color:#c2c7cc;background:#262b31;border-color:#3a4048}
+html.dark .cl-grp-docs .cl-chip{color:#bdb0ec;background:#251f3d;border-color:#463a72}
+html.dark .cl-grp-remove .cl-chip{color:#e0b184;background:#362417;border-color:#6b4527}
+html.dark .cl-grp-note .cl-chip{color:#c2c7cc;background:#262b31;border-color:#3a4048}
+
+/* 移动端：竖线收起，卡片单列 */
+@media(max-width:768px){
+  .cl-timeline{padding-left:0}
+  .cl-timeline::before,.cl-rel::before,.cl-rel.is-latest::before{display:none}
+  .cl-rel{border-left:2px solid var(--line);padding-left:14px;margin-bottom:26px}
+  .cl-rel.is-latest{border-left-color:var(--accent)}
+  .article-content h2.cl-title{font-size:18px}
+  .cl-nav{gap:6px;padding:10px}
+  .article-content .cl-nav a{font-size:12px;padding:2px 8px}
+  .cl-badges{gap:6px}
+  html.dark .cl-rel{border-left-color:#343a42}
+  html.dark .cl-rel.is-latest{border-left-color:var(--accent)}
+}

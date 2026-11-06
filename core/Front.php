@@ -679,7 +679,10 @@ final class Front
                 $data['tags'] = $fil($take('tag', $ids($rawTag)));
             }
         }
-        $html = Markdown::render((string)$row['content']);
+        // /changelog 走结构化「版本时间线」渲染（core/Changelog.php）；其它内容页仍走通用 Markdown
+        $html = ($slug === 'changelog' && class_exists('Changelog'))
+            ? Changelog::render((string)$row['content'], $lang)
+            : Markdown::render((string)$row['content']);
         // 服务端目录：给 h2~h5 加锚点 id 并收集目录项（右栏顶部展示，无需 JS）
         $tocItems = [];
         $html = preg_replace_callback('/<h([2345])([^>]*)>(.*?)<\/h\1>/is', function ($m) use (&$tocItems): string {

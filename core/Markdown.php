@@ -23,8 +23,10 @@ final class Markdown
 
             if ($t === '') { $i++; continue; }
 
-            // 围栏代码
+            // 围栏代码（```lang 输出 data-lang，供主题显示代码块语言角标）
             if (str_starts_with($t, '```')) {
+                $lang = strtolower(trim(substr($t, 3)));
+                if (preg_match('/^[a-z0-9_+#.\-]{1,20}$/', $lang) !== 1) { $lang = ''; }
                 $buf = [];
                 $i++;
                 while ($i < $n && !str_starts_with(trim($lines[$i]), '```')) {
@@ -32,7 +34,8 @@ final class Markdown
                     $i++;
                 }
                 $i++; // 跳过闭合围栏
-                $out .= '<pre><code>' . e(implode("\n", $buf)) . '</code></pre>';
+                $out .= '<pre' . ($lang !== '' ? ' data-lang="' . e($lang) . '"' : '')
+                    . '><code>' . e(implode("\n", $buf)) . '</code></pre>';
                 continue;
             }
             // 分割线
