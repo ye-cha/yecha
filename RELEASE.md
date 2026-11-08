@@ -1,6 +1,6 @@
 # YeCha 发布标准规范（Release Standard）
 
-> 适用范围：每次发布新版本（打 tag + 出包 + 上 GitHub）。本规范是**强制清单**，逐项完成、缺一不可。
+> 适用范围：每次发布新版本（打 tag + 出包 + 上 GitHub），以及**日常每一次提交**（不发版也必须同步 GitHub，见第 6 节）。本规范是**强制清单**，逐项完成、缺一不可。
 > 实测依据：v1.2.4 发布（2026-11-06）完整走通本流程。
 
 ## 0. 前置条件
@@ -38,6 +38,19 @@
 ## 5. 收尾
 - [ ] 服务器上含 DB 密码等敏感信息的临时脚本已删除。
 - [ ] 项目日志（`.workbuddy/memory`）追加本次发布结论。
+
+## 6. 日常同步（不发版也必须推送）
+
+> 目标：GitHub 上的 `ye-cha/yecha` 永远与线上 106 仓库一致，不能出现「线上改完、GitHub 落后几个提交」。
+
+- [ ] 每次功能性提交后立即 `git push origin main`（展示层、文档、内容接线等不发版的改动同样适用）。
+- [ ] 同步校验：`git rev-list --left-right --count main...origin/main` 必须输出 `0\t0`（左=本地独有，右=远端独有）。
+- [ ] 文件数校验：`git ls-tree -r main --name-only | wc -l` 与 GitHub `git/trees/main?recursive=1` 的 blob 数一致。
+- [ ] tag 校验：`comm -23 <(git tag | sort) <(git ls-remote --tags origin | awk '{print $2}' | sed 's#refs/tags/##' | grep -v '\^{}' | sort)` 应为空。
+- [ ] 提交前 `git status --short` 必须为空；有未提交改动就先提交再推，不要「推了一半」。
+- [ ] 凭证：106 的 `origin` 为 HTTPS + `credential.helper store`，token 存 `/root/.git-credentials`（权限 600，仓库外）。
+  **不要把 token 写进仓库文件、提交内容或 `git config` 的值里**；换 token 时只改该文件。
+- [ ] 是否顺带发版（bump `YC_VERSION` + tag + 出包 + Release）单独判断：涉及内核/对外接口变更则按第 1~5 步发版，纯展示层/文档可只推 `main`。
 
 ---
 
