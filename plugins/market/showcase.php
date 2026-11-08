@@ -551,7 +551,8 @@ function yc_sc_downloads(): string
 
     // 完整安装包（download/*.zip，按 mtime 倒序）
     $zips = [];
-    foreach (glob($root . '/download/*.zip') ?: [] as $f) {
+    $relFiles = array_merge(glob($root . '/download/*.zip') ?: [], glob($root . '/download/yecha-*.tar.gz') ?: []);
+    foreach ($relFiles as $f) {
         $base = basename($f);
         $sha = '';
         $sf = $f . '.sha256';
@@ -573,7 +574,11 @@ function yc_sc_downloads(): string
             . '<a class="sc-btn" href="/download/' . e(rawurlencode($core['file'])) . '" download>' . yc_sc_t('下载完整包', 'Download full package') . '</a>'
             . ($core['sha'] !== '' ? ' <a class="sc-btn ghost" href="/download/' . e(rawurlencode($core['file'])) . '.sha256">SHA-256</a>' : '')
             . '<div class="sc-note" style="margin-top:10px">' . yc_sc_t('解压后按文档配置 config.inc.php，访问站点根完成安装。', 'Unpack, configure config.inc.php, then open the site root to run the installer.') . ' <a href="' . $lp . '/docs">' . yc_sc_t('安装文档 →', 'Install docs →') . '</a></div>'
-            . '<div class="sc-note" style="margin-top:6px">' . yc_sc_t('本站当前版本 1.0.0；核心完整包最新公开构建为 1.0 Beta b2 Build20260928，1.0.0 的主题包与插件包见下方。', 'This site runs 1.0.0; the newest published core build is 1.0 Beta b2 Build20260928. 1.0.0 theme and plugin packages are listed below.') . '</div></div>';
+            . '<div class="sc-note" style="margin-top:6px">'
+            . ($en
+                ? 'This site runs <code>' . e(defined('YC_VERSION') ? YC_VERSION : '') . '</code>. Above is the newest published build; older versions and the full source are on <a href="https://github.com/ye-cha/yecha/releases" target="_blank" rel="noopener">GitHub Releases ↗</a>.'
+                : '本站当前版本 <code>' . e(defined('YC_VERSION') ? YC_VERSION : '') . '</code>；上方为最新公开构建，历史版本与完整源码见 <a href="https://github.com/ye-cha/yecha/releases" target="_blank" rel="noopener">GitHub Releases ↗</a>。')
+            . '</div></div>';
     }
     $histHtml = '';
     foreach ($hist as $z) {
