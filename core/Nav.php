@@ -166,7 +166,7 @@ final class Nav
         if ($cur === $base || str_starts_with($cur, $base . '/')) { return true; }
         /* yf-seo-20261020：社区平铺伪静态 —— /forum.html 族（板块/帖子/用户/热榜…）都算社区项高亮 */
         if (($base === '/forum' || $base === '/forum.html')
-            && (preg_match('#^/forum(-[a-z0-9-]+)?\\.html$', $cur) === 1 || preg_match('#^/forum(/|$)', $cur) === 1)) { return true; }
+            && (preg_match('#^/forum(-[a-z0-9-]+)?\\.html$#', $cur) === 1 || preg_match('#^/forum(/|$)#', $cur) === 1)) { return true; }
         if (!str_ends_with($base, '.html') && $cur === $base . '.html') { return true; }
         return false;
     }
