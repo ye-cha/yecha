@@ -1,8 +1,69 @@
 # CHANGELOG · YeCha（夜叉）系统
 
-> 发布日：2026-11-06 · 版本：**1.2.4**（含 1.2.1 / 1.2.2 / 1.2.3 / 1.2.4）
+> 发布日：2026-11-08 · 版本：**1.2.5**（含 1.2.1 / 1.2.2 / 1.2.3 / 1.2.4 / 1.2.5）
 > 口径：只写「做了什么 + 判据」，逐条可回溯到 `/root/ta55/`（本轮）与 `_lqpix/ta/报告-*.md`（历史）。
 > 说明：本文件随发行包冻结；出包后再改文字 = 重发一次版本。
+
+## 1.2.5 要点（2026-11-08 · 企业主题栏目 / changelog 结构化 / 文档体系）
+
+| 组成 | 数值 |
+|---|---|
+| 系统版本 | `core/version.php` = `1.2.5` |
+| 改动面 | 新增 `core/Changelog.php`、`core/docs-nav.php`、`plugins/market/enterprise.php`；改 `core/Front.php`、`core/Markdown.php`、`core/Nav.php`、`index.php`、`admin/index.php`、`plugins/market/{page,plugin,showcase}.php`、`themes/yecha/style.css`、`themes/yecha/views/partials/{landing-cms,sidebar,sidebar-en,sidebar-lang}.php`、`lang/{zh_CN,en_US}.php`、`README.md`、`RELEASE.md` |
+| 规模 | `git diff v1.2.4 HEAD --stat` = 22 文件，+942 / −203 |
+| 规范检查 | 全部改动文件 `php -l` 通过；中英两版页面渲染 0 PHP 警告；diff 无行尾污染 |
+
+### 背景
+1.2.4 之后积累了三批**官网展示层与内核通用**改动，一直只在实例上生效、未入版：
+企业主题栏目（`/enterprise`）、`/changelog` 结构化重做、文档体系与右栏改造。
+其中 `core/Changelog.php`、`core/docs-nav.php`、`plugins/market/enterprise.php`
+是**新增内核/插件文件**，不进发行包会导致「从 Release 装出来的站点」缺少这些能力，
+与仓库 main 不一致——按 `RELEASE.md` 第 4 步口径必须发版。
+
+### 改动
+- **企业主题栏目 `/enterprise`**（`plugins/market/enterprise.php` 新增）：12 款企业官网行业
+  风格包卡片（截图 / 适用行业 / 气质说明 / 令牌色板）+ 30 套演示站主题分区（复用
+  `/theme/<id>` 详情与既有缩略图）；纯 PHP SSR 直出、中英双语，无新增外链。
+  接线：market 插件注册 `slug=enterprise`、`page.php` 分发、`Nav.php` 应用市场下拉与页脚
+  并行入口、`lang/zh_CN|en_US` 语言键、`/market` 汇总页加「12 企业风格包」计数。
+- **`/changelog` 结构化时间线**（`core/Changelog.php` 新增）：解析
+  `## YYYY-MM-DD · YeCha <版本> · <标题>` 为版本卡片（版本徽章 / `<time datetime>` /
+  Latest 标记 / 仅对真实存在的 tag 生成 GitHub Release·Tag 链接）+ Keep a Changelog
+  分类 chip（新增/改进/修复/安全/验收/根因/文档，符号+文字双通道）+ 顶部版本导航与深链锚点；
+  格式不符时安全回退通用 Markdown 渲染。`core/Front.php` 仅在 `slug=changelog` 分流。
+- **Markdown 围栏代码语言标记**（`core/Markdown.php`）：```lang 输出 `data-lang`，
+  `pre[data-lang]::before` 显示语言角标，**所有内容页**（`/docs` 等）同时受益。
+- **文档与侧栏单一数据源**（`core/docs-nav.php` 新增）：文档导航 / 最近更新 / 资源入口
+  由内核与主题共用；`index.php` 默认右栏块改为 `search/about/docs/recent/resources`
+  （旧 `cats/latest/tags/archives` 分支保留兼容旧配置），`admin/index.php`「页面布局」
+  可用块同步新增，避免后台保存布局回退。
+- **官网定位收敛与 README/RELEASE**：README 重写为 1.2.5 真实状态（34 主题 / 20 插件 /
+  MIT / 安装向导 / 升级与安全），`RELEASE.md` 增「6. 日常同步」——不发版也必须推 GitHub。
+
+### 判据与验收
+- `/enterprise`、`/en/enterprise` 均 200，12 张风格卡 / 30 个主题链接 / 12 张截图齐全。
+- `/changelog`、`/en/changelog` 各 12 版本 / 12 摘要 / 12 带语言代码块 / 33 分类 chip，
+  0 降级分组、0 中文泄漏、0 PHP 警告；中英分类分布一致。
+- `/docs` 代码块 `data-lang` 生效；右栏中英一致（文档导航 11 项 / 最近更新 4 个深链 /
+  资源入口），0 旧博客块。
+- 回归：`/theme` `/plugin` `/market` `/downloads` `/store` `/pages` `/sitemap.xml`
+  `/feed` `/about.html` `/forum.html` `/admin/` 全 200。
+- 公网 `https://yecha.org/...` 200，`Cache-Control: no-cache`、CF `cf-cache-status: DYNAMIC`。
+
+### 发行包与部署
+- 发行包：`yecha-1.2.5.tar.gz` —— 基于 tag `v1.2.5` 的 `git archive`（校验和见
+  `releases/MANIFEST.sha256`）。
+- **注意**：文档 11 章、`/changelog` 版本条目、企业主题栏目文案均属**数据层**
+  （`ye_contents` / `ye_poly_contents`），不在发行包内；升级代码后需另行导入这些内容，
+  否则后台/前台页面结构在、正文为空。
+
+### 回滚
+- 版本回滚：`core/version.php` 改回 `1.2.4`。
+- 代码回滚：`git revert` 相应提交，或 `git checkout v1.2.4 -- <改动文件>`；
+  `/enterprise` 路由随 `plugins/market/page.php` 一并回退后 404，不影响既有页面。
+- 数据回滚：本次无表结构变更（无 migrations），内容层改动可原样保留。
+
+---
 
 ## 0. 1.2.4 要点（tw 深翻页接 bounds 快路径）
 
