@@ -565,4 +565,151 @@ html.dark .jd-icon .ico-sun, html[data-theme="dark"] .jd-icon .ico-sun { display
 
 /* ---------- 14. 暗色下图片降亮度（避免白块刺眼） ---------- */
 html.dark .prose img, html[data-theme="dark"] .prose img { filter: brightness(.92); }
+
+/* ==========================================================================
+   15. 文章末尾收尾
+   ========================================================================== */
+.post-end {
+  margin: 44px 0 8px; padding-top: 26px;
+  border-top: 1px dashed var(--hairline);
+  text-align: center;
+}
+.post-end__mark {
+  font-family: var(--font-mono); color: var(--muted);
+  font-size: 13px; letter-spacing: .3em; margin-bottom: 12px;
+}
+.post-end__meta {
+  display: flex; gap: 14px; justify-content: center; flex-wrap: wrap;
+  font-size: 12.5px; color: var(--muted);
+}
+.post-end__meta span { white-space: nowrap; }
+.post-end__meta b { color: var(--content); font-weight: 600; }
+
+/* ==========================================================================
+   16. 评论区（复用内核 comments 组件，按静读设计语言美化）
+   ========================================================================== */
+.comments-area { margin-top: 38px; }
+.comments-area .comments { margin: 28px 0 0; }
+.comments-title {
+  font-size: 17px; color: var(--fg); margin: 0 0 6px;
+  display: flex; align-items: baseline; gap: 10px;
+  padding-bottom: 12px; border-bottom: 2px solid var(--fg);
+}
+.comments-title .count { font-size: 12.5px; color: var(--muted); font-weight: 400; font-family: var(--font-mono); }
+.c-empty { color: var(--muted); font-size: 13.5px; padding: 14px 0 4px; }
+
+.c-thread { margin: 0; }
+.c-item {
+  display: flex; gap: 12px; padding: 14px 2px;
+  border-bottom: 1px dashed var(--hairline);
+  font-size: 14.5px; line-height: 1.8;
+}
+.c-item .avatar {
+  flex: none; width: 38px; height: 38px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 600; font-size: 16px; border: 1px solid var(--border);
+}
+.c-body { flex: 1; min-width: 0; }
+.c-who { display: flex; gap: 10px; align-items: baseline; font-size: 12.5px; color: var(--muted); margin-bottom: 3px; flex-wrap: wrap; }
+.c-who b { color: var(--fg); font-size: 13.5px; font-weight: 600; }
+.c-who time { color: var(--muted); font-family: var(--font-mono); }
+.c-replies { color: var(--accent); font-size: 12px; }
+.c-text { color: var(--content); white-space: pre-wrap; overflow-wrap: break-word; }
+.c-text .mention { color: var(--accent); font-weight: 600; }
+
+.seg-block { margin: 14px 0; padding-left: 12px; border-left: 3px solid var(--hairline); }
+.seg-head { font-size: 12.5px; color: var(--muted); margin-bottom: 6px; }
+.anchor-quote { color: var(--muted); font-size: 12.5px; border-left: 3px solid var(--hairline); padding: 2px 10px; margin: 6px 0; background: var(--panel); border-radius: 0 var(--radius-sm) var(--radius-sm) 0; }
+
+/* 发表 / 回复表单 */
+.reply-to { margin: 8px 0 2px; }
+.reply-to > summary { cursor: pointer; color: var(--accent); font-size: 13px; list-style: none; }
+.reply-to > summary::-webkit-details-marker { display: none; }
+.reply-to > summary::before { content: "▸ "; }
+.reply-to[open] > summary::before { content: "▾ "; }
+.c-form { display: flex; flex-direction: column; gap: 8px; margin: 18px 0 4px; background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 14px; }
+.c-form.reply-form { margin: 8px 0 2px; background: transparent; border-style: dashed; }
+.c-input { width: 100%; box-sizing: border-box; border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 9px 12px; font: inherit; font-size: 14px; background: var(--card); color: var(--content); }
+.c-form textarea.c-input { min-height: 76px; resize: vertical; line-height: 1.7; }
+.c-input:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.c-actions { display: flex; align-items: center; gap: 14px; justify-content: space-between; flex-wrap: wrap; }
+.c-actions .hint { font-size: 12px; color: var(--muted); }
+.c-form .hp { position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0; overflow: hidden; }
+.btn {
+  align-self: flex-end; border: 0; cursor: pointer;
+  background: var(--accent); color: #fff; font: inherit; font-size: 14px; font-weight: 600;
+  padding: 8px 20px; border-radius: var(--radius-max);
+  transition: opacity .15s var(--ease);
+}
+.btn:hover { opacity: .9; }
+.seg-write { margin: 14px 0 6px; }
+.seg-write > summary { cursor: pointer; color: var(--accent); font-size: 13.5px; }
+.seg-write > summary::-webkit-details-marker { display: none; }
+.c-row { display: flex; gap: 8px; flex-wrap: wrap; }
+.c-row select { border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 6px 8px; font: inherit; background: var(--card); color: var(--content); }
+
+/* 评论分页 */
+.pager { display: flex; justify-content: center; gap: 10px; padding: 24px 0 8px; color: var(--muted); font-size: 13px; font-family: var(--font-mono); }
+.pager a { color: var(--accent); padding: 0 6px; }
+.pager .cur { color: var(--accent); font-weight: 700; }
+
+/* 深色评论 */
+html.dark .c-item, html[data-theme="dark"] .c-item { border-bottom-color: var(--border); }
+html.dark .c-form, html[data-theme="dark"] .c-form { background: var(--panel); border-color: var(--border); }
+html.dark .c-input, html[data-theme="dark"] .c-input { background: var(--card); border-color: var(--border); color: var(--content); }
+html.dark .anchor-quote, html[data-theme="dark"] .anchor-quote { background: var(--panel); }
+html.dark .btn, html[data-theme="dark"] .btn { color: #1b1916; }
+
+/* ==========================================================================
+   17. 回到顶部
+   ========================================================================== */
+.jd-top {
+  position: fixed; right: 22px; bottom: 22px; z-index: 60;
+  width: 44px; height: 44px; border-radius: 50%; border: 1px solid var(--border);
+  background: var(--card); color: var(--content); cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: var(--shadow-md); opacity: 0; visibility: hidden;
+  transform: translateY(8px); transition: opacity .2s var(--ease), transform .2s var(--ease), visibility .2s;
+}
+.jd-top.show { opacity: 1; visibility: visible; transform: none; }
+.jd-top:hover { color: var(--accent); border-color: var(--accent); }
+.jd-top svg { width: 20px; height: 20px; }
+@media (max-width: 860px) { .jd-top { right: 14px; bottom: 14px; width: 40px; height: 40px; } }
+@media print { .jd-top { display: none !important; } }
+
+/* ==========================================================================
+   18. 图片灯箱（沉浸式看图）
+   ========================================================================== */
+.jd-lb {
+  position: fixed; inset: 0; z-index: 9998; display: none;
+  background: var(--mask); backdrop-filter: blur(2px);
+  align-items: center; justify-content: center; padding: 56px 64px;
+}
+.jd-lb.open { display: flex; }
+.jd-lb img {
+  max-width: 100%; max-height: 100%; width: auto; height: auto;
+  border-radius: var(--radius-md); box-shadow: 0 24px 70px rgb(0 0 0 / .55);
+  background: var(--card); cursor: zoom-in; transition: transform .12s var(--ease);
+}
+.jd-lb.zoom img { cursor: grab; }
+.jd-lb-btn {
+  position: absolute; border: 0; background: rgb(255 255 255 / .16); color: #fff;
+  width: 46px; height: 46px; border-radius: 50%; font-size: 22px; line-height: 1;
+  cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 0;
+  transition: background .15s var(--ease);
+}
+.jd-lb-btn:hover { background: rgb(255 255 255 / .3); }
+.jd-lb-x { top: 16px; right: 16px; }
+.jd-lb-p { left: 14px; top: 50%; transform: translateY(-50%); }
+.jd-lb-n { right: 14px; top: 50%; transform: translateY(-50%); }
+.jd-lb-cap {
+  position: absolute; left: 0; right: 0; bottom: 16px; text-align: center;
+  color: #d7dbe0; font-size: 13px; letter-spacing: .02em; pointer-events: none;
+}
+.jd-lb-cap .num { font-family: var(--font-mono); }
+@media (max-width: 640px) {
+  .jd-lb { padding: 44px 10px; }
+  .jd-lb-p { left: 6px; } .jd-lb-n { right: 6px; }
+  .jd-lb-btn { width: 40px; height: 40px; font-size: 19px; }
+}
 html.dark .prose img:hover, html[data-theme="dark"] .prose img:hover { filter: brightness(1); }

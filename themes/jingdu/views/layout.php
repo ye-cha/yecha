@@ -185,6 +185,20 @@ if (!empty($GLOBALS['YC_META'])) {
   <?php endif; ?>
 </footer>
 
+<!-- 回到顶部 -->
+<button type="button" class="jd-top" id="jdTop" aria-label="<?= e(__('ui.top') ?? '回到顶部') ?>" title="<?= e(__('ui.top') ?? '回到顶部') ?>">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5"></path><path d="m5 12 7-7 7 7"></path></svg>
+</button>
+
+<!-- 图片灯箱 -->
+<div class="jd-lb" id="jdLb" aria-hidden="true">
+  <button type="button" class="jd-lb-btn jd-lb-x" id="jdLbX" aria-label="关闭">✕</button>
+  <button type="button" class="jd-lb-btn jd-lb-p" id="jdLbP" aria-label="上一张">‹</button>
+  <button type="button" class="jd-lb-btn jd-lb-n" id="jdLbN" aria-label="下一张">›</button>
+  <img id="jdLbImg" src="" alt="">
+  <div class="jd-lb-cap" id="jdLbCap"></div>
+</div>
+
 <?php $__footStat = (string)get_option('stats.foot', ''); if ($__footStat !== '') { echo "\n<!-- stats.foot -->\n" . $__footStat; } ?>
 <script>
 /* 明暗切换（记住访客选择） */
@@ -305,6 +319,82 @@ document.addEventListener('error', function (e) {
     t.replaceWith(s);
   }
 }, true);
+/* 回到顶部：滚过一屏才出现 */
+(function () {
+  var b = document.getElementById('jdTop');
+  if (!b) { return; }
+  function onScroll() {
+    if (window.pageYOffset > 600) { b.classList.add('show'); }
+    else { b.classList.remove('show'); }
+  }
+  window.addEventListener('scroll', onScroll, { passive: true });
+  onScroll();
+  b.addEventListener('click', function () { window.scrollTo({ top: 0, behavior: 'smooth' }); });
+})();
+/* 图片灯箱：点击正文大图沉浸式查看（多图翻页 / 缩放 / 旋转 / 拖拽 / 键盘） */
+(function () {
+  var lb = document.getElementById('jdLb'), img = document.getElementById('jdLbImg'),
+      cap = document.getElementById('jdLbCap'), x = document.getElementById('jdLbX'),
+      p = document.getElementById('jdLbP'), n = document.getElementById('jdLbN');
+  if (!lb || !img) { return; }
+  var list = [], idx = 0, zoom = 1, rot = 0, panX = 0, panY = 0, dragging = false, sx = 0, sy = 0;
+  function apply() { img.style.transform = 'translate(' + panX + 'px,' + panY + 'px) scale(' + zoom + ') rotate(' + rot + 'deg)'; }
+  function collect() {
+    var imgs = document.querySelectorAll('.prose img, .article-content img, .jd-content img');
+    list = [];
+    for (var i = 0; i < imgs.length; i++) {
+      var im = imgs[i];
+      if (im.width && im.height && im.width < 80 && im.height < 80) { continue; } /* 小图标/表情不触发 */
+      if (im.closest('a') && im.closest('a').getAttribute('href') && /\.(zip|tar|gz|pdf)$/i.test(im.closest('a').getAttribute('href'))) { continue; }
+      list.push(im);
+    }
+  }
+  function open(i) {
+    collect();
+    if (!list.length) { return; }
+    idx = i; zoom = 1; rot = 0; panX = 0; panY = 0;
+    lb.classList.add('open', 'zoom'); lb.setAttribute('aria-hidden', 'false');
+    img.src = list[idx].currentSrc || list[idx].src;
+    img.alt = list[idx].alt || '';
+    apply(); updateCap();
+  }
+  function close() { lb.classList.remove('open'); lb.setAttribute('aria-hidden', 'true'); }
+  function updateCap() {
+    if (list.length > 1) { cap.innerHTML = '<span class="num">' + (idx + 1) + ' / ' + list.length + '</span> · 点击放大，拖拽平移，← → 翻页，R 旋转，Esc 关闭'; }
+    else { cap.textContent = '点击放大，拖拽平移，R 旋转，Esc 关闭'; }
+  }
+  document.addEventListener('click', function (e) {
+    var t = e.target;
+    if (t && t.tagName === 'IMG' && t.closest('.prose, .article-content, .jd-content')) {
+      collect(); var i = list.indexOf(t); open(i < 0 ? 0 : i); e.preventDefault();
+    }
+  });
+  x.addEventListener('click', close);
+  lb.addEventListener('click', function (e) { if (e.target === lb || e.target === img && zoom === 1) { close(); } });
+  p.addEventListener('click', function (e) { e.stopPropagation(); if (!list.length) { return; } idx = (idx - 1 + list.length) % list.length; open(idx); });
+  n.addEventListener('click', function (e) { e.stopPropagation(); if (!list.length) { return; } idx = (idx + 1) % list.length; open(idx); });
+  img.addEventListener('click', function (e) {
+    if (!lb.classList.contains('open')) { return; } /* 未开时放行，让 document 监听器打开 */
+    e.stopPropagation();
+    if (zoom === 1) { zoom = 2; } else if (zoom === 2) { zoom = 4; } else { zoom = 1; panX = 0; panY = 0; }
+    lb.classList.toggle('zoom', zoom > 1); apply();
+  });
+  img.addEventListener('mousedown', function (e) {
+    if (zoom <= 1) { return; }
+    dragging = true; sx = e.clientX - panX; sy = e.clientY - panY; img.style.cursor = 'grabbing'; e.preventDefault();
+  });
+  window.addEventListener('mousemove', function (e) { if (!dragging) { return; } panX = e.clientX - sx; panY = e.clientY - sy; apply(); });
+  window.addEventListener('mouseup', function () { dragging = false; img.style.cursor = zoom > 1 ? 'grab' : 'zoom-in'; });
+  document.addEventListener('keydown', function (e) {
+    if (!lb.classList.contains('open')) { return; }
+    if (e.key === 'Escape') { close(); }
+    else if (e.key === 'ArrowLeft') { p.click(); }
+    else if (e.key === 'ArrowRight') { n.click(); }
+    else if (e.key === 'r' || e.key === 'R') { rot = (rot + 90) % 360; apply(); }
+    else if (e.key === '+' || e.key === '=') { zoom = Math.min(4, zoom + 1); lb.classList.add('zoom'); apply(); }
+    else if (e.key === '-' || e.key === '_') { zoom = Math.max(1, zoom - 1); if (zoom === 1) { panX = 0; panY = 0; } lb.classList.toggle('zoom', zoom > 1); apply(); }
+  });
+})();
 </script>
 </body>
 </html>

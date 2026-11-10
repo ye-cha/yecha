@@ -110,6 +110,15 @@ if ($tocOn && !empty($p['toc']) && is_array($p['toc'])) {
   </nav>
   <?php endif; ?>
 
+  <div class="post-end">
+    <div class="post-end__mark">— 本 文 结 束 —</div>
+    <div class="post-end__meta">
+      <span>发布于 <b><?= e(date('Y-m-d', $pt)) ?></b></span>
+      <span>阅读 <b><?= Str::num((int)$p['views']) ?></b></span>
+      <?php if (!empty($p['license'])): ?><span>许可 <b><?= e((string)$p['license']) ?></b></span><?php endif; ?>
+    </div>
+  </div>
+
   <?= View::render('partials/comments', [
       'cid' => $cid, 'logged' => $logged, 'back' => $back,
       'comments' => $comments, 'segments' => $segments, 'para_n' => $para_n, 'csrf' => $csrf,
