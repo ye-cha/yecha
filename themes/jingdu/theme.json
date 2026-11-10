@@ -1,0 +1,19 @@
+{
+  "name": "静读 Jingdu",
+  "slug": "jingdu",
+  "version": "1.0.0",
+  "requires_core": "1.2.5",
+  "author": "YeCha",
+  "license": "MIT",
+  "homepage": "https://yecha.org/",
+  "description": "专注阅读的极简单栏主题：暖米白纸感底、深褐正文、等宽数字、波浪下划线、Gruvbox 奶油代码窗（macOS 三圆点 + 语言角标 + 复制），宽屏右侧悬浮目录，夜读深色偏暖。无侧栏、无推荐位、无封面大图，力气都花在字距行距上。移植参考 ComBox（Typecho, by aijun）的阅读理念，模板与样式为 YeCha 原生实现。",
+  "screenshot": "screenshot.png",
+  "settings": [
+    { "key": "width", "label": "版心宽度", "type": "number", "def": "940", "help": "像素；建议 860~1000，默认 940", "min": 720, "max": 1280 },
+    { "key": "accent", "label": "强调色", "type": "color", "def": "", "help": "留空 = 主题默认 #b3541e" },
+    { "key": "per_page", "label": "每页条数", "type": "number", "def": "10", "min": 1, "max": 50 },
+    { "key": "excerpt", "label": "摘要字数", "type": "number", "def": "150", "help": "首页卡片摘要截断字数", "min": 60, "max": 400 },
+    { "key": "toc", "label": "文章目录", "type": "select", "def": "1", "opts": { "1": "显示（宽屏悬浮）", "0": "隐藏" } },
+    { "key": "dark_mode", "label": "默认配色", "type": "select", "def": "auto", "opts": { "auto": "跟随系统", "light": "固定浅色", "dark": "固定深色" } }
+  ]
+}
