@@ -1,0 +1,67 @@
+# 针对 ye-cha/yecha 定制（传统 PHP 应用，无 composer.json / phpunit）
+# 放到仓库：.github/workflows/macos-php-lint.yml
+# 该仓库是公开仓库，标准 macOS runner 免费且不限量，所以可以放心用 PHP 版本矩阵
+
+name: macOS PHP check
+
+on:
+  workflow_dispatch:            # 可手动点一次先验证
+  push:
+    branches: [main]
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+  pull_request:
+    branches: [main]
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+
+concurrency:
+  group: macos-php-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    name: macOS 26 / PHP ${{ matrix.php }}
+    runs-on: macos-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        php: ['8.1', '8.2', '8.3']
+
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      - name: 打印 macOS 环境
+        run: |
+          sw_vers
+          uname -m
+
+      # GitHub 的 macOS 镜像默认不预装 PHP，用官方社区 action 安装
+      - name: 安装 PHP ${{ matrix.php }}
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          tools: none
+          coverage: none
+
+      - name: 全量 PHP 语法检查
+        run: |
+          php -v
+          count=0
+          fail=0
+          while IFS= read -r -d '' f; do
+            count=$((count+1))
+            if ! php -l "$f" > /dev/null 2>&1; then
+              php -l "$f"
+              fail=$((fail+1))
+            fi
+          done < <(find . -type f -name '*.php' -not -path './.git/*' -print0)
+          echo "共检查 $count 个 PHP 文件，失败 $fail 个"
+          test "$fail" -eq 0
+
+      - name: 检查配置样例语法
+        run: php -l config.inc.php.example
